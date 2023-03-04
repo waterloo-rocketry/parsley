@@ -1,55 +1,122 @@
-from ascii import Ascii
 from bitstring import BitString
-from enum_was_taken import Enum
-from field import Field
-from numeric import Numeric
+from parsley_definitions import *
 import message_types as mt
 
-TIMESTAMP_2 = Numeric("time", 16, scale=1000, signed=True)
-TIMESTAMP_3 = Numeric("time", 24, scale=1000)
 
-FIELDS = {
-    "GENERAL_CMD": [TIMESTAMP_3, Enum("command", 8, mt.gen_cmd_hex)],
-    "ACTUATOR_CMD": [TIMESTAMP_3, Enum("actuator", 8, mt.actuator_id_hex), Enum("state", 8, mt.actuator_states_hex)],
-    "ALT_ARM_CMD": [TIMESTAMP_3, Enum("state", 4, mt.arm_states_hex), Numeric("number", 4)],
-    "RESET_CMD": [TIMESTAMP_3, Enum("id", 8, mt.board_id_hex)],
+@register("GENERAL_BOARD_STATUS")
+def parse_board_status(msg_data):
+    timestamp = _parse_timestamp(msg_data[:3])
+    board_stat = mt.board_stat_str[msg_data[3]]
 
-    "DEBUG_MSG": [TIMESTAMP_3, Numeric("level", 4), Numeric("line", 12), Ascii("data", 24)],
-    "DEBUG_PRINTF": [Ascii("string", 64)],
-    "DEBUG_RADIO_CMD": [Ascii("string", 64)],
+    res = {"time": timestamp, "status": board_stat}
 
-    "ACTUATOR_STAT": [TIMESTAMP_3, Enum("actuator", 8, mt.actuator_id_hex), Enum("req_state", 8, mt.actuator_states_hex), Enum("cur_state", 8, mt.actuator_states_hex)],
-    "ALT_ARM_STAT": [TIMESTAMP_3, Enum("state", 4, mt.arm_states_hex), Numeric("number", 4), Numeric("drogue_v", 16, signed=True), Numeric("main_v", 16, signed=True)],
-    "BOARD_STAT": [TIMESTAMP_3, Enum("stat", 8, mt.board_stat_hex) ], # TODO HALP
+    if board_stat == 'E_BUS_OVER_CURRENT':
+        current = msg_data[4] << 8 | msg_data[5]
+        res["current"] = current
 
-    "SENSOR_TEMP": [TIMESTAMP_3, Numeric("sensor", 8), Numeric("temperature", 24, scale=0.001, signed=True)],
-    "SENSOR_ALTITUDE": [TIMESTAMP_3, Numeric("altitude", 32, signed=False)], # weird signed 2s compliment subtraction
-    "SENSOR_ACC": [TIMESTAMP_2, Numeric("x", 16, scale=0.0001, signed=True), Numeric("y", 16, scale=0.0001, signed=True), Numeric("z", 16, scale=0.0001, signed=True)], # weird a / (2**16) * 8 going on but also x16 for ACC2 ?? or just a parlsey thing, signed in parsley parse
-    "SENSOR_GYRO": [TIMESTAMP_2, Numeric("x", 16, scale=0.03, signed=True), Numeric("y", 16, scale=0.03, signed=True), Numeric("z", 16, scale=0.03, signed=True)], # unsure about rounding, signed in parsley parse
-    "SENSOR_MAG": [TIMESTAMP_2, Numeric("x", 16, signed=True), Numeric("y", 16, signed=True), Numeric("z", 16, signed=True)], # they're signed in parsley parse
-    "SENSOR_ANALOG": [TIMESTAMP_2, Enum("id", 8, mt.sensor_id_hex), Numeric("value", 16, signed=True)],
+    elif board_stat in ["E_BUS_UNDER_VOLTAGE", "E_BUS_OVER_VOLTAGE",
+                        "E_BATT_UNDER_VOLTAGE", "E_BATT_OVER_VOLTAGE"]:
+        voltage = msg_data[4] << 8 | msg_data[5]
+        res["voltage"] = voltage
 
-    "GPS_TIMESTAMP": [TIMESTAMP_3, Numeric("hours", 8), Numeric("minutes", 8), Numeric("seconds", 8), Numeric("dseconds", 8)],
-    "GPS_LATITUDE": [TIMESTAMP_3, Numeric("degrees", 8), Numeric("minutes", 8), Numeric("dminutes", 16, signed=True), Ascii("direction", 8)],
-    "GPS_LONGITUDE": [TIMESTAMP_3, Numeric("degrees", 8), Numeric("minutes", 8), Numeric("dminutes", 16, signed=True), Ascii("direction", 8)],
-    "GPS_ALTITUDE": [TIMESTAMP_3, Numeric("altitude", 16, signed=True), Numeric("daltitude", 8), Ascii("unit", 8)],
-    "GPS_INFO": [TIMESTAMP_3, Numeric("numsat", 8), Numeric("quality", 8)],
+    elif board_stat in ["E_BOARD_FEARED_DEAD", "E_MISSING_CRITICAL_BOARD"]:
+        board_id = mt.board_id_str[msg_data[4]]
+        res["board_id"] = board_id
 
-    "FILL_LVL": [TIMESTAMP_3, Numeric("level", 8), Enum("direction", 8, mt.fill_direction_hex)],
+    elif board_stat in ["E_NO_CAN_TRAFFIC", "E_RADIO_SIGNAL_LOST"]:
+        time = msg_data[4] << 8 | msg_data[5]
+        res["err_time"] = time
 
-    "RADI_VALUE": [TIMESTAMP_3, Numeric("board", 8), Numeric("radi", 16, signed=True)],
+    elif board_stat == "E_SENSOR":
+        sensor_id = mt.sensor_id_str[msg_data[4]]
+        res["sensor_id"] = sensor_id
 
-    "LEDS_ON": [],
-    "LEDS_OFF": []
-}
+    elif board_stat == "E_ACTUATOR_STATE":
+        expected_state = mt.actuator_states_str[msg_data[4]]
+        cur_state = mt.actuator_states_str[msg_data[5]]
+        res["req_state"] = expected_state
+        res["cur_state"] = cur_state
+
+    elif board_stat == "E_LOGGING":
+        res["err"] = msg_data[4]
+
+    return res
 
 def parse(msg_sid, msg_data):
     msg_type = mt.msg_type_str[msg_sid & 0x7e0]
     board_id = mt.board_id_str[msg_sid & 0x1f]
-    msg_data = BitString(msg_data)
 
-    result = {"msg_type": msg_type, "board_id": board_id, "data": {}}
-    for field in FIELDS[msg_type]:
-        result["data"][field.name] = field.decode(msg_data.pop(field.length))
+    res = {"msg_type":msg_type, "board_id": board_id}
+    if msg_type in FIELDS.keys():
+        bit_str = BitString(msg_data)
+        for field in FIELDS[msg_type]:
+            data = bit_str.pop(field.length)
+            res[field.name] = field.decode(data)
+    else:
+        res["data"] = {"unknown": msg_data}
+    return res
 
-    return result
+
+
+
+def parse_live_telemetry(line):
+    line = line.lstrip(' \0')
+    if len(line) == 0 or line[0] != '$':
+        return None
+    line = line[1:]
+
+    msg_sid, msg_data = line.split(":")
+    msg_data, msg_checksum = msg_data.split(";")
+    msg_sid = int(msg_sid, 16)
+    msg_data = [int(byte, 16) for byte in msg_data.split(",")]
+    sum1 = 0
+    sum2 = 0
+    for c in line[:-1]:
+        if c.lower() in "0123456789abcdef":
+            sum1 = (sum1 + int(c, 16)) % 15
+            sum2 = (sum1 + sum2) % 15
+    if int(msg_checksum, 16) != sum1 ^ sum2:
+        print(f"Bad checksum, expected {sum1 ^ sum2} but got {msg_checksum}")
+        return None
+
+    return msg_sid, msg_data
+
+
+def parse_usb_debug(line):
+    line = line.lstrip(' \0')
+    if len(line) == 0 or line[0] != '$':
+        return None
+    line = line[1:]
+
+    if ":" in line:
+        msg_sid, msg_data = line.split(":")
+        msg_sid = int(msg_sid, 16)
+        msg_data = [int(byte, 16) for byte in msg_data.split(",")]
+    else:
+        msg_sid = int(line, 16)
+        msg_data = []
+
+    return msg_sid, msg_data
+
+
+def parse_logger(line):
+    # see cansw_logger/can_syslog.c for format
+    msg_sid, msg_data = line[:3], line[3:]
+    msg_sid = int(msg_sid, 16)
+    # last 'byte' is the recv_timestamp
+    msg_data = [int(msg_data[i:i+2], 16) for i in range(0, len(msg_data), 2)]
+    return msg_sid, msg_data
+
+
+MSG_TYPE_LEN = max([len(msg_type) for msg_type in mt.msg_type_hex])
+BOARD_ID_LEN = max([len(board_id) for board_id in mt.board_id_hex])
+
+
+def fmt_line(parsed_data):
+    msg_type = parsed_data['msg_type']
+    board_id = parsed_data['board_id']
+    data = parsed_data["data"]
+    res = f"[ {msg_type:<{MSG_TYPE_LEN}} {board_id:<{BOARD_ID_LEN}} ]"
+    for k, v in data.items():
+        res += f" {k}: {v}"
+    return res
