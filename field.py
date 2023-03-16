@@ -20,3 +20,9 @@ class Field:
         build a message. Raise a ValueError with an appropiate message if this is not possible.
         """
         raise NotImplementedError
+
+    def contains(self, value):
+        """
+        Used to check whether a certain value is contained within the range of the field.
+        """
+        raise NotImplementedError

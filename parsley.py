@@ -3,45 +3,6 @@ from parsley_definitions import *
 import message_types as mt
 
 
-@register("GENERAL_BOARD_STATUS")
-def parse_board_status(msg_data):
-    timestamp = _parse_timestamp(msg_data[:3])
-    board_stat = mt.board_stat_str[msg_data[3]]
-
-    res = {"time": timestamp, "status": board_stat}
-
-    if board_stat == 'E_BUS_OVER_CURRENT':
-        current = msg_data[4] << 8 | msg_data[5]
-        res["current"] = current
-
-    elif board_stat in ["E_BUS_UNDER_VOLTAGE", "E_BUS_OVER_VOLTAGE",
-                        "E_BATT_UNDER_VOLTAGE", "E_BATT_OVER_VOLTAGE"]:
-        voltage = msg_data[4] << 8 | msg_data[5]
-        res["voltage"] = voltage
-
-    elif board_stat in ["E_BOARD_FEARED_DEAD", "E_MISSING_CRITICAL_BOARD"]:
-        board_id = mt.board_id_str[msg_data[4]]
-        res["board_id"] = board_id
-
-    elif board_stat in ["E_NO_CAN_TRAFFIC", "E_RADIO_SIGNAL_LOST"]:
-        time = msg_data[4] << 8 | msg_data[5]
-        res["err_time"] = time
-
-    elif board_stat == "E_SENSOR":
-        sensor_id = mt.sensor_id_str[msg_data[4]]
-        res["sensor_id"] = sensor_id
-
-    elif board_stat == "E_ACTUATOR_STATE":
-        expected_state = mt.actuator_states_str[msg_data[4]]
-        cur_state = mt.actuator_states_str[msg_data[5]]
-        res["req_state"] = expected_state
-        res["cur_state"] = cur_state
-
-    elif board_stat == "E_LOGGING":
-        res["err"] = msg_data[4]
-
-    return res
-
 def parse(msg_sid, msg_data):
     msg_type = mt.msg_type_str[msg_sid & 0x7e0]
     board_id = mt.board_id_str[msg_sid & 0x1f]
@@ -51,7 +12,14 @@ def parse(msg_sid, msg_data):
         bit_str = BitString(msg_data)
         for field in FIELDS[msg_type]:
             data = bit_str.pop(field.length)
-            res[field.name] = field.decode(data)
+            if isinstance(field, Switch):
+                res[field.name] = field.decode(data)
+                nested_fields = field.get_fields(data)
+                for nested_field in nested_fields:
+                    data = bit_str.pop(nested_field.length)
+                    res[nested_field.name] = nested_field.decode(data)
+            else: 
+                res[field.name] = field.decode(data)
     else:
         res["data"] = {"unknown": msg_data}
     return res

@@ -18,7 +18,11 @@ class Enum(Field):
         return self.map_num_val[num]
 
     def encode(self, value):
+        if not self.contains(value):
+            return self.map_val_num[value].to_bytes((self.length + 7) // 8, 'big')
+    
+    def contains(self, value):
         if value not in self.map_val_num:
             raise ValueError(f"Value '{value}' not in mapping.")
-        return self.map_val_num[value].to_bytes((self.length + 7) // 8, 'big')
+        return True
     
