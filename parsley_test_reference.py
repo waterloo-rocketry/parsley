@@ -11,3 +11,30 @@ x.push(Ascii("data", 24).encode("abc"), 24)
 result = {}
 for field in FIELDS["DEBUG_MSG"]:
     result[field.name] = field.decode(x.pop(field.length))
+
+# example of writing SWITCH cases
+y = BitString()
+y.push(TIMESTAMP_3.encode(14159), 24)
+y.push(Enum("status", 8, mt.board_stat_hex).encode("E_BUS_OVER_CURRENT"), 8)
+y.push(Numeric("current", 16).encode(2653), 16)
+
+result2 = {}
+for field in FIELDS["BOARD_STATUS"]:
+    data = y.pop(field.length)
+    if isinstance(field, Switch):
+        result2[field.name] = field.decode(data)
+        nested_fields = field.get_fields(data)
+        # in the actual code, probably make this recursive
+        for nested_field in nested_fields:
+            data = y.pop(nested_field.length)
+            result2[nested_field.name] = nested_field.decode(data)
+    else:
+        result2[field.name] = field.decode(data)
+
+z = BitString()
+z.push(Ascii("string", 64).encode("HeY"), 64)
+
+result3 = {}
+for field in FIELDS["DEBUG_PRINTF"]:
+    data = z.pop(field.length)
+    result3[field.name] = field.decode(data)
