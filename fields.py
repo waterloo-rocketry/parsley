@@ -1,8 +1,8 @@
 from field import Field
 
 class ASCII(Field):
-    def __init__(self, name, length):
-        super().__init__(name, length)
+    def __init__(self, name, length, optional=False):
+        super().__init__(name, length, optional)
 
     def decode(self, data):
         return data.replace(b'\x00', b'').decode('ascii')

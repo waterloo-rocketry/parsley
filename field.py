@@ -2,9 +2,10 @@ class Field:
     """
     Abstract base class for a field in a message.
     """
-    def __init__(self, name, length):
+    def __init__(self, name, length, optional=False):
         self.name = name
         self.length = length # length in bits
+        self.optional = optional
 
     def decode(self, data):
         """
