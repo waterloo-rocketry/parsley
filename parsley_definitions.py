@@ -1,4 +1,4 @@
-from ascii import Ascii
+from ascii import ASCII
 from bitstring import BitString
 from enum_was_taken import Enum
 from field import Field
@@ -28,9 +28,9 @@ FIELDS = {
     "ALT_ARM_CMD": [TIMESTAMP_3, Enum("state", 4, mt.arm_states_hex), Numeric("altimeter", 4)],
     "RESET_CMD": [TIMESTAMP_3, Enum("board_id", 8, mt.board_id_hex)],
 
-    "DEBUG_MSG": [TIMESTAMP_3, Numeric("level", 4), Numeric("line", 12), Ascii("data", 24)],
-    "DEBUG_PRINTF": [Ascii("string", 64)],
-    "DEBUG_RADIO_CMD": [Ascii("string", 64)],
+    "DEBUG_MSG": [TIMESTAMP_3, Numeric("level", 4), Numeric("line", 12), ASCII("data", 24, optional=True)],
+    "DEBUG_PRINTF": [ASCII("string", 64, optional=True)],
+    "DEBUG_RADIO_CMD": [ASCII("string", 64, optional=True)],
 
     "ACTUATOR_STATUS": [TIMESTAMP_3, Enum("actuator", 8, mt.actuator_id_hex), Enum("req_state", 8, mt.actuator_states_hex), Enum("cur_state", 8, mt.actuator_states_hex)],
     "ALT_ARM_STATUS": [TIMESTAMP_3, Enum("state", 4, mt.arm_states_hex), Numeric("altimeter", 4), Numeric("drogue_v", 16, signed=True), Numeric("main_v", 16, signed=True)],
@@ -45,9 +45,9 @@ FIELDS = {
     "SENSOR_ANALOG": [TIMESTAMP_2, Enum("sensor_idid", 8, mt.sensor_id_hex), Numeric("value", 16, signed=True)],
 
     "GPS_TIMESTAMP": [TIMESTAMP_3, Numeric("hrs", 8), Numeric("mins", 8), Numeric("secs", 8), Numeric("dsecs", 8)],
-    "GPS_LATITUDE": [TIMESTAMP_3, Numeric("degs", 8), Numeric("mins", 8), Numeric("dmins", 16, signed=True), Ascii("direction", 8)],
-    "GPS_LONGITUDE": [TIMESTAMP_3, Numeric("degs", 8), Numeric("mins", 8), Numeric("dmins", 16, signed=True), Ascii("direction", 8)],
-    "GPS_ALTITUDE": [TIMESTAMP_3, Numeric("altitude", 16, signed=True), Numeric("daltitude", 8), Ascii("unit", 8)],
+    "GPS_LATITUDE": [TIMESTAMP_3, Numeric("degs", 8), Numeric("mins", 8), Numeric("dmins", 16, signed=True), ASCII("direction", 8)],
+    "GPS_LONGITUDE": [TIMESTAMP_3, Numeric("degs", 8), Numeric("mins", 8), Numeric("dmins", 16, signed=True), ASCII("direction", 8)],
+    "GPS_ALTITUDE": [TIMESTAMP_3, Numeric("altitude", 16, signed=True), Numeric("daltitude", 8), ASCII("unit", 8)],
     "GPS_INFO": [TIMESTAMP_3, Numeric("num_sats", 8), Numeric("quality", 8)],
 
     "FILL_LVL": [TIMESTAMP_3, Numeric("level", 8), Enum("direction", 8, mt.fill_direction_hex)],

@@ -5,7 +5,7 @@ x = BitString()
 x.push(TIMESTAMP_3.encode(12345), 24)
 x.push(Numeric("level", 4).encode(7), 4)
 x.push(Numeric("line", 12).encode(123), 12)
-x.push(Ascii("data", 24).encode("abc"), 24)
+x.push(ASCII("data", 24).encode("abc"), 24)
 
 # example of reading BitString formatted data
 result = {}
@@ -32,9 +32,12 @@ for field in FIELDS["BOARD_STATUS"]:
         result2[field.name] = field.decode(data)
 
 z = BitString()
-z.push(Ascii("string", 64).encode("HeY"), 64)
+z.push(ASCII("string", 64).encode("HeY"), 64)
 
 result3 = {}
 for field in FIELDS["DEBUG_PRINTF"]:
     data = z.pop(field.length)
     result3[field.name] = field.decode(data)
+
+# TODO: change field encode to retunr tuple, first is bytes second is lenght so thtat
+# when you do bitstring.push(encode) you don't have to manually specify the number anymore

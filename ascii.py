@@ -1,15 +1,19 @@
 from field import Field
 
-class Ascii(Field):
-    def __init__(self, name, length):
-        super().__init__(name, length)
+class ASCII(Field):
+    def __init__(self, name, length, optional=False):
+        super().__init__(name, length, optional)
 
     def decode(self, data):
-        return data.decode('ascii')
+        return data.replace(b'\x00', b'').decode('ascii')
     
     def encode(self, value):
         if self.contains(value):
-            return value.encode('ascii')
+            data = value.encode('ascii')
+            filler_data = b'\x00' * (self.length - len(data))
+            if self.optional:
+                data = filler_data + data
+            return data
 
     def contains(self, value):
         if not type(value) == str:
