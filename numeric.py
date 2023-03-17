@@ -14,7 +14,7 @@ class Numeric(Field):
         value *= 1/self.scale # doing //= self.scale sometimes fogs up the data after decode
         value = int(value)
         if self.contains(value):
-            return value.to_bytes((self.length + 7) // 8, byteorder='big', signed=self.signed)
+            return (value.to_bytes((self.length + 7) // 8, byteorder='big', signed=self.signed), self.length)
 
     def contains(self, value):
         hex_value = hex(value)

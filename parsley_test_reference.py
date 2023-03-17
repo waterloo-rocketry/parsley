@@ -2,10 +2,10 @@ from parsley_definitions import *
 
 # example of writing DEBUG_MSG (for unit test generation)
 x = BitString()
-x.push(TIMESTAMP_3.encode(12345), 24)
-x.push(Numeric("level", 4).encode(7), 4)
-x.push(Numeric("line", 12).encode(123), 12)
-x.push(ASCII("data", 24).encode("abc"), 24)
+x.push(TIMESTAMP_3.encode(12345))
+x.push(Numeric("level", 4).encode(7))
+x.push(Numeric("line", 12).encode(123))
+x.push(ASCII("data", 24).encode("abc"))
 
 # example of reading BitString formatted data
 result = {}
@@ -14,9 +14,9 @@ for field in FIELDS["DEBUG_MSG"]:
 
 # example of writing SWITCH cases
 y = BitString()
-y.push(TIMESTAMP_3.encode(14159), 24)
-y.push(Enum("status", 8, mt.board_stat_hex).encode("E_BUS_OVER_CURRENT"), 8)
-y.push(Numeric("current", 16).encode(2653), 16)
+y.push(TIMESTAMP_3.encode(14159))
+y.push(Enum("status", 8, mt.board_stat_hex).encode("E_BUS_OVER_CURRENT"))
+y.push(Numeric("current", 16).encode(2653))
 
 result2 = {}
 for field in FIELDS["BOARD_STATUS"]:
@@ -32,7 +32,7 @@ for field in FIELDS["BOARD_STATUS"]:
         result2[field.name] = field.decode(data)
 
 z = BitString()
-z.push(ASCII("string", 64).encode("HeY"), 64)
+z.push(ASCII("string", 64).encode("HeY"))
 
 result3 = {}
 for field in FIELDS["DEBUG_PRINTF"]:

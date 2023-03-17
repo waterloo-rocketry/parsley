@@ -25,7 +25,8 @@ class BitString:
         self.data = self.data & ((1 << self.length) - 1) # and then mask them out
         return res.to_bytes((field_length + 7) // 8, 'big') # and convert to a bytes object
 
-    def push(self, value, field_length):
+    def push(self, data):
+        (value, field_length) = data
         """
         Appends arbitrary sized bits.
         """

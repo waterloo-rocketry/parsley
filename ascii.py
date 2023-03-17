@@ -13,7 +13,7 @@ class ASCII(Field):
             filler_data = b'\x00' * (self.length - len(data))
             if self.optional:
                 data = filler_data + data
-            return data
+            return (data, self.length)
 
     def contains(self, value):
         if not type(value) == str:
