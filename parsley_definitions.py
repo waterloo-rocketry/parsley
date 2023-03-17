@@ -1,9 +1,6 @@
-from ascii import ASCII
 from bitstring import BitString
-from enum_was_taken import Enum
 from field import Field
-from numeric import Numeric
-from switch import Switch
+from fields import ASCII, Enum, Numeric, Switch
 import message_types as mt
 
 # I think value *= scale is much more intuitive than divide
