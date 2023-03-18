@@ -1,4 +1,5 @@
 from parsley_definitions import *
+from bitstring import BitString
 
 # TODO: could make this recursive, but seems overkill for current usage
 def parse_cmd(msg_type, msg_data):
