@@ -55,7 +55,7 @@ msg_type_hex = {
 msg_type_str = {v: k for k, v in msg_type_hex.items()}
 
 board_id_hex = {
-    "DUMMY": 0x00,
+    "ALL": 0x00,
     "INJECTOR": 0x01,
     "INJECTOR_SPARE": 0x02,
     "LOGGER": 0x03,
