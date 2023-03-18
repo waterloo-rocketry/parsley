@@ -47,8 +47,6 @@ class TestParsley:
         res = parsley.parse_cmd("RESET_CMD", msg_data)
         assert res["board_id"] == "ALL"
 
-# ------------------------------------ (manual breakpoint for me to keep visual track of progress, will delete later)
-
     def test_debug_msg(self):
         msg_data = BitString()
         msg_data.push(*self.timestamp3())
@@ -71,8 +69,6 @@ class TestParsley:
         msg_data.push(*ASCII("string", 64, optional=True).encode("RADIO"))
         res = parsley.parse_cmd("DEBUG_RADIO_CMD", msg_data)
         assert res["string"] == "RADIO"
-
-# ------------------------------------ (manual breakpoint for me to keep visual track of progress, will delete later)
 
     def test_actuator_status(self):
         msg_data = BitString()
@@ -162,8 +158,6 @@ class TestParsley:
         assert res["req_state"] == "ACTUATOR_CLOSED"
         assert res["cur_state"] == "ACTUATOR_UNK"
 
-# ------------------------------------ (manual breakpoint for me to keep visual track of progress, will delete later)
-
     def test_sensor_temp(self):
         msg_data = BitString()
         msg_data.push(*self.timestamp3())
@@ -228,8 +222,6 @@ class TestParsley:
         assert res["sensor_id"] == "SENSOR_BARO"
         assert res["value"] == 54321
 
-# ------------------------------------ (manual breakpoint for me to keep visual track of progress, will delete later)
-
     def test_gps_timestamp(self):
         msg_data = BitString()
         msg_data.push(*self.timestamp3())
@@ -289,8 +281,6 @@ class TestParsley:
         assert res["num_sats"] == 12
         assert res["quality"] == 23
 
-# ------------------------------------ (manual breakpoint for me to keep visual track of progress, will delete later)
-
     def test_fill_lvl(self):
         msg_data = BitString()
         msg_data.push(*self.timestamp3())
@@ -317,31 +307,6 @@ class TestParsley:
         # LED_OFF message has no message body
         pass
 
-# ------------------------------------ (manual breakpoint for me to keep visual track of progress, will delete later)
-
-    def test_parse(self, monkeypatch):
-        msg_data = BitString()
-        def parse_monkey(msg_data):
-            return {"monkey": msg_data}
-        monkeypatch.setitem(parsley_definitions._func_map, "LEDS_ON", parse_monkey)
-
-        msg_sid = mt.msg_type_hex["LEDS_ON"] | mt.board_id_hex["ARMING"]
-        msg_data = [1, 2, 3, 4]
-        res = parsley.parse_cmd("", msg_data)
-parse(msg_sid, msg_data)
-        assert res["msg_type"] == "LEDS_ON"
-        assert res["board_id"] == "ARMING"
-        assert res["data"]["monkey"] == msg_data
-
-    def test_parse_usb(self):
-        msg_data = BitString()
-        msg_sid, msg_data = parsley_definitions.parse_usb_debug("$555:
-        msg_data = BitString()1,2,FF")
-        assert msg_sid == 0x555
-        assert msg_data == [1, 2, 0xFF]
-
-    def test_parse_logger(self):
-        msg_data = BitString()
-        msg_sid, msg_data = parsley_definitions.parse_logger("5550102FF")
-        assert msg_sid == 0x555
-        assert msg_data == [1, 2, 0xFF]
+# TODO: field unit testing (boundaries, signed, optional) => probably have to assert raw bits
+# TODO: double check signed fields
+# TODO: look into the parse/usb/logger parsing functions
