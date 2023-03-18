@@ -2,7 +2,7 @@ from fields import ASCII, Enum, Numeric, Switch
 import message_types as mt
 
 # I think value *= scale is much more intuitive than divide
-TIMESTAMP_2 = Numeric("time", 16, scale=1/1000, signed=True)
+TIMESTAMP_2 = Numeric("time", 16, scale=1/1000)
 TIMESTAMP_3 = Numeric("time", 24, scale=1/1000)
 
 BOARD_STATUS = {
@@ -42,22 +42,21 @@ FIELDS = {
     "BOARD_STATUS": [TIMESTAMP_3, Switch(Enum("status", 8, mt.board_stat_hex), BOARD_STATUS)],
 
     "SENSOR_TEMP": [TIMESTAMP_3, Numeric("sensor_id", 8), Numeric("temperature", 24, scale=1/2**10, signed=True)],
-    "SENSOR_ALTITUDE": [TIMESTAMP_3, Numeric("altitude", 32, signed=True)], # weird signed 2s compliment subtraction, but im pretty sure shoudl be signed (jack said yes too so)
+    "SENSOR_ALTITUDE": [TIMESTAMP_3, Numeric("altitude", 32, signed=True)],
     "SENSOR_ACC": [TIMESTAMP_2, Numeric("x", 16, scale=8/2**16, signed=True), Numeric("y", 16, scale=8/2**16, signed=True), Numeric("z", 16, scale=8/2**16, signed=True)],
-    "SENSOR_ACC2": [TIMESTAMP_2, Numeric("x", 16, scale=16/2**16, signed=True), Numeric("y", 16, scale=16/2**16, signed=True), Numeric("z", 16, scale=16/2**16, signed=True)], # only difference is scale
-    "SENSOR_GYRO": [TIMESTAMP_2, Numeric("x", 16, scale=2000/2**16, signed=True), Numeric("y", 16, scale=2000/2**16, signed=True), Numeric("z", 16, scale=2000/2**16, signed=True)], # unsure about rounding, signed in parsley parse
+    "SENSOR_GYRO": [TIMESTAMP_2, Numeric("x", 16, scale=2000/2**16, signed=True), Numeric("y", 16, scale=2000/2**16, signed=True), Numeric("z", 16, scale=2000/2**16, signed=True)],
     "SENSOR_MAG": [TIMESTAMP_2, Numeric("x", 16, signed=True), Numeric("y", 16, signed=True), Numeric("z", 16, signed=True)],
-    "SENSOR_ANALOG": [TIMESTAMP_2, Enum("sensor_idid", 8, mt.sensor_id_hex), Numeric("value", 16)],
+    "SENSOR_ANALOG": [TIMESTAMP_2, Enum("sensor_id", 8, mt.sensor_id_hex), Numeric("value", 16)],
 
     "GPS_TIMESTAMP": [TIMESTAMP_3, Numeric("hrs", 8), Numeric("mins", 8), Numeric("secs", 8), Numeric("dsecs", 8)],
-    "GPS_LATITUDE": [TIMESTAMP_3, Numeric("degs", 8), Numeric("mins", 8), Numeric("dmins", 16, signed=True), ASCII("direction", 8)],
-    "GPS_LONGITUDE": [TIMESTAMP_3, Numeric("degs", 8), Numeric("mins", 8), Numeric("dmins", 16, signed=True), ASCII("direction", 8)],
-    "GPS_ALTITUDE": [TIMESTAMP_3, Numeric("altitude", 16, signed=True), Numeric("daltitude", 8), ASCII("unit", 8)],
+    "GPS_LATITUDE": [TIMESTAMP_3, Numeric("degs", 8), Numeric("mins", 8), Numeric("dmins", 16), ASCII("direction", 8)],
+    "GPS_LONGITUDE": [TIMESTAMP_3, Numeric("degs", 8), Numeric("mins", 8), Numeric("dmins", 16), ASCII("direction", 8)],
+    "GPS_ALTITUDE": [TIMESTAMP_3, Numeric("altitude", 16), Numeric("daltitude", 8), ASCII("unit", 8)],
     "GPS_INFO": [TIMESTAMP_3, Numeric("num_sats", 8), Numeric("quality", 8)],
 
     "FILL_LVL": [TIMESTAMP_3, Numeric("level", 8), Enum("direction", 8, mt.fill_direction_hex)],
 
-    "RADI_VALUE": [TIMESTAMP_3, Numeric("radi_board", 8), Numeric("radi", 16, signed=True)],
+    "RADI_VALUE": [TIMESTAMP_3, Numeric("radi_board", 8), Numeric("radi", 16)],
 
     "LEDS_ON": [],
     "LEDS_OFF": []

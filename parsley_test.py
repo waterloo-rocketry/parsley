@@ -7,8 +7,11 @@ import message_types as mt
 import parsley
 
 class TestParsley:
+    # TODO: ask jack about timestamp scaling esp cutting stuff off
+    def timestamp2():
+        return TIMESTAMP_2.encode(0)
+    
     def timestamp3():
-        msg_data = BitString()
         return TIMESTAMP_3.encode(0)
     
     def test_general_cmd(self):
@@ -50,7 +53,7 @@ class TestParsley:
         msg_data = BitString()
         msg_data.push(*self.timestamp3())
         msg_data.push(*Numeric("level", 4).encode(6))
-        msg_data.push(*Numeric("line", 12).encode(291))
+        msg_data.push(*Numeric("line", 12).encode(0x123))
         msg_data.push(*ASCII("data", 24, optional=True).encode("ABC"))
         res = parsley.parse_cmd("DEBUG_MSG", msg_data)
         assert res["level"] == 6
@@ -161,40 +164,80 @@ class TestParsley:
 
 # ------------------------------------ (manual breakpoint for me to keep visual track of progress, will delete later)
 
-    def test_sensor_analog(self):
+    def test_sensor_temp(self):
         msg_data = BitString()
-        msg_data = struct.pack(">HbH", 12345, mt.sensor_id_hex["SENSOR_BARO"], 54321)
-        res = parsley.parse_cmd("", msg_data)
-parse_sensor_analog(msg_data)
-        assert res["time"] == 12345
-        assert res["sensor_id"] == "SENSOR_BARO"
-        assert res["value"] == 54321
+        msg_data.push(*self.timestamp3())
+        msg_data.push(*Numeric("sensor_id", 8).encode(0x12))
+        msg_data.push(*Numeric("temperature", 24, scale=1/2**10).encode(12.5 * 2**10))
+        res = parsley.parse_cmd("SENSOR_TEMP", msg_data)
+        assert res["sensor_id"] == 0x12
+        assert res["temperature"] == 12.5
 
     def test_sensor_altitude(self):
         msg_data = BitString()
         msg_data.push(*self.timestamp3())
- + struct.pack(">i", -12345)
-        res = parsley.parse_cmd("", msg_data)
-parse_sensor_altitude(msg_data)
+        msg_data.push(*Numeric("altitude", 32, signed=True).encode(-12345))
+        res = parsley.parse_cmd("SENSOR_ALTITUDE", msg_data)
         assert res["altitude"] == -12345
 
-    def test_sensor_temp(self):
+    # TODO: double check that this is inteded behaviour for scaling
+    def test_sensor_acc(self):
         msg_data = BitString()
-        msg_data.push(*self.timestamp3())
- + b'\x12'
-        msg_data += struct.pack(">I", int(12.5 * 2**10))[1:
-        msg_data = BitString()]
-        res = parsley.parse_cmd("", msg_data)
-parse_sensor_temp(msg_data)
-        assert res["sensor_id"] == 0x12
-        assert res["temperature"] == 12.5
+        msg_data.push(*TIMESTAMP_2.encode(54321))
+        msg_data.push(*Numeric("x", 16, scale=8/2**16, signed=True).encode(2**13))
+        msg_data.push(*Numeric("y", 16, scale=8/2**16, signed=True).encode(2**14))
+        msg_data.push(*Numeric("z", 16, scale=8/2**16, signed=True).encode(2**15))
+        res = parsley.parse_cmd("SENSOR_ACC", msg_data)
+        assert res["time"] == 54321
+        assert res["x"] == 2**13
+        assert res["y"] == 2**14
+        assert res["z"] == 2**15
+
+    # TODO: because whats the point of scaling/decaling input if its going to be the same anyways
+    # unless its just to accept a larger range of values (?)
+    def test_sensor_gyro(self):
+        msg_data = BitString()
+        msg_data.push(*self.timestamp2())
+        msg_data.push(*Numeric("x", 16, scale=2000/2**16, signed=True).encode(2**13))
+        msg_data.push(*Numeric("y", 16, scale=2000/2**16, signed=True).encode(2**14))
+        msg_data.push(*Numeric("z", 16, scale=2000/2**16, signed=True).encode(2**15))
+        res = parsley.parse_cmd("SENSOR_GYRO", msg_data)
+        assert res["time"] == 54321
+        assert res["x"] == 2**13
+        assert res["y"] == 2**14
+        assert res["z"] == 2**15
+    
+    def test_sensor_mag(self):
+        msg_data = BitString()
+        msg_data.push(*self.timestamp2())
+        msg_data.push(*Numeric("x", 16, signed=True).encode(-100))
+        msg_data.push(*Numeric("y", 16, signed=True).encode(-200))
+        msg_data.push(*Numeric("z", 16, signed=True).encode(-300))
+        res = parsley.parse_cmd("SENSOR_MAG", msg_data)
+        assert res["time"] == 54321
+        assert res["x"] == -100
+        assert res["y"] == -200
+        assert res["z"] == -300
+
+    def test_sensor_analog(self):
+        msg_data = BitString()
+        msg_data.push(*self.timestamp2())
+        msg_data.push(*Enum("sensor_id", 8, mt.sensor_id_hex).encode("SENSOR_BARO"))
+        msg_data.push(*Numeric("value", 16).encode(54321))
+        res = parsley.parse_cmd("SENSOR_ANALOG", msg_data)
+        assert res["sensor_id"] == "SENSOR_BARO"
+        assert res["value"] == 54321
+
+# ------------------------------------ (manual breakpoint for me to keep visual track of progress, will delete later)
 
     def test_gps_timestamp(self):
         msg_data = BitString()
         msg_data.push(*self.timestamp3())
- + struct.pack(">bbbb", 12, 23, 34, 45)
-        res = parsley.parse_cmd("", msg_data)
-parse_gps_timestamp(msg_data)
+        msg_data.push(*Numeric("hrs", 8).encode(12))
+        msg_data.push(*Numeric("mins", 8).encode(23))
+        msg_data.push(*Numeric("secs", 8).encode(34))
+        msg_data.push(*Numeric("dsecs", 8).encode(45))
+        res = parsley.parse_cmd("GPS_TIMESTAMP", msg_data)
         assert res["hrs"] == 12
         assert res["mins"] == 23
         assert res["secs"] == 34
@@ -203,9 +246,11 @@ parse_gps_timestamp(msg_data)
     def test_gps_latitude(self):
         msg_data = BitString()
         msg_data.push(*self.timestamp3())
- + struct.pack(">bbHc", 12, 23, 12345, b'N')
-        res = parsley.parse_cmd("", msg_data)
-parse_gps_latitude(msg_data)
+        msg_data.push(*Numeric("degs", 8).encode(12))
+        msg_data.push(*Numeric("mins", 8).encode(23))
+        msg_data.push(*Numeric("dmins", 8).encode(12345))
+        msg_data.push(*ASCII("direction", 8).encode("N"))
+        res = parsley.parse_cmd("GPS_LATITUDE", msg_data)
         assert res["degs"] == 12
         assert res["mins"] == 23
         assert res["dmins"] == 12345
@@ -214,9 +259,11 @@ parse_gps_latitude(msg_data)
     def test_gps_longitude(self):
         msg_data = BitString()
         msg_data.push(*self.timestamp3())
- + struct.pack(">bbHc", 12, 23, 12345, b'W')
-        res = parsley.parse_cmd("", msg_data)
-parse_gps_longitude(msg_data)
+        msg_data.push(*Numeric("degs", 8).encode(12))
+        msg_data.push(*Numeric("mins", 8).encode(23))
+        msg_data.push(*Numeric("dmins", 8).encode(12345))
+        msg_data.push(*ASCII("direction", 8).encode("W"))
+        res = parsley.parse_cmd("GPS_LONGITUDE", msg_data)
         assert res["degs"] == 12
         assert res["mins"] == 23
         assert res["dmins"] == 12345
@@ -225,9 +272,10 @@ parse_gps_longitude(msg_data)
     def test_gps_altitude(self):
         msg_data = BitString()
         msg_data.push(*self.timestamp3())
- + struct.pack(">Hbc", 12345, 12, b'm')
-        res = parsley.parse_cmd("", msg_data)
-parse_gps_altitude(msg_data)
+        msg_data.push(*Numeric("altitude", 16).encode(12345))
+        msg_data.push(*Numeric("daltitude", 8).encode(12))
+        msg_data.push(*ASCII("unit", 8).encode("m"))
+        res = parsley.parse_cmd("GPS_ALTITUDE", msg_data)
         assert res["altitude"] == 12345
         assert res["daltitude"] == 12
         assert res["unit"] == "m"
@@ -235,21 +283,41 @@ parse_gps_altitude(msg_data)
     def test_gps_info(self):
         msg_data = BitString()
         msg_data.push(*self.timestamp3())
- + struct.pack(">bb", 12, 23)
-        res = parsley.parse_cmd("", msg_data)
-parse_gps_info(msg_data)
+        msg_data.push(*Numeric("num_sats", 8).encode(12))
+        msg_data.push(*Numeric("quality", 8).encode(23))
+        res = parsley.parse_cmd("GPS_INFO", msg_data)
         assert res["num_sats"] == 12
         assert res["quality"] == 23
+
+# ------------------------------------ (manual breakpoint for me to keep visual track of progress, will delete later)
 
     def test_fill_lvl(self):
         msg_data = BitString()
         msg_data.push(*self.timestamp3())
-
-        msg_data += struct.pack(">bb", 9, mt.fill_direction_hex["FILLING"])
-        res = parsley.parse_cmd("", msg_data)
-parse_fill_lvl(msg_data)
+        msg_data.push(*Numeric("level", 8).encode(9))
+        msg_data.push(*Enum("direction", 8, mt.fill_direction_hex).encode("FILLING"))
+        res = parsley.parse_cmd("FILL_LVL", msg_data)
         assert res["level"] == 9
         assert res["direction"] == "FILLING"
+
+    def test_radi_value(self):
+        msg_data = BitString()
+        msg_data.push(*self.timestamp3())
+        msg_data.push(*Numeric("radi_board", 8).encode(1))
+        msg_data.push(*Numeric("radi", 16).encode(500))
+        res = parsley.parse_cmd("RADI_VALUE", msg_data)
+        assert res["radi_board"] == 1
+        assert res["radi"] == 500
+
+    def test_leds_on(self):
+        # LED_ON message has no message body
+        pass
+
+    def test_leds_off(self):
+        # LED_OFF message has no message body
+        pass
+
+# ------------------------------------ (manual breakpoint for me to keep visual track of progress, will delete later)
 
     def test_parse(self, monkeypatch):
         msg_data = BitString()
@@ -277,50 +345,3 @@ parse(msg_sid, msg_data)
         msg_sid, msg_data = parsley_definitions.parse_logger("5550102FF")
         assert msg_sid == 0x555
         assert msg_data == [1, 2, 0xFF]
-
-    def test_sensor_acc(self):
-        msg_data = BitString()
-        msg_data = struct.pack(">Hhhh", 12345, 1, 2, 3)
-        res = parsley.parse_cmd("", msg_data)
-parse_sensor_acc_gyro_mag(msg_data)
-        assert res["time"] == 12345
-        assert res["x"] == 1
-        assert res["y"] == 2
-        assert res["z"] == 3
-
-        msg_data = struct.pack(">Hhhh", 12345, -1, -2, -3)
-        res = parsley.parse_cmd("", msg_data)
-parse_sensor_acc_gyro_mag(msg_data)
-        assert res["time"] == 12345
-        assert res["x"] == -1
-        assert res["y"] == -2
-        assert res["z"] == -3
-
-    def test_sensor_gyro(self):
-        msg_data = BitString()
-        # covered by test_sensor_acc
-        pass
-
-    def test_sensor_mag(self):
-        msg_data = BitString()
-        # covered by test_sensor_acc
-        pass
-
-    def test_radi_value(self):
-        msg_data = BitString()
-        msg_data.push(*self.timestamp3())
- + struct.pack(">bH", 1, 500)
-        res = parsley.parse_cmd("", msg_data)
-parse_radi_value(msg_data)
-        assert res["radi_board"] == 1
-        assert res["radi"] == 500
-
-    def test_leds_on(self):
-        msg_data = BitString()
-        # LED_ON message has no message body
-        pass
-
-    def test_leds_off(self):
-        msg_data = BitString()
-        # LED_OFF message has no message body
-        pass
