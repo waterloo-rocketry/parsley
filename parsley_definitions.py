@@ -1,5 +1,3 @@
-from bitstring import BitString
-from field import Field
 from fields import ASCII, Enum, Numeric, Switch
 import message_types as mt
 
@@ -54,14 +52,3 @@ FIELDS = {
     "LEDS_ON": [],
     "LEDS_OFF": []
 }
-
-# def parse(msg_sid, msg_data):
-#     msg_type = mt.msg_type_str[msg_sid & 0x7e0]
-#     board_id = mt.board_id_str[msg_sid & 0x1f]
-#     msg_data = BitString(msg_data)
-
-#     result = {"msg_type": msg_type, "board_id": board_id, "data": {}}
-#     for field in FIELDS[msg_type]:
-#         result["data"][field.name] = field.decode(msg_data.pop(field.length))
-
-#     return result
