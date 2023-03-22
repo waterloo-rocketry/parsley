@@ -163,7 +163,9 @@ sensor_id_hex = {
     "SENSOR_MAG_2": 13,
     "SENSOR_ROCKET_BATT": 14,
     "SENSOR_PRESSURE_PNEUMATICS": 15,
-    "SENSOR_VENT_TEMP": 16
+    "SENSOR_VENT_TEMP": 16,
+    "SENSOR_CHARGE_CURR": 17,
+    "SENSOR_CHARGE_VOLT": 18
 }
 sensor_id_str = {v: k for k, v in sensor_id_hex.items()}
 

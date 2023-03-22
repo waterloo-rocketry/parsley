@@ -10,7 +10,7 @@ def parse_cmd(msg_type, msg_data):
         if isinstance(field, Switch):
             nested_fields = field.get_fields(data)
             for nested_field in nested_fields:
-                data = msg_data.pop(field.length)
+                data = msg_data.pop(nested_field.length)
                 res[nested_field.name] = nested_field.decode(data)
     return res
 

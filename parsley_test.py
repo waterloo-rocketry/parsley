@@ -1,5 +1,4 @@
 import pytest
-
 from bitstring import BitString
 from parsley_definitions import *
 import message_types as mt
@@ -7,19 +6,22 @@ import message_types as mt
 import parsley
 
 class TestParsley:
-    # TODO: ask jack about timestamp scaling esp cutting stuff off
-    def timestamp2():
+    TOLERANCE = 0.01
+    def approx(self, value):
+        return pytest.approx(value, self.TOLERANCE)
+
+    def timestamp2(self):
         return TIMESTAMP_2.encode(0)
     
-    def timestamp3():
+    def timestamp3(self):
         return TIMESTAMP_3.encode(0)
     
     def test_general_cmd(self):
         msg_data = BitString()
-        msg_data.push(*TIMESTAMP_3.encode(12345))
+        msg_data.push(*TIMESTAMP_3.encode(12.345))
         msg_data.push(*Enum("command", 8, mt.gen_cmd_hex).encode("BUS_DOWN_WARNING"))
         res = parsley.parse_cmd("GENERAL_CMD", msg_data)
-        assert res["time"] == 12345
+        assert res["time"] == self.approx(12.345)
         assert res["command"] == "BUS_DOWN_WARNING"
 
     def test_actuator_cmd(self):
@@ -52,11 +54,11 @@ class TestParsley:
         msg_data.push(*self.timestamp3())
         msg_data.push(*Numeric("level", 4).encode(6))
         msg_data.push(*Numeric("line", 12).encode(0x123))
-        msg_data.push(*ASCII("data", 24, optional=True).encode("ABC"))
+        msg_data.push(*ASCII("data", 24, optional=True).encode("AC"))
         res = parsley.parse_cmd("DEBUG_MSG", msg_data)
         assert res["level"] == 6
         assert res["line"] == 0x123
-        assert res["data"] == b'ABC'
+        assert res["data"] == 'AC'
 
     def test_debug_printf(self):
         msg_data = BitString()
@@ -81,8 +83,6 @@ class TestParsley:
         assert res["req_state"] == "ACTUATOR_CLOSED"
         assert res["cur_state"] == "ACTUATOR_UNK"
 
-    # TODO: this one is a bit weird check up on it later
-    # TODO: my signed=True i think is completely messed up
     def test_alt_arm_status(self):
         msg_data = BitString()
         msg_data.push(*self.timestamp3())
@@ -98,6 +98,7 @@ class TestParsley:
 
     def test_board_status_nominal(self):
         msg_data = BitString()
+        msg_data.push(*self.timestamp3())
         msg_data.push(*Enum("status", 8, mt.board_stat_hex).encode("E_NOMINAL"))
         res = parsley.parse_cmd("BOARD_STATUS", msg_data)
         assert res["status"] == "E_NOMINAL"
@@ -162,10 +163,10 @@ class TestParsley:
         msg_data = BitString()
         msg_data.push(*self.timestamp3())
         msg_data.push(*Numeric("sensor_id", 8).encode(0x12))
-        msg_data.push(*Numeric("temperature", 24, scale=1/2**10).encode(12.5 * 2**10))
+        msg_data.push(*Numeric("temperature", 24, scale=1/2**10).encode(12.5))
         res = parsley.parse_cmd("SENSOR_TEMP", msg_data)
         assert res["sensor_id"] == 0x12
-        assert res["temperature"] == 12.5
+        assert res["temperature"] == self.approx(12.5)
 
     def test_sensor_altitude(self):
         msg_data = BitString()
@@ -174,32 +175,28 @@ class TestParsley:
         res = parsley.parse_cmd("SENSOR_ALTITUDE", msg_data)
         assert res["altitude"] == -12345
 
-    # TODO: double check that this is inteded behaviour for scaling
     def test_sensor_acc(self):
         msg_data = BitString()
-        msg_data.push(*TIMESTAMP_2.encode(54321))
-        msg_data.push(*Numeric("x", 16, scale=8/2**16, signed=True).encode(2**13))
-        msg_data.push(*Numeric("y", 16, scale=8/2**16, signed=True).encode(2**14))
-        msg_data.push(*Numeric("z", 16, scale=8/2**16, signed=True).encode(2**15))
+        msg_data.push(*TIMESTAMP_2.encode(54.321))
+        msg_data.push(*Numeric("x", 16, scale=8/2**16, signed=True).encode(-2))
+        msg_data.push(*Numeric("y", 16, scale=8/2**16, signed=True).encode(-3))
+        msg_data.push(*Numeric("z", 16, scale=8/2**16, signed=True).encode(-4))
         res = parsley.parse_cmd("SENSOR_ACC", msg_data)
-        assert res["time"] == 54321
-        assert res["x"] == 2**13
-        assert res["y"] == 2**14
-        assert res["z"] == 2**15
+        assert res["time"] == self.approx(54.321)
+        assert res["x"] == self.approx(-2)
+        assert res["y"] == self.approx(-3)
+        assert res["z"] == self.approx(-4)
 
-    # TODO: because whats the point of scaling/decaling input if its going to be the same anyways
-    # unless its just to accept a larger range of values (?)
     def test_sensor_gyro(self):
         msg_data = BitString()
         msg_data.push(*self.timestamp2())
-        msg_data.push(*Numeric("x", 16, scale=2000/2**16, signed=True).encode(2**13))
-        msg_data.push(*Numeric("y", 16, scale=2000/2**16, signed=True).encode(2**14))
-        msg_data.push(*Numeric("z", 16, scale=2000/2**16, signed=True).encode(2**15))
+        msg_data.push(*Numeric("x", 16, scale=2000/2**16, signed=True).encode(3))
+        msg_data.push(*Numeric("y", 16, scale=2000/2**16, signed=True).encode(4))
+        msg_data.push(*Numeric("z", 16, scale=2000/2**16, signed=True).encode(5))
         res = parsley.parse_cmd("SENSOR_GYRO", msg_data)
-        assert res["time"] == 54321
-        assert res["x"] == 2**13
-        assert res["y"] == 2**14
-        assert res["z"] == 2**15
+        assert res["x"] == self.approx(3)
+        assert res["y"] == self.approx(4)
+        assert res["z"] == self.approx(5)
     
     def test_sensor_mag(self):
         msg_data = BitString()
@@ -208,10 +205,9 @@ class TestParsley:
         msg_data.push(*Numeric("y", 16, signed=True).encode(-200))
         msg_data.push(*Numeric("z", 16, signed=True).encode(-300))
         res = parsley.parse_cmd("SENSOR_MAG", msg_data)
-        assert res["time"] == 54321
-        assert res["x"] == -100
-        assert res["y"] == -200
-        assert res["z"] == -300
+        assert res["x"] == self.approx(-100)
+        assert res["y"] == self.approx(-200)
+        assert res["z"] == self.approx(-300)
 
     def test_sensor_analog(self):
         msg_data = BitString()
@@ -240,7 +236,7 @@ class TestParsley:
         msg_data.push(*self.timestamp3())
         msg_data.push(*Numeric("degs", 8).encode(12))
         msg_data.push(*Numeric("mins", 8).encode(23))
-        msg_data.push(*Numeric("dmins", 8).encode(12345))
+        msg_data.push(*Numeric("dmins", 16).encode(12345))
         msg_data.push(*ASCII("direction", 8).encode("N"))
         res = parsley.parse_cmd("GPS_LATITUDE", msg_data)
         assert res["degs"] == 12
@@ -253,7 +249,7 @@ class TestParsley:
         msg_data.push(*self.timestamp3())
         msg_data.push(*Numeric("degs", 8).encode(12))
         msg_data.push(*Numeric("mins", 8).encode(23))
-        msg_data.push(*Numeric("dmins", 8).encode(12345))
+        msg_data.push(*Numeric("dmins", 16).encode(12345))
         msg_data.push(*ASCII("direction", 8).encode("W"))
         res = parsley.parse_cmd("GPS_LONGITUDE", msg_data)
         assert res["degs"] == 12

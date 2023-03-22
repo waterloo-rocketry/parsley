@@ -55,11 +55,10 @@ class Numeric(Field):
 
     def decode(self, data):
         val = int.from_bytes(data, 'big', signed = self.signed)
-        return int(val // self.scale)
+        return val * self.scale
 
     def encode(self, value):
-        value *= self.scale
-        value = int(value)
+        value = int(value // self.scale)
         if self.contains(value):
             return (value.to_bytes((self.length + 7) // 8, byteorder='big', signed=self.signed), self.length)
 

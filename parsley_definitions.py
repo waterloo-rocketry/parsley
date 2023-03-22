@@ -8,9 +8,9 @@ TIMESTAMP_3 = Numeric("time", 24, scale=1/1000)
 BOARD_STATUS = {
     "E_NOMINAL": [],
     "E_BUS_OVER_CURRENT": [Numeric("current", 16)],
-    **{key: Numeric("voltage", 16) for key in ["E_BUS_UNDER_VOLTAGE", "E_BUS_OVER_VOLTAGE", "E_BATT_UNDER_VOLTAGE", "E_BATT_OVER_VOLTAGE"]},
-    **{key: Enum("board_id", 8, mt.board_id_hex) for key in ["E_BOARD_FEARED_DEAD", "E_MISSING_CRITICAL_BOARD"]},
-    **{key: Numeric("err_time", 16) for key in ["E_NO_CAN_TRAFFIC", "E_RADIO_SIGNAL_LOST"]},
+    **{key: [Numeric("voltage", 16)] for key in ["E_BUS_UNDER_VOLTAGE", "E_BUS_OVER_VOLTAGE", "E_BATT_UNDER_VOLTAGE", "E_BATT_OVER_VOLTAGE"]},
+    **{key: [Enum("board_id", 8, mt.board_id_hex)] for key in ["E_BOARD_FEARED_DEAD", "E_MISSING_CRITICAL_BOARD"]},
+    **{key: [Numeric("err_time", 16)] for key in ["E_NO_CAN_TRAFFIC", "E_RADIO_SIGNAL_LOST"]},
     "E_SENSOR": [Enum("sensor_id", 8, mt.sensor_id_hex)],
     "E_ACTUATOR_STATE": [Enum("req_state", 8, mt.actuator_states_hex), Enum("cur_state", 8, mt.actuator_states_hex)]
 }
@@ -41,7 +41,7 @@ FIELDS = {
     "ALT_ARM_STATUS": [TIMESTAMP_3, Enum("state", 4, mt.arm_states_hex), Numeric("altimeter", 4), Numeric("drogue_v", 16), Numeric("main_v", 16)],
     "BOARD_STATUS": [TIMESTAMP_3, Switch(Enum("status", 8, mt.board_stat_hex), BOARD_STATUS)],
 
-    "SENSOR_TEMP": [TIMESTAMP_3, Numeric("sensor_id", 8), Numeric("temperature", 24, scale=1/2**10, signed=True)],
+    "SENSOR_TEMP": [TIMESTAMP_3, Numeric("sensor_id", 8), Numeric("temperature", 24, scale=1/2**10)],
     "SENSOR_ALTITUDE": [TIMESTAMP_3, Numeric("altitude", 32, signed=True)],
     "SENSOR_ACC": [TIMESTAMP_2, Numeric("x", 16, scale=8/2**16, signed=True), Numeric("y", 16, scale=8/2**16, signed=True), Numeric("z", 16, scale=8/2**16, signed=True)],
     "SENSOR_GYRO": [TIMESTAMP_2, Numeric("x", 16, scale=2000/2**16, signed=True), Numeric("y", 16, scale=2000/2**16, signed=True), Numeric("z", 16, scale=2000/2**16, signed=True)],
