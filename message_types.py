@@ -1,26 +1,9 @@
-# This file tracks message_types.h in canlib. I just copy and pasted cause I want a quick
-# and dirty CAN message decoder and not much more.
-#                  byte 0      byte 1       byte 2         byte 3                  byte 4          byte 5          byte 6          byte 7
-# GENERAL CMD:    TSTAMP_MS_H TSTAMP_MS_M  TSTAMP_MS_L    COMMAND_TYPE            None            None            None            None
-# VENT_VALVE_CMD:  TSTAMP_MS_H TSTAMP_MS_M  TSTAMP_MS_L    VENT_VALVE_STATE        None            None            None            None
-# INJ_VALVE_CMD:   TSTAMP_MS_H TSTAMP_MS_M  TSTAMP_MS_L    INJ_VALVE_STATE         None            None            None            None
-# ALT_ARM_CMD:     TSTAMP_MS_H TSTAMP_MS_M  TSTAMP_MS_L    ALT_ARM_STATE & #       None            None            None            None
-# DEBUG_MSG:       TSTAMP_MS_H TSTAMP_MS_M  TSTAMP_MS_L    DEBUG_LEVEL | LINUM_H   LINUM_L         MESSAGE_DEFINED MESSAGE_DEFINED MESSAGE_DEFINED
-# DEBUG_PRINTF:    ASCII       ASCII        ASCII          ASCII                   ASCII           ASCII           ASCII           ASCII
-# VENT_VALVE_STAT: TSTAMP_MS_H TSTAMP_MS_M  TSTAMP_MS_L    VENT_VALVE_STATE        CMD_VALVE_STATE None            None            None
-# INJ_VALVE_STAT:  TSTAMP_MS_H TSTAMP_MS_M  TSTAMP_MS_L    INJ_VALVE_STATE         CMD_VALVE_STATE None            None            None
-# ALT_ARM_STAT:    TSTAMP_MS_H TSTAMP_MS_M  TSTAMP_MS_L    ALT_ARM_STATE & #       V_DROGUE_H      V_DROGUE_L      V_MAIN_H        V_MAIN_L
-# BOARD_STAT:      TSTAMP_MS_H TSTAMP_MS_M  TSTAMP_MS_L    ERROR_CODE              BOARD_DEFINED   BOARD_DEFINED   BOARD_DEFINED   BOARD_DEFINED
-# SENSOR_ACC:      TSTAMP_MS_M TSTAMP_MS_L  VALUE_X_H      VALUE_X_L               VALUE_Y_H       VALUE_Y_L       VALUE_Z_H       VALUE_Z_L
-# SENSOR_GYRO:     TSTAMP_MS_M TSTAMP_MS_L  VALUE_X_H      VALUE_X_L               VALUE_Y_H       VALUE_Y_L       VALUE_Z_H       VALUE_Z_L
-# SENSOR_MAG:      TSTAMP_MS_M TSTAMP_MS_L  VALUE_X_H      VALUE_X_L               VALUE_Y_H       VALUE_Y_L       VALUE_Z_H       VALUE_Z_L
-# SENSOR_ANALOG:   TSTAMP_MS_M TSTAMP_MS_L  SENSOR_ID      VALUE_H                 VALUE_L         None            None            None
-# SENSOR_ALTITUDE: TSTAMP_MS_H TSTAMP_MS_M  TSTAMP_MS_L    ALTITUDE_H              ALTITUDE_HM     ALTITUDE_LM     ALTITUDE_L      None
-# LEDS_ON:         None        None         None           None                    None            None            None            None
-# LEDS_OFF:        None        None         None           None                    None            None            None            None
-# FILL_LVL:        TSTAMP_MS_H TSTAMP_MS_M  TSTAMP_MS_L    FILL_LEVEL              DIRECTION       None            None            None
+"""
+Everything defined here tracks the information from the canlib repo.
+If this file and calib differ, canlib is the source of truth.
+"""
 
-msg_type_hex = {
+msg_type = {
     "GENERAL_CMD": 0x060,
     "ACTUATOR_CMD": 0x0C0,
     "ALT_ARM_CMD": 0x140,
@@ -52,10 +35,9 @@ msg_type_hex = {
     "LEDS_ON": 0x7E0,
     "LEDS_OFF": 0x7C0,
 }
-msg_type_str = {v: k for k, v in msg_type_hex.items()}
 
-board_id_hex = {
-    "ALL": 0x00,
+board_id = {
+    "ALL": 0x00, # or do we want to stick with DUMMY
     "INJECTOR": 0x01,
     "INJECTOR_SPARE": 0x02,
     "LOGGER": 0x03,
@@ -88,65 +70,55 @@ board_id_hex = {
     "LOGGER_2": 0x1D,
     "RLCS": 0x1E
 }
-board_id_str = {v: k for k, v in board_id_hex.items()}
 
-# GEN_CMD
-gen_cmd_hex = {"BUS_DOWN_WARNING": 0}
-gen_cmd_str = {v: k for k, v in gen_cmd_hex.items()}
+gen_cmd = {
+    "BUS_DOWN_WARNING": 0
+}
 
-# ACTUATOR_CMD/STATUS STATES
-actuator_states_hex = {
+actuator_states = {
     "ACTUATOR_OPEN":  0,
     "ACTUATOR_CLOSED": 1,
     "ACTUATOR_UNK": 2,
     "ACTUATOR_ILLEGAL": 3
 }
-actuator_states_str = {v: k for k, v in actuator_states_hex.items()}
 
-# ARM_CMD/STATUS STATES
-arm_states_hex = {
+arm_states = {
     "DISARMED": 0,
     "ARMED": 1
 }
-arm_states_str = {v: k for k, v in arm_states_hex.items()}
 
+board_status = {
+    "E_NOMINAL": 0,
 
-# BOARD GENERAL STATUS ERROR CODES
-# ERROR CODE (byte 3)         (byte4)             (byte 5)            (byte 6)            (byte 7)
-board_stat_hex = {
-    "E_NOMINAL": 0,                   # x                x                   x                   x
+    "E_BUS_OVER_CURRENT": 1,
+    "E_BUS_UNDER_VOLTAGE": 2,
+    "E_BUS_OVER_VOLTAGE": 3,
 
-    "E_BUS_OVER_CURRENT": 1,          # mA_high          mA_low              x                   x
-    "E_BUS_UNDER_VOLTAGE": 2,         # mV_high          mV_low              x                   x
-    "E_BUS_OVER_VOLTAGE": 3,          # mV_high          mV_low              x                   x
+    "E_BATT_UNDER_VOLTAGE": 4,
+    "E_BATT_OVER_VOLTAGE": 5,
 
-    "E_BATT_UNDER_VOLTAGE": 4,        # mV_high          mV_low              x                   x
-    "E_BATT_OVER_VOLTAGE": 5,         # mV_high          mV_low              x                   x
+    "E_BOARD_FEARED_DEAD": 6,
+    "E_NO_CAN_TRAFFIC": 7,
+    "E_MISSING_CRITICAL_BOARD": 8,
+    "E_RADIO_SIGNAL_LOST": 9,
 
-    "E_BOARD_FEARED_DEAD": 6,         # board_id         x                   x                   x
-    "E_NO_CAN_TRAFFIC": 7,            # time_s_high      time_s_low          x                   x
-    "E_MISSING_CRITICAL_BOARD": 8,    # board_id         x                   x                   x
-    "E_RADIO_SIGNAL_LOST": 9,         # time_s_high      time_s_low          x                   x
+    "E_ACTUATOR_STATE": 10,
+    "E_CANNOT_INIT_DACS": 11,
+    "E_VENT_POT_RANGE": 12,
 
-    "E_ACTUATOR_STATE": 10,              # expected_state   valve_state         x                   x
-    "E_CANNOT_INIT_DACS": 11,         # x                x                   x                   x
-    "E_VENT_POT_RANGE": 12,            # lim_upper (mV)   lim_lower (mV)      pot (mV)            x
+    "E_LOGGING": 13,
+    "E_GPS": 14,
+    "E_SENSOR": 15,
 
-    "E_LOGGING": 13,                  # x                x                   x                   x
-    "E_GPS": 14,                      # x                x                   x                   x
-    "E_SENSOR": 15,                   # sensor_id        x                   x                   x
+    "E_ILLEGAL_CAN_MSG": 16,
+    "E_SEGFAULT": 17,
+    "E_UNHANDLED_INTERRUPT": 18,
+    "E_CODING_FUCKUP": 19,
 
-    "E_ILLEGAL_CAN_MSG": 16,          # x                x                   x                   x
-    "E_SEGFAULT": 17,                 # x                x                   x                   x
-    "E_UNHANDLED_INTERRUPT": 18,      # x                x                   x                   x
-    "E_CODING_FUCKUP": 19,            # x                x                   x                   x
-
-    "E_BATT_OVER_CURRENT": 20         # mA_high          mA_low              x                   x
+    "E_BATT_OVER_CURRENT": 20
 }
-board_stat_str = {v: k for k, v in board_stat_hex.items()}
 
-# SENSOR_ID
-sensor_id_hex = {
+sensor_id = {
     "SENSOR_IMU1": 0,
     "SENSOR_IMU2": 1,
     "SENSOR_BARO": 2,
@@ -167,19 +139,16 @@ sensor_id_hex = {
     "SENSOR_CHARGE_CURR": 17,
     "SENSOR_CHARGE_VOLT": 18
 }
-sensor_id_str = {v: k for k, v in sensor_id_hex.items()}
 
-fill_direction_hex = {
+fill_direction = {
     "FILLING": 0,
     "EMPTYING": 1,
 }
-fill_direction_str = {v: k for k, v in fill_direction_hex.items()}
 
-actuator_id_hex = {
+actuator_id = {
     "VENT_VALVE": 0,
     "INJECTOR_VALVE": 1,
     "MAMA": 2,
     "PICAM": 3,
     "CANBUS": 4,
 }
-actuator_id_str = {v: k for k, v in actuator_id_hex.items()}

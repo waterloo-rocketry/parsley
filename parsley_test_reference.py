@@ -15,7 +15,7 @@ for field in FIELDS["DEBUG_MSG"]:
 # example of writing SWITCH cases
 y = BitString()
 y.push(*TIMESTAMP_3.encode(14159))
-y.push(*Enum("status", 8, mt.board_stat_hex).encode("E_BUS_OVER_CURRENT"))
+y.push(*Enum("status", 8, mt.board_status).encode("E_BUS_OVER_CURRENT"))
 y.push(*Numeric("current", 16).encode(2653))
 
 result2 = {}

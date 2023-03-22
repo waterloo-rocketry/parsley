@@ -83,8 +83,8 @@ def parse_cmd(msg_type, msg_data):
 #     return msg_sid, msg_data
 
 
-# MSG_TYPE_LEN = max([len(msg_type) for msg_type in mt.msg_type_hex])
-# BOARD_ID_LEN = max([len(board_id) for board_id in mt.board_id_hex])
+# MSG_TYPE_LEN = max([len(msg_type) for msg_type in mt.msg_type])
+# BOARD_ID_LEN = max([len(board_id) for board_id in mt.board_id])
 
 
 # def fmt_line(parsed_data):

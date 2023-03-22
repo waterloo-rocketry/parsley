@@ -7,7 +7,7 @@ class BitString:
     """
     def __init__(self, data=b''):
         self.length = len(data) * 8 # length in bits
-        # store the data as an int (in python ints are unbounded and this lets us do bitwise manipulations)
+        # store the data as an int (in python ints let us do bitwise manipulations and are unbounded)
         self.data = int.from_bytes(data, 'big')
 
     def pop(self, field_length) -> bytes:

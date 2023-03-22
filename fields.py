@@ -14,11 +14,11 @@ class ASCII(Field):
 
     def contains(self, value):
         if not type(value) == str:
-            raise ValueError(f"'{value}' is not a valid string")
-        if self.length < len(value):
-            raise ValueError(f"String '{value}' is too large for {self.length} characters")
+            raise ValueError(f"'{value}' is not a string object")
         if not value.isascii():
-            raise ValueError(f"String '{value}' contains non-ascii characters")
+            raise ValueError(f"String '{value}' contains non-ascii character(s)")
+        if self.length < 8*len(value.encode('ascii')):
+            raise ValueError(f"String '{value}' is too large for {self.length//8} character(s)")
         return True
     
 class Enum(Field):
