@@ -327,9 +327,9 @@ class TestBitstring:
 
     def test_bitstring_non_octet(self):
         bit_str = BitString()
-        bit_str.push(b'\x15', 5) #    1 0101
-        bit_str.push(b'\x03', 2) #        11
-        bit_str.push(b'\x01', 2) #        01
+        bit_str.push(b'\x15', 5) # ___1 0101
+        bit_str.push(b'\x03', 2) #      __11
+        bit_str.push(b'\x01', 2) #      __01
         assert bit_str.pop(9) == b'\x01\x5D' #0001 0101 1101
 
     def test_bitstring_padding(self):
@@ -338,18 +338,46 @@ class TestBitstring:
         assert bit_str.pop(24) == b'\x00\x00\x00'
         assert bit_str.pop(8) == b'\xFF'
 
-    def test_bitstring_push_pop_push(self): # not recommended behaviour, it gets messy real quick
+    def test_bitstring_push_pop_push(self): # not recommended behaviour
         bit_str = BitString()
         bit_str.push(b'\x81', 8) # 1000 0001
-        assert bit_str.pop(6) == b'\x20'
-        bit_str.push(b'\x3C', 6) # 0111 11000
-        assert bit_str.pop(8) == b'\x7C'
+        assert bit_str.pop(6) == b'\x20' # __10 0000
+        bit_str.push(b'\x3C', 6) # __11 1100
+        assert bit_str.pop(8) == b'\x7C' # 0111 11000
 
     def test_bitstring_error(self):
         with pytest.raises(IndexError):
             bit_str = BitString()
             bit_str.push(b'\x12', 8)
             bit_str.pop(16)
+
+class testASCII:
+    def test_ASCII(self):
+        ascii = ASCII("string", 32)
+        (data, length) = ascii.encode(b'aBcD')
+        assert data == b'aBcD'
+        assert length == 32
+        data = ascii.decode('\x4C\x4D\x41\x4F')
+        assert data == b'LMAO'
+
+    def test_ASCII_leading_spaces(self):
+        ascii = ASCII("string", 32)
+        assert ascii.decode(b'\x57') == b'W'
+
+    def test_ASCII_error_not_str(self):
+        with pytest.raises(ValueError):
+            ascii = ASCII("string", 16)
+            ascii.encode(12)
+
+    def test_ASCII_error_not_ASCII(self):
+        with pytest.raises(ValueError):
+            ascii = ASCII("string", 16)
+            ascii.encode('😎')
+
+    def test_ASCII_error_length(self):
+        with pytest.raises(ValueError):
+            ascii = ASCII("string", 16)
+            ascii.encode(b"xdd")
 
 # TODO: field unit testing (boundaries, signed, optional) => probably have to assert raw bits
 # TODO: double check signed fields

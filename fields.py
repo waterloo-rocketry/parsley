@@ -1,6 +1,7 @@
 from field import Field
 
 class ASCII(Field):
+    # the optional field serves no purpose in parsley but is required in omnibus
     def __init__(self, name, length, optional=False):
         super().__init__(name, length, optional)
 
