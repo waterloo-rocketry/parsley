@@ -303,6 +303,54 @@ class TestParsley:
         # LED_OFF message has no message body
         pass
 
+class TestBitstring:
+    def test_bitstring(self):
+        bit_str = BitString()
+        bit_str.push(b'\xAA', 8)
+        bit_str.push(b'\xBB', 8)
+        bit_str.push(b'\xCC', 8)
+        assert bit_str.pop(24) == b'\xAA\xBB\xCC'
+
+    def test_bitstring_init(self):
+        bit_str = BitString(b'\x31\x41')
+        assert bit_str.pop(16) == b'\x31\x41'
+
+    def test_bitstring_empty(self):
+        bit_str = BitString()
+        assert bit_str.pop(0) == b''
+
+    def test_bitstring_LSB(self):
+        bit_str = BitString()
+        bit_str.push(b'\x00\x10', 16)
+        assert bit_str.pop(8) == b'\x00'
+        assert bit_str.pop(8) == b'\x10'
+
+    def test_bitstring_non_octet(self):
+        bit_str = BitString()
+        bit_str.push(b'\x15', 5) #    1 0101
+        bit_str.push(b'\x03', 2) #        11
+        bit_str.push(b'\x01', 2) #        01
+        assert bit_str.pop(9) == b'\x01\x5D' #0001 0101 1101
+
+    def test_bitstring_padding(self):
+        bit_str = BitString()
+        bit_str.push(b'\xFF', 32)
+        assert bit_str.pop(24) == b'\x00\x00\x00'
+        assert bit_str.pop(8) == b'\xFF'
+
+    def test_bitstring_push_pop_push(self): # not recommended behaviour, it gets messy real quick
+        bit_str = BitString()
+        bit_str.push(b'\x81', 8) # 1000 0001
+        assert bit_str.pop(6) == b'\x20'
+        bit_str.push(b'\x3C', 6) # 0111 11000
+        assert bit_str.pop(8) == b'\x7C'
+
+    def test_bitstring_error(self):
+        with pytest.raises(IndexError):
+            bit_str = BitString()
+            bit_str.push(b'\x12', 8)
+            bit_str.pop(16)
+
 # TODO: field unit testing (boundaries, signed, optional) => probably have to assert raw bits
 # TODO: double check signed fields
 # TODO: look into the parse/usb/logger parsing functions
