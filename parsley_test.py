@@ -303,7 +303,7 @@ class TestParsley:
         # LED_OFF message has no message body
         pass
 
-class TestBitstring:
+class TestBitString:
     def test_bitstring(self):
         bit_str = BitString()
         bit_str.push(b'\xAA', 8)
@@ -346,38 +346,78 @@ class TestBitstring:
         assert bit_str.pop(8) == b'\x7C' # 0111 11000
 
     def test_bitstring_error(self):
+        bit_str = BitString()
+        bit_str.push(b'\x12', 8)
         with pytest.raises(IndexError):
-            bit_str = BitString()
-            bit_str.push(b'\x12', 8)
             bit_str.pop(16)
 
-class testASCII:
+class TestASCII:
     def test_ASCII(self):
         ascii = ASCII("string", 32)
-        (data, length) = ascii.encode(b'aBcD')
-        assert data == b'aBcD'
+        (data, length) = ascii.encode('aBcD') # I'm not a huge fan of this coupling, open to ideas
+        assert data == b'\x61\x42\x63\x44'
         assert length == 32
-        data = ascii.decode('\x4C\x4D\x41\x4F')
-        assert data == b'LMAO'
+        data = ascii.decode(b'\x4C\x4D\x41\x4F')
+        assert data == 'LMAO'
 
     def test_ASCII_leading_spaces(self):
         ascii = ASCII("string", 32)
-        assert ascii.decode(b'\x57') == b'W'
+        assert ascii.decode(b'\x57') == 'W'
+
+    def test_ASCII_decode_encode(self):
+        ascii = ASCII("string", 32)
+        assert ascii.decode(ascii.encode('1234')[0]) == '1234' # opening a tuple, *gross*, open to ideas
 
     def test_ASCII_error_not_str(self):
+        ascii = ASCII("string", 16)
         with pytest.raises(ValueError):
-            ascii = ASCII("string", 16)
+            ascii.encode(b'12')
             ascii.encode(12)
 
     def test_ASCII_error_not_ASCII(self):
+        ascii = ASCII("string", 16)
         with pytest.raises(ValueError):
-            ascii = ASCII("string", 16)
             ascii.encode('😎')
 
     def test_ASCII_error_length(self):
+        ascii = ASCII("string", 16)
         with pytest.raises(ValueError):
-            ascii = ASCII("string", 16)
-            ascii.encode(b"xdd")
+            ascii.encode("xdd")
+
+class TestEnum:
+    def test_enum(self):
+        enum = Enum("enum", 8, mt.board_id)
+        (data, length) = enum.encode("INJECTOR") # i don't like this coupling with message_types, but it shows the inteded usage
+        assert data == b'\x01'
+        assert length == 8
+        data = enum.decode(b'\x13')
+        assert data == "PAPA"
+
+    def test_enum_decode_encode(self):
+        map = { "a": 1, "b": 10, "c": 100 }
+        enum = Enum("enum", 8, map)
+        assert enum.decode(enum.encode("a")[0]) == "a" # opening a tuple, *gross*, open to ideas
+
+    def test_enum_error_injective(self):
+        map = { "a": -1, "b": 0, "c": -1 }
+        with pytest.raises(ValueError):
+            enum = Enum("enum", 8, map)
+
+    def test_enum_error_init_neg(self):
+        map = { "a": -1, "b": 0, "c": 1 }
+        with pytest.raises(ValueError):
+            enum = Enum("enum", 8, map)
+
+    def test_enum_error_length(self):
+        map = { "max": 0x3f3f3f3f }
+        with pytest.raises(ValueError):
+            enum = Enum("enum", 8, map)
+
+    def test_enum_error_contains(self):
+        map = { "a": 1, "b": 2, "c": 3 }
+        enum = Enum("enum", 8, map)
+        with pytest.raises(ValueError):
+            enum.encode("d")
 
 # TODO: field unit testing (boundaries, signed, optional) => probably have to assert raw bits
 # TODO: double check signed fields

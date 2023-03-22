@@ -23,29 +23,34 @@ class ASCII(Field):
         return True
     
 class Enum(Field):
-    def __init__(self, name, length, map_val_num):
+    def __init__(self, name, length, map_key_val):
         super().__init__(name, length)
 
-        for k, v in map_val_num.items():
+        # ensure map is injective for decoding
+        map_val_size = len(map_key_val.values())
+        set_val_size = len(set(map_key_val.values()))
+        if map_val_size != set_val_size:
+            raise ValueError(f"Map {name} is not injective ({map_val_size} rows but only {set_val_size} unique values)")
+        for k, v in map_key_val.items():
             if v < 0:
                 raise ValueError(f"Mapping for key {k} should not be negative.")
             if v >= 1 << self.length:
                 raise ValueError(f"Mapping for key {k} is too large to fit in {self.length} bits.")
 
-        self.map_val_num = map_val_num
-        self.map_num_val = {v: k for k, v in self.map_val_num.items()}
+        self.map_key_val = map_key_val
+        self.map_val_key = {v: k for k, v in self.map_key_val.items()}
 
     def decode(self, data):
-        num = int.from_bytes(data, 'big', signed=False)
-        return self.map_num_val[num]
+        value = int.from_bytes(data, 'big', signed=False)
+        return self.map_val_key[value]
 
-    def encode(self, value):
-        if self.contains(value):
-            return (self.map_val_num[value].to_bytes((self.length + 7) // 8, 'big'), self.length)
+    def encode(self, key):
+        if self.contains(key):
+            return (self.map_key_val[key].to_bytes((self.length + 7) // 8, 'big'), self.length)
     
-    def contains(self, value):
-        if value not in self.map_val_num:
-            raise ValueError(f"Value '{value}' not in mapping.")
+    def contains(self, key):
+        if key not in self.map_key_val:
+            raise ValueError(f"Key '{key}' not in mapping.")
         return True
     
 class Numeric(Field):
