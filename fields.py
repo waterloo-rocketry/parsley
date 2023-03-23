@@ -74,7 +74,7 @@ class Enum(Field):
     
 class Numeric(Field):
     """
-    Provides (un)signed interpretation of bytes and offers value scaling
+    Provides (un)signed interpretation of bytes and offers value scaling (for precise scale values, there will be imprecision after conversion)
     """
     def __init__(self, name, length, scale = 1, signed = False):
         super().__init__(name, length)

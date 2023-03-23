@@ -25,6 +25,7 @@ class Field:
 
     def contains(self, value):
         """
-        Used to check whether a certain value is contained within the range of the field.
+        Check if value is contained in the range of a field.
+        Throw ValueErrors if value is not contained
         """
         raise NotImplementedError

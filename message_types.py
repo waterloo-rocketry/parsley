@@ -37,7 +37,7 @@ msg_type = {
 }
 
 board_id = {
-    "ALL":                  0x00, # or do we want to stick with DUMMY
+    "ALL":                  0x00, # TODO: or do we want to stick with DUMMY
     "INJECTOR":             0x01,
     "INJECTOR_SPARE":       0x02,
     "LOGGER":               0x03,
@@ -67,7 +67,7 @@ board_id = {
     "SENSOR_3":             0x1B,
     "SENSOR_4":             0x1C,
     "LOGGER_2":             0x1D,
-    # "TEMP_SENSE":           0x15, # these don't exist in canlib, kinda cringe omnibus
+    # "TEMP_SENSE":           0x15, # these don't exist in canlib, kinda cringe omnibus TODO: make a mention in the CR (and delete from code)
     # "TEMP_SENSE_SPARE":     0x16, # these don't exist in canlib, kinda cringe omnibus
     "RLCS":                 0x1E
 }
