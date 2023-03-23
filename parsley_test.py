@@ -5,10 +5,12 @@ import message_types as mt
 
 import parsley
 
+TOLERANCE = 0.01
+def approx(value):
+    return pytest.approx(value, TOLERANCE)
+
 class TestParsley:
-    TOLERANCE = 0.01
-    def approx(self, value):
-        return pytest.approx(value, self.TOLERANCE)
+
 
     def timestamp2(self):
         return TIMESTAMP_2.encode(0)
@@ -21,7 +23,7 @@ class TestParsley:
         msg_data.push(*TIMESTAMP_3.encode(12.345))
         msg_data.push(*Enum("command", 8, mt.gen_cmd).encode("BUS_DOWN_WARNING"))
         res = parsley.parse_cmd("GENERAL_CMD", msg_data)
-        assert res["time"] == self.approx(12.345)
+        assert res["time"] == approx(12.345)
         assert res["command"] == "BUS_DOWN_WARNING"
 
     def test_actuator_cmd(self):
@@ -166,7 +168,7 @@ class TestParsley:
         msg_data.push(*Numeric("temperature", 24, scale=1/2**10).encode(12.5))
         res = parsley.parse_cmd("SENSOR_TEMP", msg_data)
         assert res["sensor_id"] == 0x12
-        assert res["temperature"] == self.approx(12.5)
+        assert res["temperature"] == approx(12.5)
 
     def test_sensor_altitude(self):
         msg_data = BitString()
@@ -182,10 +184,10 @@ class TestParsley:
         msg_data.push(*Numeric("y", 16, scale=8/2**16, signed=True).encode(-3))
         msg_data.push(*Numeric("z", 16, scale=8/2**16, signed=True).encode(-4))
         res = parsley.parse_cmd("SENSOR_ACC", msg_data)
-        assert res["time"] == self.approx(54.321)
-        assert res["x"] == self.approx(-2)
-        assert res["y"] == self.approx(-3)
-        assert res["z"] == self.approx(-4)
+        assert res["time"] == approx(54.321)
+        assert res["x"] == approx(-2)
+        assert res["y"] == approx(-3)
+        assert res["z"] == approx(-4)
 
     def test_sensor_gyro(self):
         msg_data = BitString()
@@ -194,9 +196,9 @@ class TestParsley:
         msg_data.push(*Numeric("y", 16, scale=2000/2**16, signed=True).encode(4))
         msg_data.push(*Numeric("z", 16, scale=2000/2**16, signed=True).encode(5))
         res = parsley.parse_cmd("SENSOR_GYRO", msg_data)
-        assert res["x"] == self.approx(3)
-        assert res["y"] == self.approx(4)
-        assert res["z"] == self.approx(5)
+        assert res["x"] == approx(3)
+        assert res["y"] == approx(4)
+        assert res["z"] == approx(5)
     
     def test_sensor_mag(self):
         msg_data = BitString()
@@ -205,9 +207,9 @@ class TestParsley:
         msg_data.push(*Numeric("y", 16, signed=True).encode(-200))
         msg_data.push(*Numeric("z", 16, signed=True).encode(-300))
         res = parsley.parse_cmd("SENSOR_MAG", msg_data)
-        assert res["x"] == self.approx(-100)
-        assert res["y"] == self.approx(-200)
-        assert res["z"] == self.approx(-300)
+        assert res["x"] == approx(-100)
+        assert res["y"] == approx(-200)
+        assert res["z"] == approx(-300)
 
     def test_sensor_analog(self):
         msg_data = BitString()
@@ -370,8 +372,9 @@ class TestASCII:
 
     def test_ASCII_error_not_str(self):
         ascii = ASCII("string", 16)
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError): # i don't think it catches the second if the first fails, even if you trying catching a tuple of errors
             ascii.encode(b'12')
+        with pytest.raises(ValueError):
             ascii.encode(12)
 
     def test_ASCII_error_not_ASCII(self):
@@ -419,6 +422,103 @@ class TestEnum:
         with pytest.raises(ValueError):
             enum.encode("d")
 
-# TODO: field unit testing (boundaries, signed, optional) => probably have to assert raw bits
+class TestNumeric:
+    def test_numeric(self):
+        num = Numeric("num", 8)
+        (data, length) = num.encode(250)
+        assert data == b'\xFA'
+        assert length == 8
+        data = num.decode(b'\x21')
+        assert data == 33
+
+    # note that for more precise scale values, there will be imprecision after conversion
+    def test_numeric_scale(self):
+        num = Numeric("time", 8, scale=2)
+        (data, _) = num.encode(12)
+        assert data == b'\x06'
+
+        num = Numeric("time", 8, scale=1/2)
+        (data, _) = num.encode(12)
+        assert data == b'\x18'
+
+    def test_numeric_scale_impercision(self):
+        num = Numeric("time", 24, scale=1/1000)
+        (data, _) = num.encode(54.321)
+        converted_data = num.decode(data)
+        assert 54.321 == approx(converted_data)
+
+    def test_numeric_decode_encode(self):
+        num = Numeric("num", 8)
+        assert num.decode(num.encode(255)[0]) == 255 # opening a tuple, *gross*, open to ideas
+
+    def test_numeric_error_not_num(self):
+        num = Numeric("num", 8)
+        with pytest.raises(ValueError):
+            num.encode(b'12')
+        with pytest.raises(ValueError):
+            num.encode("12")
+
+    def test_numeric_error_unsigned(self):
+        num = Numeric("num", 8)
+        num.encode(0)
+        num.encode(255)
+        with pytest.raises(ValueError):
+            num.encode(-1)
+        with pytest.raises(ValueError):
+            num.encode(256)
+    
+    def test_numeric_error_signed(self):
+        num = Numeric("num", 8, signed=True)
+        num.encode(-128)
+        num.encode(0)
+        num.encode(127)
+        with pytest.raises(ValueError):
+            num.encode(-129)
+        with pytest.raises(ValueError):
+            num.encode(128)
+
+    def test_numeric_error_scale_bounds(self):
+        num = Numeric("num", 8, scale=1/4)
+        num.encode(0)
+        num.encode(63)
+        with pytest.raises(ValueError):
+            num.encode(-1)
+        with pytest.raises(ValueError):
+            num.encode(64)
+
+        num = Numeric("num", 8, signed=True, scale=1/4)
+        num.encode(-32)
+        num.encode(0)
+        num.encode(31)
+        with pytest.raises(ValueError):
+            num.encode(-33)
+        with pytest.raises(ValueError):
+            num.encode(32)
+
+    def test_numeric_error_neg_scale(self):
+        num = Numeric("num", 8, scale=-1/2)
+        num.encode(-5)
+        with pytest.raises(ValueError):
+            num.encode(5)
+
+class TestSwitch:
+    def test_switch(self):
+        enum_map = {
+            "a": 0x01,
+            "b": 0x02,
+            "c": 0x03
+        }
+        map = {
+            "a": [0, 1],
+            "b": [1, 2],
+            "c": [2, 3]
+        }
+        switch = Switch(Enum("status", 8, enum_map), map)
+        (data, _) = switch.encode("a")
+        assert data == b'\x01'
+        assert switch.get_fields(data) == [0, 1]
+
+        assert switch.decode(data) == "a"
+
 # TODO: double check signed fields
 # TODO: look into the parse/usb/logger parsing functions
