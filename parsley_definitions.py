@@ -39,7 +39,7 @@ FIELDS = {
     "ALT_ARM_STATUS": [TIMESTAMP_3, Enum("state", 4, mt.arm_states), Numeric("altimeter", 4), Numeric("drogue_v", 16), Numeric("main_v", 16)],
     "BOARD_STATUS": [TIMESTAMP_3, Switch(Enum("status", 8, mt.board_status), BOARD_STATUS)],
 
-    "SENSOR_TEMP": [TIMESTAMP_3, Numeric("sensor_id", 8), Numeric("temperature", 24, scale=1/2**10)],
+    "SENSOR_TEMP": [TIMESTAMP_3, Numeric("sensor_id", 8), Numeric("temperature", 24, scale=1/2**10, signed=True)],
     "SENSOR_ALTITUDE": [TIMESTAMP_3, Numeric("altitude", 32, signed=True)],
     "SENSOR_ACC": [TIMESTAMP_2, Numeric("x", 16, scale=8/2**16, signed=True), Numeric("y", 16, scale=8/2**16, signed=True), Numeric("z", 16, scale=8/2**16, signed=True)],
     "SENSOR_GYRO": [TIMESTAMP_2, Numeric("x", 16, scale=2000/2**16, signed=True), Numeric("y", 16, scale=2000/2**16, signed=True), Numeric("z", 16, scale=2000/2**16, signed=True)],

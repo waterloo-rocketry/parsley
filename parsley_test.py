@@ -165,7 +165,7 @@ class TestParsley:
         msg_data = BitString()
         msg_data.push(*self.timestamp3())
         msg_data.push(*Numeric("sensor_id", 8).encode(0x12))
-        msg_data.push(*Numeric("temperature", 24, scale=1/2**10).encode(12.5))
+        msg_data.push(*Numeric("temperature", 24, scale=1/2**10, signed=True).encode(12.5))
         res = parsley.parse_cmd("SENSOR_TEMP", msg_data)
         assert res["sensor_id"] == 0x12
         assert res["temperature"] == approx(12.5)
@@ -520,5 +520,4 @@ class TestSwitch:
 
         assert switch.decode(data) == "a"
 
-# TODO: double check signed fields
 # TODO: look into the parse/usb/logger parsing functions
