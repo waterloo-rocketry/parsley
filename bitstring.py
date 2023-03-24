@@ -8,7 +8,7 @@ class BitString:
     def __init__(self, data=b''):
         self.length = len(data) * 8 # length in bits
         # store the data as an int which is unbounded and lets us do bitwise manipulations
-        self.data = int.from_bytes(data, 'big')
+        self.data = int.from_bytes(data, byteorder='big')
 
     def pop(self, field_length) -> bytes:
         """
@@ -23,14 +23,14 @@ class BitString:
         self.length -= field_length
         res = self.data >> (self.length) # extract the field_length most significant bits
         self.data = self.data & ((1 << self.length) - 1) # and then mask them out
-        return res.to_bytes((field_length + 7) // 8, 'big') # and convert to a bytes object
+        return res.to_bytes((field_length + 7) // 8, byteorder='big') # and convert to a bytes object
 
     def push(self, value, field_length):
         """
         Appends arbitrary sized bits.
         """
         self.length += field_length
-        value = int.from_bytes(value, 'big')
+        value = int.from_bytes(value, byteorder='big')
         self.data = (self.data << field_length) | (value & ((1 << field_length) - 1))
 
     def __str__(self):

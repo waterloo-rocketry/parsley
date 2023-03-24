@@ -4,36 +4,39 @@ If this file and calib differ, canlib is the source of truth.
 """
 
 msg_type = {
-    "GENERAL_CMD": 0x060,
-    "ACTUATOR_CMD": 0x0C0,
-    "ALT_ARM_CMD": 0x140,
+    "GENERAL_CMD":          0x060,
+    "ACTUATOR_CMD":         0x0C0,
+    "ALT_ARM_CMD":          0x140,
+    "RESET_CMD":            0x160,
 
-    "DEBUG_MSG": 0x180,
-    "DEBUG_PRINTF": 0x1E0,
+    "DEBUG_MSG":            0x180,
+    "DEBUG_PRINTF":         0x1E0,
+    "DEBUG_RADIO_CMD":      0x200,
 
-    "ALT_ARM_STATUS": 0x440,
-    "ACTUATOR_STATUS": 0x460,
+    "ALT_ARM_STATUS":       0x440,
+    "ACTUATOR_STATUS":      0x460,
     "GENERAL_BOARD_STATUS": 0x520,
-    "RECOVERY_STATUS": 0x540,
 
-    "SENSOR_TEMP": 0x540,
-    "SENSOR_ALTITUDE": 0x560,
-    "SENSOR_ACC": 0x580,
-    "SENSOR_ACC2": 0x5A0,
-    "SENSOR_GYRO": 0x5E0,
-    "SENSOR_MAG": 0x640,
-    "SENSOR_ANALOG": 0x6A0,
+    "SENSOR_TEMP":          0x540,
+    "SENSOR_ALTITUDE":      0x560,
+    "SENSOR_ACC":           0x580,
+    "SENSOR_ACC2":          0x5A0,
+    "SENSOR_GYRO":          0x5E0,
+    "SENSOR_MAG":           0x640,
+    "SENSOR_ANALOG":        0x6A0,
 
-    "GPS_TIMESTAMP": 0x6C0,
-    "GPS_LATITUDE": 0x6E0,
-    "GPS_LONGITUDE": 0x700,
-    "GPS_ALTITUDE": 0x720,
-    "GPS_INFO": 0x740,
+    "GPS_TIMESTAMP":        0x6C0,
+    "GPS_LATITUDE":         0x6E0,
+    "GPS_LONGITUDE":        0x700,
+    "GPS_ALTITUDE":         0x720,
+    "GPS_INFO":             0x740,
 
-    "FILL_LVL": 0x780,
+    "FILL_LVL":             0x780,
 
-    "LEDS_ON": 0x7E0,
-    "LEDS_OFF": 0x7C0,
+    "MSG_FILL_LVL":         0x7A0,
+
+    "LEDS_ON":              0x7E0,
+    "LEDS_OFF":             0x7C0,
 }
 
 board_id = {

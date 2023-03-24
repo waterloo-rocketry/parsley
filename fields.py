@@ -54,13 +54,13 @@ class Enum(Field):
                 raise ValueError(f"Mapping for key {k} is too large to fit in {self.length} bits.")
 
     def decode(self, data):
-        value = int.from_bytes(data, 'big', signed=False)
+        value = int.from_bytes(data, byteorder='big', signed=False)
         if self.containsValue(value):
             return self.map_val_key[value]
 
     def encode(self, key):
         if self.contains(key):
-            return (self.map_key_val[key].to_bytes((self.length + 7) // 8, 'big'), self.length)
+            return (self.map_key_val[key].to_bytes((self.length + 7) // 8, byteorder='big'), self.length)
     
     def contains(self, key):
         if key not in self.map_key_val:
@@ -82,7 +82,7 @@ class Numeric(Field):
         self.signed = signed
 
     def decode(self, data):
-        value = int.from_bytes(data, 'big', signed = self.signed)
+        value = int.from_bytes(data, byteorder='big', signed = self.signed)
         return value * self.scale
 
     def encode(self, value):

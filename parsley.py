@@ -1,14 +1,31 @@
 from parsley_definitions import *
 
+# parameters are in the form of byte strings
 def parse(msg_sid, msg_data):
-    msg_type = mt.msg_type[msg_sid & 0x7e0]
-    board_id = mt.board_id[msg_sid & 0x1f]
+    msg_sid = int.from_bytes(msg_sid, byteorder='big', signed=False)
+    encoded_msg_type = (msg_sid & 0x7e0).to_bytes(3, byteorder='big')
+    encoded_board_id = (msg_sid & 0x1f).to_bytes(3, byteorder='big')
+    msg_type = MESSAGE_TYPE.decode(encoded_msg_type)
+    board_id = BOARD_ID.decode(encoded_board_id)
 
     res = {"msg_type": msg_type, "board_id": board_id}
     if msg_type in FIELDS.keys():
         res = parse_cmd(msg_type, msg_data, res)
     else:
         res["data"] = {"unknown": msg_data}
+    return res
+
+# TODO: could make this recursive, but seems overkill for current requirements
+def parse_cmd(msg_type, msg_data, result={}):
+    res = result
+    for field in FIELDS[msg_type]:
+        data = msg_data.pop(field.length)
+        res[field.name] = field.decode(data)
+        if isinstance(field, Switch):
+            nested_fields = field.get_fields(data)
+            for nested_field in nested_fields:
+                data = msg_data.pop(nested_field.length)
+                res[nested_field.name] = nested_field.decode(data)
     return res
 
 def parse_live_telemetry(line):
@@ -56,19 +73,6 @@ def parse_logger(line):
     # last 'byte' is the recv_timestamp
     msg_data = [int(msg_data[i:i+2], 16) for i in range(0, len(msg_data), 2)]
     return msg_sid, msg_data
-
-# TODO: could make this recursive, but seems overkill for current requirements
-def parse_cmd(msg_type, msg_data, result={}):
-    res = result
-    for field in FIELDS[msg_type]:
-        data = msg_data.pop(field.length)
-        res[field.name] = field.decode(data)
-        if isinstance(field, Switch):
-            nested_fields = field.get_fields(data)
-            for nested_field in nested_fields:
-                data = msg_data.pop(nested_field.length)
-                res[nested_field.name] = nested_field.decode(data)
-    return res
 
 MSG_TYPE_LEN = max([len(msg_type) for msg_type in mt.msg_type])
 BOARD_ID_LEN = max([len(board_id) for board_id in mt.board_id])
