@@ -1,10 +1,10 @@
 from bitstring import BitString
 from fields import ASCII, Enum, Numeric
 from parsley_definitions import TIMESTAMP_2, TIMESTAMP_3
-from utils import *
 
 import message_types as mt
 import parsley
+import test_utils
 
 class TestParsley:
     def timestamp2(self):
@@ -18,7 +18,7 @@ class TestParsley:
         msg_data.push(*TIMESTAMP_3.encode(12.345))
         msg_data.push(*Enum("command", 8, mt.gen_cmd).encode("BUS_DOWN_WARNING"))
         res = parsley.parse_cmd("GENERAL_CMD", msg_data)
-        assert res["time"] == approx(12.345)
+        assert res["time"] == test_utils.approx(12.345)
         assert res["command"] == "BUS_DOWN_WARNING"
 
     def test_actuator_cmd(self):
@@ -97,7 +97,7 @@ class TestParsley:
         msg_data = BitString()
         msg_data.push(*self.timestamp3())
         msg_data.push(*Enum("status", 8, mt.board_status).encode("E_NOMINAL"))
-        res = parsley.parse_cmd("BOARD_STATUS", msg_data)
+        res = parsley.parse_cmd("GENERAL_BOARD_STATUS", msg_data)
         assert res["status"] == "E_NOMINAL"
 
     def test_board_status_current(self):
@@ -105,7 +105,7 @@ class TestParsley:
         msg_data.push(*self.timestamp3())
         msg_data.push(*Enum("status", 8, mt.board_status).encode("E_BUS_OVER_CURRENT"))
         msg_data.push(*Numeric("current", 16).encode(12345))
-        res = parsley.parse_cmd("BOARD_STATUS", msg_data)
+        res = parsley.parse_cmd("GENERAL_BOARD_STATUS", msg_data)
         assert res["status"] == "E_BUS_OVER_CURRENT"
         assert res["current"] == 12345
 
@@ -114,7 +114,7 @@ class TestParsley:
         msg_data.push(*self.timestamp3())
         msg_data.push(*Enum("status", 8, mt.board_status).encode("E_BUS_UNDER_VOLTAGE"))
         msg_data.push(*Numeric("voltage", 16).encode(54321))
-        res = parsley.parse_cmd("BOARD_STATUS", msg_data)
+        res = parsley.parse_cmd("GENERAL_BOARD_STATUS", msg_data)
         assert res["status"] == "E_BUS_UNDER_VOLTAGE"
         assert res["voltage"] == 54321
 
@@ -123,7 +123,7 @@ class TestParsley:
         msg_data.push(*self.timestamp3())
         msg_data.push(*Enum("status", 8, mt.board_status).encode("E_BOARD_FEARED_DEAD"))
         msg_data.push(*Enum("board_id", 8, mt.board_id).encode("RADIO"))
-        res = parsley.parse_cmd("BOARD_STATUS", msg_data)
+        res = parsley.parse_cmd("GENERAL_BOARD_STATUS", msg_data)
         assert res["status"] == "E_BOARD_FEARED_DEAD"
         assert res["board_id"] == "RADIO"
 
@@ -132,7 +132,7 @@ class TestParsley:
         msg_data.push(*self.timestamp3())
         msg_data.push(*Enum("status", 8, mt.board_status).encode("E_NO_CAN_TRAFFIC"))
         msg_data.push(*Numeric("err_time", 16).encode(54321))
-        res = parsley.parse_cmd("BOARD_STATUS", msg_data)
+        res = parsley.parse_cmd("GENERAL_BOARD_STATUS", msg_data)
         assert res["status"] == "E_NO_CAN_TRAFFIC"
         assert res["err_time"] == 54321
 
@@ -141,7 +141,7 @@ class TestParsley:
         msg_data.push(*self.timestamp3())
         msg_data.push(*Enum("status", 8, mt.board_status).encode("E_SENSOR"))
         msg_data.push(*Enum("sensor_id", 8, mt.sensor_id).encode("SENSOR_BARO"))
-        res = parsley.parse_cmd("BOARD_STATUS", msg_data)
+        res = parsley.parse_cmd("GENERAL_BOARD_STATUS", msg_data)
         assert res["status"] == "E_SENSOR"
         assert res["sensor_id"] == "SENSOR_BARO"
 
@@ -151,7 +151,7 @@ class TestParsley:
         msg_data.push(*Enum("status", 8, mt.board_status).encode("E_ACTUATOR_STATE"))
         msg_data.push(*Enum("req_state", 8, mt.actuator_states).encode("ACTUATOR_CLOSED"))
         msg_data.push(*Enum("cur_state", 8, mt.actuator_states).encode("ACTUATOR_UNK"))
-        res = parsley.parse_cmd("BOARD_STATUS", msg_data)
+        res = parsley.parse_cmd("GENERAL_BOARD_STATUS", msg_data)
         assert res["status"] == "E_ACTUATOR_STATE"
         assert res["req_state"] == "ACTUATOR_CLOSED"
         assert res["cur_state"] == "ACTUATOR_UNK"
@@ -163,7 +163,7 @@ class TestParsley:
         msg_data.push(*Numeric("temperature", 24, scale=1/2**10, signed=True).encode(12.5))
         res = parsley.parse_cmd("SENSOR_TEMP", msg_data)
         assert res["sensor_id"] == 0x12
-        assert res["temperature"] == approx(12.5)
+        assert res["temperature"] == test_utils.approx(12.5)
 
     def test_sensor_altitude(self):
         msg_data = BitString()
@@ -179,10 +179,10 @@ class TestParsley:
         msg_data.push(*Numeric("y", 16, scale=8/2**16, signed=True).encode(-3))
         msg_data.push(*Numeric("z", 16, scale=8/2**16, signed=True).encode(-4))
         res = parsley.parse_cmd("SENSOR_ACC", msg_data)
-        assert res["time"] == approx(54.321)
-        assert res["x"] == approx(-2)
-        assert res["y"] == approx(-3)
-        assert res["z"] == approx(-4)
+        assert res["time"] == test_utils.approx(54.321)
+        assert res["x"] == test_utils.approx(-2)
+        assert res["y"] == test_utils.approx(-3)
+        assert res["z"] == test_utils.approx(-4)
 
     def test_sensor_gyro(self):
         msg_data = BitString()
@@ -191,9 +191,9 @@ class TestParsley:
         msg_data.push(*Numeric("y", 16, scale=2000/2**16, signed=True).encode(4))
         msg_data.push(*Numeric("z", 16, scale=2000/2**16, signed=True).encode(5))
         res = parsley.parse_cmd("SENSOR_GYRO", msg_data)
-        assert res["x"] == approx(3)
-        assert res["y"] == approx(4)
-        assert res["z"] == approx(5)
+        assert res["x"] == test_utils.approx(3)
+        assert res["y"] == test_utils.approx(4)
+        assert res["z"] == test_utils.approx(5)
     
     def test_sensor_mag(self):
         msg_data = BitString()
@@ -202,9 +202,9 @@ class TestParsley:
         msg_data.push(*Numeric("y", 16, signed=True).encode(-200))
         msg_data.push(*Numeric("z", 16, signed=True).encode(-300))
         res = parsley.parse_cmd("SENSOR_MAG", msg_data)
-        assert res["x"] == approx(-100)
-        assert res["y"] == approx(-200)
-        assert res["z"] == approx(-300)
+        assert res["x"] == test_utils.approx(-100)
+        assert res["y"] == test_utils.approx(-200)
+        assert res["z"] == test_utils.approx(-300)
 
     def test_sensor_analog(self):
         msg_data = BitString()

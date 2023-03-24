@@ -1,6 +1,6 @@
 from bitstring import BitString
 from fields import ASCII, Enum, Numeric, Switch
-from utils import *
+import test_utils
 
 import message_types as mt # see TestEnum regarding this coupling
 
@@ -145,7 +145,7 @@ class TestNumeric:
         num = Numeric("time", 24, scale=1/1000)
         (data, _) = num.encode(54.321)
         converted_data = num.decode(data)
-        assert 54.321 == approx(converted_data)
+        assert 54.321 == test_utils.approx(converted_data)
 
     def test_numeric_decode_encode(self):
         num = Numeric("num", 8)
@@ -214,7 +214,8 @@ class TestSwitch:
             "c": [2, 3]
         }
         switch = Switch(Enum("status", 8, enum_map), map)
-        (data, _) = switch.encode("a")
+        (data, length) = switch.encode("a")
         assert data == b'\x01'
+        assert length == 8
         assert switch.get_fields(data) == [0, 1]
         assert switch.decode(data) == "a"

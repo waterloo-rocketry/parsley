@@ -1,4 +1,5 @@
 from parsley_definitions import *
+from bitstring import BitString
 
 # parameters are in the form of byte strings
 def parse(msg_sid, msg_data):
@@ -10,21 +11,22 @@ def parse(msg_sid, msg_data):
 
     res = {"msg_type": msg_type, "board_id": board_id}
     if msg_type in FIELDS.keys():
-        res = parse_cmd(msg_type, msg_data, res)
+        bit_str = BitString(msg_data)
+        res = parse_cmd(msg_type, bit_str, res)
     else:
         res["data"] = {"unknown": msg_data}
     return res
 
 # TODO: could make this recursive, but seems overkill for current requirements
-def parse_cmd(msg_type, msg_data, result={}):
+def parse_cmd(msg_type, bit_str, result={}):
     res = result
     for field in FIELDS[msg_type]:
-        data = msg_data.pop(field.length)
+        data = bit_str.pop(field.length)
         res[field.name] = field.decode(data)
         if isinstance(field, Switch):
             nested_fields = field.get_fields(data)
             for nested_field in nested_fields:
-                data = msg_data.pop(nested_field.length)
+                data = bit_str.pop(nested_field.length)
                 res[nested_field.name] = nested_field.decode(data)
     return res
 
