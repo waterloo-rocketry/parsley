@@ -140,8 +140,8 @@ sensor_id = {
     "SENSOR_ROCKET_BATT": 14,
     "SENSOR_PRESSURE_PNEUMATICS": 15,
     "SENSOR_VENT_TEMP": 16,
-    "SENSOR_CHARGE_CURR": 17, # TODO: add these in canlib
-    "SENSOR_CHARGE_VOLT": 18
+    "SENSOR_CHARGE_CURR": 17, # TODO: add in canlib
+    "SENSOR_CHARGE_VOLT": 18 # TODO: add in canlib
 }
 
 fill_direction = {

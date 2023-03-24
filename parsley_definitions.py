@@ -1,8 +1,8 @@
 from fields import ASCII, Enum, Numeric, Switch
 import message_types as mt
 
-MESSAGE_TYPE = Enum("msg_type", 12, mt.msg_type) # 6
-BOARD_ID = Enum("msg_type", 12, mt.board_id) # 5
+MESSAGE_TYPE = Enum("msg_type", 12, mt.msg_type)
+BOARD_ID = Enum("msg_type", 12, mt.board_id)
 
 TIMESTAMP_2 = Numeric("time", 16, scale=1/1000)
 TIMESTAMP_3 = Numeric("time", 24, scale=1/1000)
