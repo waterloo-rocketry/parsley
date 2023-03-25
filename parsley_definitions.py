@@ -1,4 +1,5 @@
 from fields import ASCII, Enum, Numeric, Switch
+
 import message_types as mt
 
 MESSAGE_TYPE = Enum("msg_type", 12, mt.msg_type)

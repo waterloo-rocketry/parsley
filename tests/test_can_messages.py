@@ -1,10 +1,11 @@
+import parsley
+
 from bitstring import BitString
 from fields import ASCII, Enum, Numeric
 from parsley_definitions import TIMESTAMP_2, TIMESTAMP_3
 
 import message_types as mt
-import parsley
-import test_utils
+import utils.test_utils as test_utils
 
 class TestParsley:
     def timestamp2(self):

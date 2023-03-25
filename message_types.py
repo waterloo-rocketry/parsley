@@ -1,6 +1,6 @@
 """
-Everything defined here tracks the information from the canlib repo.
-If this file and calib differ, canlib is the source of truth.
+Everything defined here tracks the information from canlib
+If this file and canlib differ, canlib is the source of truth.
 """
 
 msg_type = {

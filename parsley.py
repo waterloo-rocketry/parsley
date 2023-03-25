@@ -1,21 +1,36 @@
-from parsley_definitions import *
 from bitstring import BitString
+from fields import Switch
+from parsley_definitions import MESSAGE_TYPE, BOARD_ID, FIELDS
 
-# parameters are in the form of byte strings
+import constants
+
+# TODO: formally comment this function ?
+# TODO: mention vv in review
+# I'm not sure if we want this kind of bullet-proof-ness
+# because technically, encoding msg_type and board_id could throw
+# or parsing the command could also throw but this code looks a bit oogly
 def parse(msg_sid, msg_data):
-    msg_sid = int.from_bytes(msg_sid, byteorder='big', signed=False)
-    encoded_msg_type = (msg_sid & 0x7e0).to_bytes(3, byteorder='big')
-    encoded_board_id = (msg_sid & 0x1f).to_bytes(3, byteorder='big')
-    msg_type = MESSAGE_TYPE.decode(encoded_msg_type)
-    board_id = BOARD_ID.decode(encoded_board_id)
+    try:
+        msg_sid_int = int.from_bytes(msg_sid, byteorder=constants.BYTE_ORDER, signed=False)
+        encoded_msg_type = (msg_sid_int & 0x7e0).to_bytes(3, byteorder=constants.BYTE_ORDER)
+        encoded_board_id = (msg_sid_int & 0x1f).to_bytes(3, byteorder=constants.BYTE_ORDER)
+        msg_type = MESSAGE_TYPE.decode(encoded_msg_type)
+        board_id = BOARD_ID.decode(encoded_board_id)
+    except:
+        return {
+            "sid": {"unknown": msg_sid},
+            "data": {"unknown": msg_data}
+        }
 
-    res = {"msg_type": msg_type, "board_id": board_id}
-    if msg_type in FIELDS.keys():
+    try:
         bit_str = BitString(msg_data)
-        res = parse_cmd(msg_type, bit_str, res)
-    else:
-        res["data"] = {"unknown": msg_data}
-    return res
+        res = parse_cmd(msg_type, bit_str, {})
+    except:
+        res = {"data": {"unknown": msg_data}}
+    finally:
+        res["msg_type"] = msg_type
+        res["board_id"] = board_id
+        return res
 
 # TODO: could make this recursive, but seems overkill for current requirements
 def parse_cmd(msg_type, bit_str, result={}):
@@ -76,14 +91,11 @@ def parse_logger(line):
     msg_data = [int(msg_data[i:i+2], 16) for i in range(0, len(msg_data), 2)]
     return msg_sid, msg_data
 
-MSG_TYPE_LEN = max([len(msg_type) for msg_type in mt.msg_type])
-BOARD_ID_LEN = max([len(board_id) for board_id in mt.board_id])
-
 def format_line(parsed_data):
     msg_type = parsed_data['msg_type']
     board_id = parsed_data['board_id']
     data = parsed_data["data"]
-    res = f"[ {msg_type:<{MSG_TYPE_LEN}} {board_id:<{BOARD_ID_LEN}} ]"
+    res = f"[ {msg_type:<{constants.MSG_TYPE_LEN}} {board_id:<{constants.BOARD_ID_LEN}} ]"
     for k, v in data.items():
         res += f" {k}: {v}"
     return res

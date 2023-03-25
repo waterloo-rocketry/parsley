@@ -1,11 +1,11 @@
 class Field:
     """
-    Abstract base class for a field in a message.
+    Abstract base class for a message field.
     """
     def __init__(self, name, length, optional=False):
         self.name = name
         self.length = length # length in bits
-        self.optional = optional
+        self.optional = optional # serves no purpose in parsley but is required in omnibus
 
     def decode(self, data):
         """
@@ -18,14 +18,14 @@ class Field:
     def encode(self, value):
         """
         Convert value to self.length bits of data (in an LSB-aligned bytes object) to
-        build a message. Returns a tuple of (data, len_of_data_in_bits). Raise a ValueError with
-        an appropiate message if this is not possible.
+        build a message. Returns a tuple of (encoded_data, bit_len_of_data). Raise a ValueError
+        with an appropiate message if this is not possible.
         """
         raise NotImplementedError
 
     def contains(self, value):
         """
-        Check if value is contained in the range of a field.
-        Throw ValueErrors if value is not contained
+        Check if value is contained within the range of the field. Raise a ValueError if the
+        value is outside the valid range.
         """
         raise NotImplementedError
