@@ -9,19 +9,33 @@ TIMESTAMP_2 = Numeric("time", 16, scale=1/1000)
 TIMESTAMP_3 = Numeric("time", 24, scale=1/1000)
 
 BOARD_STATUS = {
-    **{key: [] for key in ["E_NOMINAL", "E_CANNOT_INIT_DACS", "E_GPS", "E_ILLEGAL_CAN_MSG", "E_SEGFAULT", "E_UNHANDLED_INTERRUPT", "E_CODING_SCREWUP"]},
-    "E_BUS_OVER_CURRENT": [Numeric("current", 16)],
-    **{key: [Numeric("voltage", 16)] for key in ["E_BUS_UNDER_VOLTAGE", "E_BUS_OVER_VOLTAGE", "E_BATT_UNDER_VOLTAGE", "E_BATT_OVER_VOLTAGE"]},
-    **{key: [Enum("board_id", 8, mt.board_id)] for key in ["E_BOARD_FEARED_DEAD", "E_MISSING_CRITICAL_BOARD"]},
-    **{key: [Numeric("err_time", 16)] for key in ["E_NO_CAN_TRAFFIC", "E_RADIO_SIGNAL_LOST"]},
-    "E_SENSOR": [Enum("sensor_id", 8, mt.sensor_id)],
-    "E_ACTUATOR_STATE": [Enum("req_state", 8, mt.actuator_states), Enum("cur_state", 8, mt.actuator_states)]
+    "E_NOMINAL":                [],
+
+    "E_BUS_OVER_CURRENT":       [Numeric("current", 16)],
+    "E_BUS_UNDER_VOLTAGE":      [Numeric("voltage", 16)],
+    "E_BUS_OVER_VOLTAGE":       [Numeric("voltage", 16)],
+
+    "E_BATT_UNDER_VOLTAGE":     [Numeric("voltage", 16)],
+    "E_BATT_OVER_VOLTAGE":      [Numeric("voltage", 16)],
+
+    "E_BOARD_FEARED_DEAD":      [Enum("board_id", 8, mt.board_id)],
+    "E_NO_CAN_TRAFFIC":         [Numeric("err_time", 16)],
+    "E_MISSING_CRITICAL_BOARD": [Enum("board_id", 8, mt.board_id)],
+    "E_RADIO_SIGNAL_LOST":      [Numeric("err_time", 16)],
+
+    "E_ACTUATOR_STATE":         [Enum("req_state", 8, mt.actuator_states), Enum("cur_state", 8, mt.actuator_states)],
+    "E_CANNOT_INIT_DACS":       [],
+    "E_VENT_POT_RANGE":         [Numeric("upper", 8, 1/1000), Numeric("lower", 8, 1/1000), Numeric("pot", 8, 1/1000)],
+
+    "E_LOGGING":                [Enum("error", 8, mt.logger_error)], #add UT
+    "E_GPS":                    [],
+    "E_SENSOR":                 [Enum("sensor_id", 8, mt.sensor_id)],
+
+    "E_ILLEGAL_CAN_MSG":        [],
+    "E_SEGFAULT":               [],
+    "E_UNHANDLED_INTERRUPT":    [],
+    "E_CODING_SCREWUP":         [],
 }
-""" TODO:
- missing: 
- - E_VENT_POT_RANGE # numeric (lim_upper), numeric (lim_lower), numeric (pot) each with a 1/1000 scaling factor?
- - E_LOGGING # unsure what error_type refers to, like the board_status keys (?)
- """
 
 FIELDS = {
     "GENERAL_CMD": [TIMESTAMP_3, Enum("command", 8, mt.gen_cmd)],

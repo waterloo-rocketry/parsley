@@ -1,4 +1,4 @@
-import constants
+
 
 class BitString:
     """
@@ -9,7 +9,7 @@ class BitString:
     def __init__(self, data=b''):
         self.length = len(data) * 8 # length in bits
         # store the data as an int which is unbounded and lets us do bitwise manipulations
-        self.data = int.from_bytes(data, byteorder=constants.BYTE_ORDER)
+        self.data = int.from_bytes(data, byteorder='big')
 
     def pop(self, field_length) -> bytes:
         """
@@ -24,7 +24,7 @@ class BitString:
         self.length -= field_length
         res = self.data >> (self.length) # extract the field_length most significant bits
         self.data = self.data & ((1 << self.length) - 1) # and then mask them out
-        return res.to_bytes((field_length + 7) // 8, byteorder=constants.BYTE_ORDER) # and convert to a bytes object
+        return res.to_bytes((field_length + 7) // 8, byteorder='big') # and convert to a bytes object
 
     def push(self, value, field_length):
         """
@@ -35,6 +35,6 @@ class BitString:
         will append only 110000
         """
         self.length += field_length
-        value = int.from_bytes(value, byteorder=constants.BYTE_ORDER)
+        value = int.from_bytes(value, byteorder='big')
         value = value & ((1 << field_length) -1) # extract the field_length least significant bits
         self.data = (self.data << field_length) | value # and then append to data

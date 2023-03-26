@@ -29,7 +29,7 @@ class TestBitString:
         bit_str.push(b'\x15', 5) # ___1 0101
         bit_str.push(b'\x03', 2) #      __11
         bit_str.push(b'\x01', 2) #      __01
-        assert bit_str.pop(9) == b'\x01\x5D' #0001 0101 1101
+        assert bit_str.pop(9) == b'\x01\x5D' #___1 0101 1101
 
     def test_bitstring_padding(self):
         bit_str = BitString()
@@ -37,7 +37,7 @@ class TestBitString:
         assert bit_str.pop(24) == b'\x00\x00\x00'
         assert bit_str.pop(8) == b'\xFF'
 
-    def test_bitstring_push_pop_push(self): # not recommended behaviour
+    def test_bitstring_push_pop_push(self):
         bit_str = BitString()
         bit_str.push(b'\x81', 8) # 1000 0001
         assert bit_str.pop(6) == b'\x20' # __10 0000

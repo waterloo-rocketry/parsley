@@ -40,7 +40,7 @@ msg_type = {
 }
 
 board_id = {
-    "ALL":                  0x00, # TODO: or do we want to stick with DUMMY
+    "ALL":                  0x00,
     "INJECTOR":             0x01,
     "INJECTOR_SPARE":       0x02,
     "LOGGER":               0x03,
@@ -120,6 +120,23 @@ board_status = {
     "E_CODING_FUCKUP": 19,
 
     "E_BATT_OVER_CURRENT": 20
+}
+
+logger_error = {
+    # SD card related failures
+    "E_SD_NONE": 0,
+    "E_SD_FAIL_READ_BLOCK": 1,
+    "E_SD_FAIL_GO_IDLE": 2,
+    "E_SD_FAIL_SEND_IF_COND": 3,
+    "E_SD_FAIL_VOLTAGE_CHECK": 4,
+    "E_SD_FAIL_FS_INIT": 5,
+    "E_SD_FAIL_READ_FILE": 6,
+    "E_SD_FAIL_UNIMPLEMENTED_FUNCTION": 7,
+    "E_SD_FAIL_WRITE_BLOCK": 8,
+    "E_SD_FAIL_OPEN_FILE": 9,
+    "E_SD_FAIL_WRITE_DATA_RESP": 10,
+    # syslog related failures
+    "E_SYSLOG_ALL_BUFFERS_FULL": 11,
 }
 
 sensor_id = {

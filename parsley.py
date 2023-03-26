@@ -1,40 +1,14 @@
+import inspect, sys
+
 from bitstring import BitString
 from fields import Switch
 from parsley_definitions import MESSAGE_TYPE, BOARD_ID, FIELDS
 
-import constants
-
-# TODO: formally comment this function ?
-# TODO: mention vv in review
-# I'm not sure if we want this kind of bullet-proof-ness
-# because technically, encoding msg_type and board_id could throw
-# or parsing the command could also throw but this code looks a bit oogly
-def parse(msg_sid, msg_data):
-    try:
-        msg_sid_int = int.from_bytes(msg_sid, byteorder=constants.BYTE_ORDER, signed=False)
-        encoded_msg_type = (msg_sid_int & 0x7e0).to_bytes(3, byteorder=constants.BYTE_ORDER)
-        encoded_board_id = (msg_sid_int & 0x1f).to_bytes(3, byteorder=constants.BYTE_ORDER)
-        msg_type = MESSAGE_TYPE.decode(encoded_msg_type)
-        board_id = BOARD_ID.decode(encoded_board_id)
-    except:
-        return {
-            "sid": {"unknown": msg_sid},
-            "data": {"unknown": msg_data}
-        }
-
-    try:
-        bit_str = BitString(msg_data)
-        res = parse_cmd(msg_type, bit_str, {})
-    except:
-        res = {"data": {"unknown": msg_data}}
-    finally:
-        res["msg_type"] = msg_type
-        res["board_id"] = board_id
-        return res
+import message_types as mt
 
 # TODO: could make this recursive, but seems overkill for current requirements
-def parse_cmd(msg_type, bit_str, result={}):
-    res = result
+def parse(msg_type, bit_str):
+    res = {}
     for field in FIELDS[msg_type]:
         data = bit_str.pop(field.length)
         res[field.name] = field.decode(data)
@@ -44,6 +18,44 @@ def parse_cmd(msg_type, bit_str, result={}):
                 data = bit_str.pop(nested_field.length)
                 res[nested_field.name] = nested_field.decode(data)
     return res
+
+# TODO: formally comment this function ?
+def parse_raw(msg_sid, msg_data):
+    try:
+        msg_sid = int.from_bytes(msg_sid, byteorder='big', signed=False)
+        encoded_msg_type = (msg_sid & 0x7e0).to_bytes(3, byteorder='big')
+        encoded_board_id = (msg_sid & 0x1f).to_bytes(3, byteorder='big')
+        msg_type = parse_msg_type(encoded_msg_type)
+        res["msg_type"] = msg_type
+        board_id = parse_board_id(encoded_board_id)
+        res["board_id"] = board_id
+        res.update(parse(msg_type, BitString(msg_data)))
+    except: # 
+        function_name = get_exception_function_name()
+        match function_name:
+            case "parse_msg_type":
+                res.update({"unknown_sid": msg_sid, "unknown_data": msg_data})
+            case "parse_board_id": # if board_id threw, continue parsing
+                res.update({"unknown_board_id": encoded_board_id})
+                res.update(parse(msg_type, BitString(msg_data)))
+            case "parse":
+                res.update({"data": {"unknown": msg_data}})
+            case _:
+                res = {"error": "absolutely no clue"}
+    return res
+
+def parse_msg_type(encoded_msg_type):
+    return MESSAGE_TYPE.decode(encoded_msg_type)
+
+def parse_board_id(encoded_board_id):
+    return BOARD_ID.decode(encoded_board_id)
+
+# wizardy voodoo magic
+def get_exception_function_name():
+    trace_back = sys.exc_info()[-1]
+    frame = trace_back.tb_frame
+    function_name = frame.f_code.co_name
+    return function_name
 
 def parse_live_telemetry(line):
     line = line.lstrip(' \0')
@@ -91,11 +103,14 @@ def parse_logger(line):
     msg_data = [int(msg_data[i:i+2], 16) for i in range(0, len(msg_data), 2)]
     return msg_sid, msg_data
 
+MSG_TYPE_LEN = max([len(msg_type) for msg_type in mt.msg_type])
+BOARD_ID_LEN = max([len(board_id) for board_id in mt.board_id])
+
 def format_line(parsed_data):
     msg_type = parsed_data['msg_type']
     board_id = parsed_data['board_id']
     data = parsed_data["data"]
-    res = f"[ {msg_type:<{constants.MSG_TYPE_LEN}} {board_id:<{constants.BOARD_ID_LEN}} ]"
+    res = f"[ {msg_type:<{MSG_TYPE_LEN}} {board_id:<{BOARD_ID_LEN}} ]"
     for k, v in data.items():
         res += f" {k}: {v}"
     return res

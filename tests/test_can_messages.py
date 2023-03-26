@@ -18,7 +18,7 @@ class TestParsley:
         msg_data = BitString()
         msg_data.push(*TIMESTAMP_3.encode(12.345))
         msg_data.push(*Enum("command", 8, mt.gen_cmd).encode("BUS_DOWN_WARNING"))
-        res = parsley.parse_cmd("GENERAL_CMD", msg_data)
+        res = parsley.parse("GENERAL_CMD", msg_data)
         assert res["time"] == test_utils.approx(12.345)
         assert res["command"] == "BUS_DOWN_WARNING"
 
@@ -27,7 +27,7 @@ class TestParsley:
         msg_data.push(*self.timestamp3())
         msg_data.push(*Enum("actuator", 8, mt.actuator_id).encode("VENT_VALVE"))
         msg_data.push(*Enum("req_state", 8, mt.actuator_states).encode("ACTUATOR_CLOSED"))
-        res = parsley.parse_cmd("ACTUATOR_CMD", msg_data)
+        res = parsley.parse("ACTUATOR_CMD", msg_data)
         assert res["actuator"] == "VENT_VALVE"
         assert res["req_state"] == "ACTUATOR_CLOSED"
 
@@ -36,7 +36,7 @@ class TestParsley:
         msg_data.push(*self.timestamp3())
         msg_data.push(*Enum("state", 4, mt.arm_states).encode("ARMED"))
         msg_data.push(*Numeric("altimeter", 4).encode(7))
-        res = parsley.parse_cmd("ALT_ARM_CMD", msg_data)
+        res = parsley.parse("ALT_ARM_CMD", msg_data)
         assert res["state"] == "ARMED"
         assert res["altimeter"] == 7
 
@@ -44,7 +44,7 @@ class TestParsley:
         msg_data = BitString()
         msg_data.push(*self.timestamp3())
         msg_data.push(*Enum("board_id", 8, mt.board_id).encode("ALL"))
-        res = parsley.parse_cmd("RESET_CMD", msg_data)
+        res = parsley.parse("RESET_CMD", msg_data)
         assert res["board_id"] == "ALL"
 
     def test_debug_msg(self):
@@ -53,7 +53,7 @@ class TestParsley:
         msg_data.push(*Numeric("level", 4).encode(6))
         msg_data.push(*Numeric("line", 12).encode(0x123))
         msg_data.push(*ASCII("data", 24, optional=True).encode("AC"))
-        res = parsley.parse_cmd("DEBUG_MSG", msg_data)
+        res = parsley.parse("DEBUG_MSG", msg_data)
         assert res["level"] == 6
         assert res["line"] == 0x123
         assert res["data"] == 'AC'
@@ -61,13 +61,13 @@ class TestParsley:
     def test_debug_printf(self):
         msg_data = BitString()
         msg_data.push(*ASCII("string", 64, optional=True).encode("ABCDEFGH"))
-        res = parsley.parse_cmd("DEBUG_PRINTF", msg_data)
+        res = parsley.parse("DEBUG_PRINTF", msg_data)
         assert res["string"] == "ABCDEFGH"
 
     def test_debug_radio_cmd(self):
         msg_data = BitString()
         msg_data.push(*ASCII("string", 64, optional=True).encode("RADIO"))
-        res = parsley.parse_cmd("DEBUG_RADIO_CMD", msg_data)
+        res = parsley.parse("DEBUG_RADIO_CMD", msg_data)
         assert res["string"] == "RADIO"
 
     def test_actuator_status(self):
@@ -76,7 +76,7 @@ class TestParsley:
         msg_data.push(*Enum("actuator", 8, mt.actuator_id).encode("INJECTOR_VALVE"))
         msg_data.push(*Enum("req_state", 8, mt.actuator_states).encode("ACTUATOR_CLOSED"))
         msg_data.push(*Enum("cur_state", 8, mt.actuator_states).encode("ACTUATOR_UNK"))
-        res = parsley.parse_cmd("ACTUATOR_STATUS", msg_data)
+        res = parsley.parse("ACTUATOR_STATUS", msg_data)
         assert res["actuator"] == "INJECTOR_VALVE"
         assert res["req_state"] == "ACTUATOR_CLOSED"
         assert res["cur_state"] == "ACTUATOR_UNK"
@@ -88,7 +88,7 @@ class TestParsley:
         msg_data.push(*Numeric("altimeter", 4).encode(4))
         msg_data.push(*Numeric("drogue_v", 16).encode(12345))
         msg_data.push(*Numeric("main_v", 16).encode(54321))
-        res = parsley.parse_cmd("ALT_ARM_STATUS", msg_data)
+        res = parsley.parse("ALT_ARM_STATUS", msg_data)
         assert res["state"] == "DISARMED"
         assert res["altimeter"] == 4
         assert res["drogue_v"] == 12345
@@ -98,7 +98,7 @@ class TestParsley:
         msg_data = BitString()
         msg_data.push(*self.timestamp3())
         msg_data.push(*Enum("status", 8, mt.board_status).encode("E_NOMINAL"))
-        res = parsley.parse_cmd("GENERAL_BOARD_STATUS", msg_data)
+        res = parsley.parse("GENERAL_BOARD_STATUS", msg_data)
         assert res["status"] == "E_NOMINAL"
 
     def test_board_status_current(self):
@@ -106,7 +106,7 @@ class TestParsley:
         msg_data.push(*self.timestamp3())
         msg_data.push(*Enum("status", 8, mt.board_status).encode("E_BUS_OVER_CURRENT"))
         msg_data.push(*Numeric("current", 16).encode(12345))
-        res = parsley.parse_cmd("GENERAL_BOARD_STATUS", msg_data)
+        res = parsley.parse("GENERAL_BOARD_STATUS", msg_data)
         assert res["status"] == "E_BUS_OVER_CURRENT"
         assert res["current"] == 12345
 
@@ -115,7 +115,7 @@ class TestParsley:
         msg_data.push(*self.timestamp3())
         msg_data.push(*Enum("status", 8, mt.board_status).encode("E_BUS_UNDER_VOLTAGE"))
         msg_data.push(*Numeric("voltage", 16).encode(54321))
-        res = parsley.parse_cmd("GENERAL_BOARD_STATUS", msg_data)
+        res = parsley.parse("GENERAL_BOARD_STATUS", msg_data)
         assert res["status"] == "E_BUS_UNDER_VOLTAGE"
         assert res["voltage"] == 54321
 
@@ -124,7 +124,7 @@ class TestParsley:
         msg_data.push(*self.timestamp3())
         msg_data.push(*Enum("status", 8, mt.board_status).encode("E_BOARD_FEARED_DEAD"))
         msg_data.push(*Enum("board_id", 8, mt.board_id).encode("RADIO"))
-        res = parsley.parse_cmd("GENERAL_BOARD_STATUS", msg_data)
+        res = parsley.parse("GENERAL_BOARD_STATUS", msg_data)
         assert res["status"] == "E_BOARD_FEARED_DEAD"
         assert res["board_id"] == "RADIO"
 
@@ -133,7 +133,7 @@ class TestParsley:
         msg_data.push(*self.timestamp3())
         msg_data.push(*Enum("status", 8, mt.board_status).encode("E_NO_CAN_TRAFFIC"))
         msg_data.push(*Numeric("err_time", 16).encode(54321))
-        res = parsley.parse_cmd("GENERAL_BOARD_STATUS", msg_data)
+        res = parsley.parse("GENERAL_BOARD_STATUS", msg_data)
         assert res["status"] == "E_NO_CAN_TRAFFIC"
         assert res["err_time"] == 54321
 
@@ -142,7 +142,7 @@ class TestParsley:
         msg_data.push(*self.timestamp3())
         msg_data.push(*Enum("status", 8, mt.board_status).encode("E_SENSOR"))
         msg_data.push(*Enum("sensor_id", 8, mt.sensor_id).encode("SENSOR_BARO"))
-        res = parsley.parse_cmd("GENERAL_BOARD_STATUS", msg_data)
+        res = parsley.parse("GENERAL_BOARD_STATUS", msg_data)
         assert res["status"] == "E_SENSOR"
         assert res["sensor_id"] == "SENSOR_BARO"
 
@@ -152,7 +152,7 @@ class TestParsley:
         msg_data.push(*Enum("status", 8, mt.board_status).encode("E_ACTUATOR_STATE"))
         msg_data.push(*Enum("req_state", 8, mt.actuator_states).encode("ACTUATOR_CLOSED"))
         msg_data.push(*Enum("cur_state", 8, mt.actuator_states).encode("ACTUATOR_UNK"))
-        res = parsley.parse_cmd("GENERAL_BOARD_STATUS", msg_data)
+        res = parsley.parse("GENERAL_BOARD_STATUS", msg_data)
         assert res["status"] == "E_ACTUATOR_STATE"
         assert res["req_state"] == "ACTUATOR_CLOSED"
         assert res["cur_state"] == "ACTUATOR_UNK"
@@ -162,7 +162,7 @@ class TestParsley:
         msg_data.push(*self.timestamp3())
         msg_data.push(*Numeric("sensor_id", 8).encode(0x12))
         msg_data.push(*Numeric("temperature", 24, scale=1/2**10, signed=True).encode(12.5))
-        res = parsley.parse_cmd("SENSOR_TEMP", msg_data)
+        res = parsley.parse("SENSOR_TEMP", msg_data)
         assert res["sensor_id"] == 0x12
         assert res["temperature"] == test_utils.approx(12.5)
 
@@ -170,7 +170,7 @@ class TestParsley:
         msg_data = BitString()
         msg_data.push(*self.timestamp3())
         msg_data.push(*Numeric("altitude", 32, signed=True).encode(-12345))
-        res = parsley.parse_cmd("SENSOR_ALTITUDE", msg_data)
+        res = parsley.parse("SENSOR_ALTITUDE", msg_data)
         assert res["altitude"] == -12345
 
     def test_sensor_acc(self):
@@ -179,7 +179,7 @@ class TestParsley:
         msg_data.push(*Numeric("x", 16, scale=8/2**16, signed=True).encode(-2))
         msg_data.push(*Numeric("y", 16, scale=8/2**16, signed=True).encode(-3))
         msg_data.push(*Numeric("z", 16, scale=8/2**16, signed=True).encode(-4))
-        res = parsley.parse_cmd("SENSOR_ACC", msg_data)
+        res = parsley.parse("SENSOR_ACC", msg_data)
         assert res["time"] == test_utils.approx(54.321)
         assert res["x"] == test_utils.approx(-2)
         assert res["y"] == test_utils.approx(-3)
@@ -191,7 +191,7 @@ class TestParsley:
         msg_data.push(*Numeric("x", 16, scale=2000/2**16, signed=True).encode(3))
         msg_data.push(*Numeric("y", 16, scale=2000/2**16, signed=True).encode(4))
         msg_data.push(*Numeric("z", 16, scale=2000/2**16, signed=True).encode(5))
-        res = parsley.parse_cmd("SENSOR_GYRO", msg_data)
+        res = parsley.parse("SENSOR_GYRO", msg_data)
         assert res["x"] == test_utils.approx(3)
         assert res["y"] == test_utils.approx(4)
         assert res["z"] == test_utils.approx(5)
@@ -202,7 +202,7 @@ class TestParsley:
         msg_data.push(*Numeric("x", 16, signed=True).encode(-100))
         msg_data.push(*Numeric("y", 16, signed=True).encode(-200))
         msg_data.push(*Numeric("z", 16, signed=True).encode(-300))
-        res = parsley.parse_cmd("SENSOR_MAG", msg_data)
+        res = parsley.parse("SENSOR_MAG", msg_data)
         assert res["x"] == test_utils.approx(-100)
         assert res["y"] == test_utils.approx(-200)
         assert res["z"] == test_utils.approx(-300)
@@ -212,7 +212,7 @@ class TestParsley:
         msg_data.push(*self.timestamp2())
         msg_data.push(*Enum("sensor_id", 8, mt.sensor_id).encode("SENSOR_BARO"))
         msg_data.push(*Numeric("value", 16).encode(54321))
-        res = parsley.parse_cmd("SENSOR_ANALOG", msg_data)
+        res = parsley.parse("SENSOR_ANALOG", msg_data)
         assert res["sensor_id"] == "SENSOR_BARO"
         assert res["value"] == 54321
 
@@ -223,7 +223,7 @@ class TestParsley:
         msg_data.push(*Numeric("mins", 8).encode(23))
         msg_data.push(*Numeric("secs", 8).encode(34))
         msg_data.push(*Numeric("dsecs", 8).encode(45))
-        res = parsley.parse_cmd("GPS_TIMESTAMP", msg_data)
+        res = parsley.parse("GPS_TIMESTAMP", msg_data)
         assert res["hrs"] == 12
         assert res["mins"] == 23
         assert res["secs"] == 34
@@ -236,7 +236,7 @@ class TestParsley:
         msg_data.push(*Numeric("mins", 8).encode(23))
         msg_data.push(*Numeric("dmins", 16).encode(12345))
         msg_data.push(*ASCII("direction", 8).encode("N"))
-        res = parsley.parse_cmd("GPS_LATITUDE", msg_data)
+        res = parsley.parse("GPS_LATITUDE", msg_data)
         assert res["degs"] == 12
         assert res["mins"] == 23
         assert res["dmins"] == 12345
@@ -249,7 +249,7 @@ class TestParsley:
         msg_data.push(*Numeric("mins", 8).encode(23))
         msg_data.push(*Numeric("dmins", 16).encode(12345))
         msg_data.push(*ASCII("direction", 8).encode("W"))
-        res = parsley.parse_cmd("GPS_LONGITUDE", msg_data)
+        res = parsley.parse("GPS_LONGITUDE", msg_data)
         assert res["degs"] == 12
         assert res["mins"] == 23
         assert res["dmins"] == 12345
@@ -261,7 +261,7 @@ class TestParsley:
         msg_data.push(*Numeric("altitude", 16).encode(12345))
         msg_data.push(*Numeric("daltitude", 8).encode(12))
         msg_data.push(*ASCII("unit", 8).encode("m"))
-        res = parsley.parse_cmd("GPS_ALTITUDE", msg_data)
+        res = parsley.parse("GPS_ALTITUDE", msg_data)
         assert res["altitude"] == 12345
         assert res["daltitude"] == 12
         assert res["unit"] == "m"
@@ -271,7 +271,7 @@ class TestParsley:
         msg_data.push(*self.timestamp3())
         msg_data.push(*Numeric("num_sats", 8).encode(12))
         msg_data.push(*Numeric("quality", 8).encode(23))
-        res = parsley.parse_cmd("GPS_INFO", msg_data)
+        res = parsley.parse("GPS_INFO", msg_data)
         assert res["num_sats"] == 12
         assert res["quality"] == 23
 
@@ -280,7 +280,7 @@ class TestParsley:
         msg_data.push(*self.timestamp3())
         msg_data.push(*Numeric("level", 8).encode(9))
         msg_data.push(*Enum("direction", 8, mt.fill_direction).encode("FILLING"))
-        res = parsley.parse_cmd("FILL_LVL", msg_data)
+        res = parsley.parse("FILL_LVL", msg_data)
         assert res["level"] == 9
         assert res["direction"] == "FILLING"
 
@@ -289,7 +289,7 @@ class TestParsley:
         msg_data.push(*self.timestamp3())
         msg_data.push(*Numeric("radi_board", 8).encode(1))
         msg_data.push(*Numeric("radi", 16).encode(500))
-        res = parsley.parse_cmd("RADI_VALUE", msg_data)
+        res = parsley.parse("RADI_VALUE", msg_data)
         assert res["radi_board"] == 1
         assert res["radi"] == 500
 

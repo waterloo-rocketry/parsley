@@ -1,6 +1,27 @@
-from field import Field
+class Field:
+    """
+    Abstract base class for a message field.
+    """
+    def __init__(self, name, length, optional=False):
+        self.name = name
+        self.length = length # length in bits
+        self.optional = optional # serves no purpose in parsley but is required in omnibus
 
-import constants
+    def decode(self, data):
+        """
+        Convert self.length bits of data (returned in the format given by BitString.pop)
+        to the corresponding python value of the field. This value could be a number, string,
+        etc. depending on the specific field type.
+        """
+        raise NotImplementedError
+
+    def encode(self, value):
+        """
+        Convert value to self.length bits of data (in an LSB-aligned bytes object) to
+        build a message. Returns a tuple of (encoded_data, bit_len_of_data). Raise a ValueError
+        with an appropiate message if this is not possible.
+        """
+        raise NotImplementedError
 
 class ASCII(Field):
     """
@@ -13,18 +34,16 @@ class ASCII(Field):
         return data.replace(b'\x00', b'').decode('ascii')
     
     def encode(self, value):
-        if self.contains(value):
-            encoded_data = value.encode('ascii')
-            return (encoded_data, self.length)
-
-    def contains(self, value):
         if type(value) != str:
             raise ValueError(f"Value '{value}' is not a string.")
         if not value.isascii():
             raise ValueError(f"String '{value}' contains non-ascii character(s).")
         if self.length < 8*len(value.encode('ascii')):
             raise ValueError(f"String '{value}' is too large for {self.length//8} character(s).")
-        return True
+
+        encoded_data = value.encode('ascii')
+        return (encoded_data, self.length)
+
     
 class Enum(Field):
     """
@@ -49,24 +68,18 @@ class Enum(Field):
                 raise ValueError(f"Mapping value {v} for key {k} is too large to fit in {self.length} bits.")
 
     def decode(self, data):
-        value = int.from_bytes(data, byteorder=constants.BYTE_ORDER, signed=False)
-        if self.containsValue(value):
-            return self.map_val_key[value]
-
-    def encode(self, key):
-        if self.contains(key):
-            encoded_data = self.map_key_val[key].to_bytes((self.length + 7) // 8, byteorder=constants.BYTE_ORDER)
-            return (encoded_data, self.length)
-    
-    def contains(self, key):
-        if key not in self.map_key_val:
-            raise ValueError(f"Key '{key}' not found in mapping {self.name}.")
-        return True
-    
-    def containsValue(self, value):
+        value = int.from_bytes(data, byteorder='big', signed=False)
         if value not in self.map_val_key:
             raise ValueError(f"Value '{value}' not found in mapping {self.name}.")
-        return True
+
+        return self.map_val_key[value]
+
+    def encode(self, key):
+        if key not in self.map_key_val:
+            raise ValueError(f"Key '{key}' not found in mapping {self.name}.")
+
+        encoded_data = self.map_key_val[key].to_bytes((self.length + 7) // 8, byteorder='big')
+        return (encoded_data, self.length)
     
 class Numeric(Field):
     """
@@ -79,16 +92,10 @@ class Numeric(Field):
         self.signed = signed
 
     def decode(self, data):
-        value = int.from_bytes(data, byteorder=constants.BYTE_ORDER, signed = self.signed)
+        value = int.from_bytes(data, byteorder='big', signed = self.signed)
         return value * self.scale
 
     def encode(self, value):
-        if self.contains(value):
-            value = int(value // self.scale)
-            encoded_data = value.to_bytes((self.length + 7) // 8, byteorder=constants.BYTE_ORDER, signed=self.signed)
-            return (encoded_data, self.length)
-
-    def contains(self, value):
         if type(value) != int and type(value) != float:
             raise ValueError(f"Value '{value}' is not a number.")
         value = int(value // self.scale)
@@ -103,7 +110,9 @@ class Numeric(Field):
                 raise ValueError(f"Value {value} ({hex_value}) is too large for {self.length} signed bits.")
             if value < -1 << (self.length - 1):
                 raise ValueError(f"Value {value} ({hex_value}) is too small for {self.length} signed bits.")
-        return True
+        
+        encoded_data = value.to_bytes((self.length + 7) // 8, byteorder='big', signed=self.signed)
+        return (encoded_data, self.length)
 
 class Switch(Field):
     """
