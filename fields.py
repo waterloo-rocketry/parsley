@@ -44,7 +44,6 @@ class ASCII(Field):
         encoded_data = value.encode('ascii')
         return (encoded_data, self.length)
 
-    
 class Enum(Field):
     """
     Provides bijective mapping between (key, value) pairs.

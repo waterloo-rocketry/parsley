@@ -34,8 +34,7 @@ def parse_raw(msg_sid, msg_data):
         res = {"msg_type": msg_type, "board_id": board_id}
         res.update(parse(msg_type, BitString(msg_data)))
     except Exception as e:
-        print(e)
-        err_msg = e.args[0]
+        err_msg = e.args[0] # TODO: verify actually prints the error message string
         res = {
             "msg_type": encoded_msg_type,
             "board_id": encoded_board_id,
