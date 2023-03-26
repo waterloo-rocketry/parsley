@@ -98,6 +98,7 @@ class Numeric(Field):
     def encode(self, value):
         if type(value) != int and type(value) != float:
             raise ValueError(f"Value '{value}' is not a number.")
+
         value = int(value // self.scale)
         hex_value = hex(value)
         if not self.signed:
@@ -116,7 +117,7 @@ class Numeric(Field):
 
 class Switch(Field):
     """
-    Provides surjective mapping for enum keys and an another dictionary.
+    Wrapper for Enum and provides surjective mapping for enum keys and an another dictionary.
     """
     def __init__(self, enum, map_key_enum):
         super().__init__(enum.name, enum.length)

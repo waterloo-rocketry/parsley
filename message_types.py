@@ -56,7 +56,7 @@ board_id = {
     "GPS":                  0x0D,
     "GPS_SPARE":            0x0E,
     "FILL":                 0x0F,
-    "FILL_SPARE":           0x010,
+    "FILL_SPARE":           0x10,
     "ARMING":               0x11,
     "ARMING_SPARE":         0X12,
     "PAPA":                 0x13,
@@ -70,8 +70,6 @@ board_id = {
     "SENSOR_3":             0x1B,
     "SENSOR_4":             0x1C,
     "LOGGER_2":             0x1D,
-    # "TEMP_SENSE":           0x15, # these don't exist in canlib, kinda cringe omnibus TODO: make a mention in the CR (and delete from code)
-    # "TEMP_SENSE_SPARE":     0x16, # these don't exist in canlib, kinda cringe omnibus
     "RLCS":                 0x1E
 }
 
@@ -156,9 +154,7 @@ sensor_id = {
     "SENSOR_MAG_2": 13,
     "SENSOR_ROCKET_BATT": 14,
     "SENSOR_PRESSURE_PNEUMATICS": 15,
-    "SENSOR_VENT_TEMP": 16,
-    "SENSOR_CHARGE_CURR": 17, # TODO: add in canlib
-    "SENSOR_CHARGE_VOLT": 18 # TODO: add in canlib
+    "SENSOR_VENT_TEMP": 16
 }
 
 fill_direction = {

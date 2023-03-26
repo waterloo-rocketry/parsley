@@ -1,4 +1,4 @@
-import inspect, sys
+import sys
 
 from bitstring import BitString
 from fields import Switch
@@ -6,7 +6,7 @@ from parsley_definitions import MESSAGE_TYPE, BOARD_ID, FIELDS
 
 import message_types as mt
 
-# TODO: could make this recursive, but seems overkill for current requirements
+# TODO: comment this function
 def parse(msg_type, bit_str):
     res = {}
     for field in FIELDS[msg_type]:
@@ -19,43 +19,30 @@ def parse(msg_type, bit_str):
                 res[nested_field.name] = nested_field.decode(data)
     return res
 
-# TODO: formally comment this function ?
+# TODO: comment this function
 def parse_raw(msg_sid, msg_data):
+    msg_sid = int.from_bytes(msg_sid, byteorder='big', signed=False)
+    encoded_msg_type = (msg_sid & 0x7e0).to_bytes(3, byteorder='big')
+    encoded_board_id = (msg_sid & 0x1f).to_bytes(3, byteorder='big')
+
     try:
-        msg_sid = int.from_bytes(msg_sid, byteorder='big', signed=False)
-        encoded_msg_type = (msg_sid & 0x7e0).to_bytes(3, byteorder='big')
-        encoded_board_id = (msg_sid & 0x1f).to_bytes(3, byteorder='big')
-        msg_type = parse_msg_type(encoded_msg_type)
-        res["msg_type"] = msg_type
-        board_id = parse_board_id(encoded_board_id)
-        res["board_id"] = board_id
+        board_id = BOARD_ID.decode(encoded_board_id)
+    except: # if board_id throws, we can continue parsing
+        board_id = f"UNKNOWN_BOARD ({encoded_board_id})"
+    try:
+        msg_type = MESSAGE_TYPE.decode(encoded_msg_type)
+        res = {"msg_type": msg_type, "board_id": board_id}
         res.update(parse(msg_type, BitString(msg_data)))
-    except: # 
-        function_name = get_exception_function_name()
-        match function_name:
-            case "parse_msg_type":
-                res.update({"unknown_sid": msg_sid, "unknown_data": msg_data})
-            case "parse_board_id": # if board_id threw, continue parsing
-                res.update({"unknown_board_id": encoded_board_id})
-                res.update(parse(msg_type, BitString(msg_data)))
-            case "parse":
-                res.update({"data": {"unknown": msg_data}})
-            case _:
-                res = {"error": "absolutely no clue"}
+    except Exception as e:
+        print(e)
+        err_msg = e.args[0]
+        res = {
+            "msg_type": encoded_msg_type,
+            "board_id": encoded_board_id,
+            "data": msg_data,
+            "error": err_msg
+        }
     return res
-
-def parse_msg_type(encoded_msg_type):
-    return MESSAGE_TYPE.decode(encoded_msg_type)
-
-def parse_board_id(encoded_board_id):
-    return BOARD_ID.decode(encoded_board_id)
-
-# wizardy voodoo magic
-def get_exception_function_name():
-    trace_back = sys.exc_info()[-1]
-    frame = trace_back.tb_frame
-    function_name = frame.f_code.co_name
-    return function_name
 
 def parse_live_telemetry(line):
     line = line.lstrip(' \0')
