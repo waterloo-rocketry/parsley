@@ -6,7 +6,7 @@ MESSAGE_TYPE = Enum("msg_type", 12, mt.msg_type)
 BOARD_ID = Enum("msg_type", 12, mt.board_id)
 
 TIMESTAMP_2 = Numeric("time", 16, scale=1/1000) # returns data scaled in seconds
-TIMESTAMP_3 = Numeric("time", 24, scale=1/1000)
+TIMESTAMP_3 = Numeric("time", 24, scale=1/1000) # returns data scaled in seconds
 
 BOARD_STATUS = {
     "E_NOMINAL":                [],
@@ -27,7 +27,7 @@ BOARD_STATUS = {
     "E_CANNOT_INIT_DACS":       [],
     "E_VENT_POT_RANGE":         [Numeric("upper", 8, 1/1000), Numeric("lower", 8, 1/1000), Numeric("pot", 8, 1/1000)],
 
-    "E_LOGGING":                [Enum("error", 8, mt.logger_error)], #add UT
+    "E_LOGGING":                [Enum("error", 8, mt.logger_error)],
     "E_GPS":                    [],
     "E_SENSOR":                 [Enum("sensor_id", 8, mt.sensor_id)],
 
@@ -54,7 +54,7 @@ FIELDS = {
     "SENSOR_TEMP":          [TIMESTAMP_3, Numeric("sensor_id", 8), Numeric("temperature", 24, scale=1/2**10, signed=True)],
     "SENSOR_ALTITUDE":      [TIMESTAMP_3, Numeric("altitude", 32, signed=True)],
     "SENSOR_ACC":           [TIMESTAMP_2, Numeric("x", 16, scale=8/2**16, signed=True), Numeric("y", 16, scale=8/2**16, signed=True), Numeric("z", 16, scale=8/2**16, signed=True)],
-    "SENSOR_ACC2":          [TIMESTAMP_2, Numeric("x", 16, scale=16/2**16, signed=True), Numeric("y", 16, scale=16/2**16, signed=True), Numeric("z", 16, scale=16/2**16, signed=True)], # TODO: create unit test for this
+    "SENSOR_ACC2":          [TIMESTAMP_2, Numeric("x", 16, scale=16/2**16, signed=True), Numeric("y", 16, scale=16/2**16, signed=True), Numeric("z", 16, scale=16/2**16, signed=True)],
     "SENSOR_GYRO":          [TIMESTAMP_2, Numeric("x", 16, scale=2000/2**16, signed=True), Numeric("y", 16, scale=2000/2**16, signed=True), Numeric("z", 16, scale=2000/2**16, signed=True)],
     "SENSOR_MAG":           [TIMESTAMP_2, Numeric("x", 16, signed=True), Numeric("y", 16, signed=True), Numeric("z", 16, signed=True)],
     "SENSOR_ANALOG":        [TIMESTAMP_2, Enum("sensor_id", 8, mt.sensor_id), Numeric("value", 16)],

@@ -74,7 +74,7 @@ class TestParsley:
     def test_parse_bad_board_id(self):
         (msg_type_bits, _) = MESSAGE_TYPE.encode("LEDS_ON")
         board_id = b'\x1F'
-        # need to manually build this message since BOARD_ID.encode() will throw an error for \x1F
+        # need to manually build this message since BOARD_ID.encode() will currently throw an error for b'\x1F'
         msg_type_int = int.from_bytes(msg_type_bits, byteorder='big', signed=False)
         board_id_int = int.from_bytes(board_id, byteorder='big', signed=False)
         msg_sid_int = msg_type_int | board_id_int

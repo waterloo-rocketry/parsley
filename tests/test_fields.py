@@ -5,7 +5,6 @@ from fields import ASCII, Enum, Numeric, Switch
 import message_types as mt
 import test_utils as tu
 
-
 class TestASCII:
     def test_ASCII(self):
         a = ASCII("string", 32)
@@ -159,20 +158,20 @@ class TestNumeric:
 
 class TestSwitch:
     def test_switch(self):
-        enum_map = {
+        enum = {
             "a": 0x01,
             "b": 0x02,
             "c": 0x03
         }
-        map = {
+        map_key_enum = {
             "a": [0, 1],
             "b": [1, 2],
             "c": [2, 3]
         }
-        switch = Switch(Enum("status", 8, enum_map), map)
+        switch = Switch(Enum("status", 8, enum), map_key_enum)
         (data, length) = switch.encode("a")
-        decoded_data = switch.decode(data)
         assert data == b'\x01'
         assert length == 8
+        decoded_data = switch.decode(data)
         assert decoded_data == "a"
         assert switch.get_fields(decoded_data) == [0, 1]
