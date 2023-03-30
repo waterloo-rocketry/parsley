@@ -2,16 +2,14 @@ import parsley
 
 from bitstring import BitString
 from fields import ASCII, Enum, Numeric
-from parsley_definitions import MESSAGE_TYPE, BOARD_ID, TIMESTAMP_3
+from parsley_definitions import MESSAGE_TYPE, TIMESTAMP_3
 
 import message_types as mt
-import utils.test_utils as test_utils
+import test_utils as tu
 
 class TestParsley:
     def test_parse(self):
-        (msg_type_bits, _) = MESSAGE_TYPE.encode("GENERAL_BOARD_STATUS")
-        (board_id_bits, _) = BOARD_ID.encode("PAPA_SPARE")
-        msg_sid = test_utils.create_msg_sid_from_bytes(msg_type_bits, board_id_bits)
+        msg_sid = tu.create_msg_sid_from_strings("GENERAL_BOARD_STATUS", "PAPA_SPARE")
         """
                      |----| => ___1 0100 = 0x14 = PAPA_SPARE
         ____ _101 0011 0100
@@ -36,10 +34,8 @@ class TestParsley:
         }
         assert res == expected_res
 
-    def test_parse_partial_byte(self):
-        (msg_type_bits, _) = MESSAGE_TYPE.encode("DEBUG_MSG")
-        (board_id_bits, _) = BOARD_ID.encode("ROCKET_PI")
-        msg_sid = test_utils.create_msg_sid_from_bytes(msg_type_bits, board_id_bits)
+    def test_parse_partial_byte_fields(self):
+        msg_sid = tu.create_msg_sid_from_strings("DEBUG_MSG", "ROCKET_PI")
         """
                      |----| => ___1 0101 = 0x15 = ROCKET_PI
         ____ _001 1001 0101
@@ -66,10 +62,29 @@ class TestParsley:
         }
         assert res == expected_res
 
+    def test_parse_bad_msg_type(self):
+        msg_sid = b'\x00\x00'
+        msg_data = b'\xAB\xCD\xEF\x00'
+        res = parsley.parse_raw(msg_sid, msg_data)
+        assert "error" in res
+
+    # there will soon be no-bad-boards but for now, we're suppose to continue parsing.
+    # When the day arrives and this UT fails, please modify parsley's parse_raw so that
+    # BOARD_ID.decode is contianed in the same try except as MESSAGE_TYPE.decode
+    def test_parse_bad_board_id(self):
+        (msg_type_bits, _) = MESSAGE_TYPE.encode("LEDS_ON")
+        board_id = b'\x1F'
+        # need to manually build this message since BOARD_ID.encode() will throw an error for \x1F
+        msg_type_int = int.from_bytes(msg_type_bits, byteorder='big', signed=False)
+        board_id_int = int.from_bytes(board_id, byteorder='big', signed=False)
+        msg_sid_int = msg_type_int | board_id_int
+        msg_sid = msg_sid_int.to_bytes(2, byteorder='big')
+
+        res = parsley.parse_raw(msg_sid, b'')
+        assert "unknown" in res['board_id']
+
     def test_parse_bad_msg_data(self):
-        (msg_type_bits, _) = MESSAGE_TYPE.encode("ALT_ARM_STATUS")
-        (board_id_bits, _) = BOARD_ID.encode("USB")
-        msg_sid = test_utils.create_msg_sid_from_bytes(msg_type_bits, board_id_bits)
+        msg_sid = tu.create_msg_sid_from_strings("ALT_ARM_STATUS", "USB")
         """
                      |----| => ___0 0101 = 0x09 = USB
         ____ _100 0100 1001
@@ -77,14 +92,6 @@ class TestParsley:
         """
         assert msg_sid == b'\x04\x49'
 
-        msg_data = '\x98\x76\x54\x32\x10'
+        msg_data = b'\x98\x76\x54\x32\x10'
         res = parsley.parse_raw(msg_sid, msg_data)
         assert "error" in res
-
-    def test_parse_bad_msg_type(self):
-        msg_sid = b'\x0F\xAC'
-        msg_data = b'\xAB\xCD\xEF\x00'
-        res = parsley.parse_raw(msg_sid, msg_data)
-        assert "error" in res
-
-# TODO: double check that I've actually tested all of parsley's errors

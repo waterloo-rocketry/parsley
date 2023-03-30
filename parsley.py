@@ -13,7 +13,7 @@ def parse(msg_type, bit_str):
         data = bit_str.pop(field.length)
         res[field.name] = field.decode(data)
         if isinstance(field, Switch):
-            nested_fields = field.get_fields(data)
+            nested_fields = field.get_fields(res[field.name])
             for nested_field in nested_fields:
                 data = bit_str.pop(nested_field.length)
                 res[nested_field.name] = nested_field.decode(data)
@@ -25,21 +25,23 @@ def parse_raw(msg_sid, msg_data):
     encoded_msg_type = (msg_sid & 0x7e0).to_bytes(3, byteorder='big')
     encoded_board_id = (msg_sid & 0x1f).to_bytes(3, byteorder='big')
 
+    # if board_id throws, try to continue parsing the rest of the messsage
+    # one day, this won't ever be the case, in which case, move BOARD_ID.decode
+    # into the same try block as MESSAEG_TYPE.decode (more aesthetic)
     try:
         board_id = BOARD_ID.decode(encoded_board_id)
-    except: # if board_id throws, we can continue parsing
-        board_id = f"UNKNOWN_BOARD ({encoded_board_id})"
+    except:
+        board_id = f"unknown: {encoded_board_id}"
     try:
         msg_type = MESSAGE_TYPE.decode(encoded_msg_type)
         res = {"msg_type": msg_type, "board_id": board_id}
         res.update(parse(msg_type, BitString(msg_data)))
-    except Exception as e:
-        err_msg = e.args[0] # TODO: verify actually prints the error message string
+    except (ValueError, IndexError) as error:
         res = {
-            "msg_type": encoded_msg_type,
-            "board_id": encoded_board_id,
+            "msg_type": str(encoded_msg_type),
+            "board_id": str(encoded_board_id),
             "data": msg_data,
-            "error": err_msg
+            "error": str(error)
         }
     return res
 

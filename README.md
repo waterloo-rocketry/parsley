@@ -17,7 +17,7 @@ import message_types as mt
 
 # Encoding a GENERAL_CMD CAN message
 msg_data = BitString()
-msg_data.push(*TIMESTAMP_3.encode(12.345)) #12.345 minutes
+msg_data.push(*TIMESTAMP_3.encode(12.345)) #12.345 seconds
 msg_data.push(*Enum("command", 8, mt.gen_cmd).encode("BUS_DOWN_WARNING"))
 
 # Decoding a CAN message

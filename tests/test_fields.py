@@ -3,42 +3,46 @@ import pytest
 from fields import ASCII, Enum, Numeric, Switch
 
 import message_types as mt
-import utils.test_utils as test_utils
+import test_utils as tu
 
 
 class TestASCII:
     def test_ASCII(self):
-        ascii = ASCII("string", 32)
-        (data, length) = ascii.encode('aBcD')
+        a = ASCII("string", 32)
+        (data, length) = a.encode('aBcD')
         assert data == b'\x61\x42\x63\x44'
         assert length == 32
-        data = ascii.decode(b'\x4C\x4D\x41\x4F')
+        data = a.decode(b'\x4C\x4D\x41\x4F')
         assert data == 'LMAO'
 
-    def test_ASCII_leading_spaces(self):
-        ascii = ASCII("string", 32)
-        assert ascii.decode(b'\x57') == 'W'
+    def test_ASCII_spaces(self):
+        a = ASCII("string", 32)
+        assert a.decode(b'\x20\x20\x57\x20') == '  W '
+
+    def test_ASCII_front_padding(self):
+        a = ASCII("string", 32)
+        assert a.decode(b'\x57') == 'W'
 
     def test_ASCII_decode_encode(self):
-        ascii = ASCII("string", 32)
-        assert ascii.decode(ascii.encode('1234')[0]) == '1234' # TODO: make a note of not seeing ny better way of decode encode
+        a = ASCII("string", 32)
+        assert a.decode(a.encode('1234')[0]) == '1234'
 
     def test_ASCII_error_not_str(self):
-        ascii = ASCII("string", 16)
-        with pytest.raises(ValueError): # TODO: make a note that one with pytest.raises only catches first error
-            ascii.encode(b'12')
+        a = ASCII("string", 16)
         with pytest.raises(ValueError):
-            ascii.encode(12)
+            a.encode(b'12')
+        with pytest.raises(ValueError):
+            a.encode(12)
 
     def test_ASCII_error_not_ASCII(self):
-        ascii = ASCII("string", 16)
+        a = ASCII("string", 16)
         with pytest.raises(ValueError):
-            ascii.encode('😎')
+            a.encode('😎')
 
     def test_ASCII_error_length(self):
-        ascii = ASCII("string", 16)
+        a = ASCII("string", 16)
         with pytest.raises(ValueError):
-            ascii.encode("xdd")
+            a.encode("xdd")
 
 class TestEnum:
     def test_enum(self):
@@ -55,7 +59,7 @@ class TestEnum:
         assert enum.decode(enum.encode("a")[0]) == "a"
 
     def test_enum_error_bijective(self):
-        map = { "a": -1, "b": 0, "c": -1 }
+        map = { "a": 1, "b": 0, "c": 1 }
         with pytest.raises(ValueError):
             Enum("enum", 8, map)
 
@@ -93,11 +97,11 @@ class TestNumeric:
         (data, _) = num.encode(12)
         assert data == b'\x18'
 
-    def test_numeric_scale_impercision(self):
+    def test_numeric_scale_imprecision(self):
         num = Numeric("time", 24, scale=1/1000)
         (data, _) = num.encode(54.321)
         converted_data = num.decode(data)
-        assert 54.321 == test_utils.approx(converted_data)
+        assert 54.321 == tu.approx(converted_data)
 
     def test_numeric_decode_encode(self):
         num = Numeric("num", 8)
@@ -167,7 +171,8 @@ class TestSwitch:
         }
         switch = Switch(Enum("status", 8, enum_map), map)
         (data, length) = switch.encode("a")
+        decoded_data = switch.decode(data)
         assert data == b'\x01'
         assert length == 8
-        assert switch.get_fields(data) == [0, 1]
-        assert switch.decode(data) == "a"
+        assert decoded_data == "a"
+        assert switch.get_fields(decoded_data) == [0, 1]

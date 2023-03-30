@@ -1,3 +1,5 @@
+import hex_utils as hu
+
 class Field:
     """
     Abstract base class for a message field.
@@ -9,7 +11,7 @@ class Field:
 
     def decode(self, data):
         """
-        Convert self.length bits of data (returned in the format given by BitString.pop)
+        Converts self.length bits of data (returned in the format given by BitString.pop)
         to the corresponding python value of the field. This value could be a number, string,
         etc. depending on the specific field type.
         """
@@ -17,8 +19,8 @@ class Field:
 
     def encode(self, value):
         """
-        Convert value to self.length bits of data (in an LSB-aligned bytes object) to
-        build a message. Returns a tuple of (encoded_data, bit_len_of_data). Raise a ValueError
+        Converts value to self.length bits of data in LSB format.
+        Returns a tuple of (encoded_data, bit_len_of_data) or raises a ValueError
         with an appropiate message if this is not possible.
         """
         raise NotImplementedError
@@ -32,11 +34,11 @@ class ASCII(Field):
     
     def encode(self, value):
         if type(value) != str:
-            raise ValueError(f"Value '{value}' is not a string.")
+            raise ValueError(f"{value} is not a string.")
         if not value.isascii():
-            raise ValueError(f"String '{value}' contains non-ascii character(s).")
+            raise ValueError(f"{value} contains non-ascii character(s).")
         if self.length < 8*len(value.encode('ascii')):
-            raise ValueError(f"String '{value}' is too large for {self.length//8} character(s).")
+            raise ValueError(f"{value} is too large for {self.length//8} character(s).")
 
         encoded_data = value.encode('ascii')
         return (encoded_data, self.length)
@@ -55,7 +57,7 @@ class Enum(Field):
         value_size = len(self.map_key_val.values())
         unique_value_size = len(set(self.map_key_val.values()))
         if value_size != unique_value_size:
-            raise ValueError(f"Mapping {self.name} is not injective: has {value_size} values but only {unique_value_size} are unique.")
+            raise ValueError(f"Mapping '{self.name}' is not injective: has {value_size} values but only {unique_value_size} are unique.")
 
         for k, v in map_key_val.items():
             if v < 0:
@@ -66,13 +68,13 @@ class Enum(Field):
     def decode(self, data):
         value = int.from_bytes(data, byteorder='big', signed=False)
         if value not in self.map_val_key:
-            raise ValueError(f"Value '{value}' not found in mapping {self.name}.")
+            raise ValueError(f"Value '{value}' not found in mapping '{self.name}'.")
 
         return self.map_val_key[value]
 
     def encode(self, key):
         if key not in self.map_key_val:
-            raise ValueError(f"Key '{key}' not found in mapping {self.name}.")
+            raise ValueError(f"Key '{key}' not found in mapping '{self.name}'.")
 
         encoded_data = self.map_key_val[key].to_bytes((self.length + 7) // 8, byteorder='big')
         return (encoded_data, self.length)
@@ -99,14 +101,14 @@ class Numeric(Field):
         hex_value = hex(value)
         if not self.signed:
             if value >= 1 << self.length:
-                raise ValueError(f"Value {value} ({hex_value}) is too large for {self.length} unsigned bits.")
+                raise ValueError(f"Value '{value}' ({hex_value}) is too large for {self.length} unsigned bits.")
             if value < 0:
-                raise ValueError(f"Cannot encode negative value {value} in an unsigned field.")
+                raise ValueError(f"Cannot encode negative value '{value}' in an unsigned field.")
         else:
             if value >= 1 << (self.length - 1):
-                raise ValueError(f"Value {value} ({hex_value}) is too large for {self.length} signed bits.")
+                raise ValueError(f"Value '{value}' ({hex_value}) is too large for {self.length} signed bits.")
             if value < -1 << (self.length - 1):
-                raise ValueError(f"Value {value} ({hex_value}) is too small for {self.length} signed bits.")
+                raise ValueError(f"Value '{value}' ({hex_value}) is too small for {self.length} signed bits.")
         
         encoded_data = value.to_bytes((self.length + 7) // 8, byteorder='big', signed=self.signed)
         return (encoded_data, self.length)
@@ -128,8 +130,5 @@ class Switch(Field):
     def encode(self, value):
         return self.enum.encode(value)
     
-    def contains(self, value):
-        return self.enum.contains(value)
-
-    def get_fields(self, data):
-        return self.map_key_enum[self.enum.decode(data)]
+    def get_fields(self, key):
+        return self.map_key_enum[key]

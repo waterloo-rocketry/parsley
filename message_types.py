@@ -33,14 +33,14 @@ msg_type = {
 
     "FILL_LVL":             0x780,
 
-    "MSG_FILL_LVL":         0x7A0,
+    "RADI_VALUE":           0x7A0,
 
     "LEDS_ON":              0x7E0,
     "LEDS_OFF":             0x7C0,
 }
 
 board_id = {
-    "ALL":                  0x00,
+    "ANY":                  0x00,
     "INJECTOR":             0x01,
     "INJECTOR_SPARE":       0x02,
     "LOGGER":               0x03,
