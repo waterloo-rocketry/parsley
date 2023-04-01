@@ -88,7 +88,7 @@ class Enum(Field):
 class Numeric(Field):
     """
     Provides transcoding between binary data and (un)signed numbers.
-    Offers value scaling between conversions but note that there may be imprecision may occur.
+    Offers value scaling between conversions (note: there may be imprecision).
     """
     def __init__(self, name, length, scale = 1, signed = False):
         super().__init__(name, length)
@@ -101,7 +101,7 @@ class Numeric(Field):
 
     def encode(self, value: Number) -> Tuple[bytes, int]:
         if not isinstance(value, Number):
-            raise ValueError(f"Value '{value}' is not a valid number type")
+            raise ValueError(f"Value '{value}' is not a valid number")
 
         value = int(value // self.scale)
         hex_value = hex(value)
