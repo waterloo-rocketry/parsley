@@ -1,3 +1,7 @@
+from typing import Any, Tuple, Union
+
+Number = Union[int, float]
+
 class Field:
     """
     Abstract base class for a message field.
@@ -7,19 +11,22 @@ class Field:
         self.length = length # length in bits
         self.optional = optional # serves no purpose in parsley but is required in omnibus
 
-    def decode(self, data):
+    def decode(self, data: bytes) -> Any:
         """
-        Converts self.length bits of data (returned in the format given by BitString.pop)
-        to the corresponding python value of the field. This value could be a number, string,
-        etc. depending on the specific field type.
+        Converts self.length bits of 'data' to the corresponding python value of the field.
+        This value could be a number, string, etc. depending on the specific field type.
+
+        'data' should be LSB-aligned which is how BitString.pop currently returns its data.
         """
         raise NotImplementedError
 
-    def encode(self, value):
+    def encode(self, value: Any) -> Tuple[bytes, int]:
         """
-        Converts value to self.length bits of data in LSB format.
-        Returns a tuple of (encoded_data, bit_len_of_data) or raises a ValueError
-        with an appropiate message if this is not possible.
+        Converts value to self.length bits of data where value is the specific field type.
+        Returns a tuple of (encoded_value, self.length) or raises
+        a ValueError with an appropiate message if this is not possible.
+
+        'value' should be LSB-aligned which is how BitString.push currently expects its data
         """
         raise NotImplementedError
 
@@ -27,10 +34,10 @@ class ASCII(Field):
     """
     Provides transcoding between binary data and ASCII-encoded text.
     """
-    def decode(self, data):
+    def decode(self, data: bytes) -> str:
         return data.replace(b'\x00', b'').decode('ascii')
     
-    def encode(self, value):
+    def encode(self, value: str) -> Tuple[bytes, int]:
         if type(value) != str:
             raise ValueError(f"{value} is not a string")
         if not value.isascii():
@@ -63,14 +70,15 @@ class Enum(Field):
             if v >= 1 << self.length:
                 raise ValueError(f"Mapping value {v} for key {k} is too large to fit in {self.length} bits")
 
-    def decode(self, data):
+    # returns the the map's key type
+    def decode(self, data: bytes):
         value = int.from_bytes(data, byteorder='big', signed=False)
         if value not in self.map_val_key:
             raise ValueError(f"Value '{value}' not found in mapping '{self.name}'")
 
         return self.map_val_key[value]
 
-    def encode(self, key):
+    def encode(self, key) -> Tuple[bytes, int]:
         if key not in self.map_key_val:
             raise ValueError(f"Key '{key}' not found in mapping '{self.name}'")
 
@@ -79,21 +87,21 @@ class Enum(Field):
     
 class Numeric(Field):
     """
-    Provides transcoding between binary data and (un)signed integers.
-    Offers value scaling during transcoding but note that there may be imprecision during conversion.
+    Provides transcoding between binary data and (un)signed numbers.
+    Offers value scaling between conversions but note that there may be imprecision may occur.
     """
     def __init__(self, name, length, scale = 1, signed = False):
         super().__init__(name, length)
         self.scale = scale
         self.signed = signed
 
-    def decode(self, data):
+    def decode(self, data: bytes) -> Number:
         value = int.from_bytes(data, byteorder='big', signed = self.signed)
         return value * self.scale
 
-    def encode(self, value):
-        if type(value) != int and type(value) != float:
-            raise ValueError(f"Value '{value}' is not a number")
+    def encode(self, value: Number) -> Tuple[bytes, int]:
+        if not isinstance(value, Number):
+            raise ValueError(f"Value '{value}' is not a valid number type")
 
         value = int(value // self.scale)
         hex_value = hex(value)

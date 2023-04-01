@@ -5,8 +5,9 @@ import message_types as mt
 MESSAGE_TYPE = Enum("msg_type", 12, mt.msg_type)
 BOARD_ID = Enum("msg_type", 12, mt.board_id)
 
-TIMESTAMP_2 = Numeric("time", 16, scale=1/1000) # returns data scaled in seconds
-TIMESTAMP_3 = Numeric("time", 24, scale=1/1000) # returns data scaled in seconds
+# returns data scaled in seconds (ie. reads raw data in milliseconds and outputs seconds)
+TIMESTAMP_2 = Numeric("time", 16, scale=1/1000)
+TIMESTAMP_3 = Numeric("time", 24, scale=1/1000)
 
 BOARD_STATUS = {
     "E_NOMINAL":                [],

@@ -1,5 +1,3 @@
-
-
 class BitString:
     """
     Stores the message data bits that we have yet to parse and lets us read
@@ -13,7 +11,7 @@ class BitString:
 
     def pop(self, field_length) -> bytes:
         """
-        Returns the next field_length bits of data as a bytes object.
+        Returns the next field_length most significant bits of data as a bytes object.
 
         The data returned will be LSB-aligned, so for example, asking for 12 bits will return:
         0000BBBB BBBBBBBB
@@ -28,13 +26,13 @@ class BitString:
 
     def push(self, value, field_length):
         """
-        Appends the next field_length bits of data from value.
+        Appends the next field_length least significant bits of data from value.
 
-        The data appended will be LSB-aligned, so for example, appending 6 bits from:
+        So for example, appending 6 bits from:
         10110000
         will append only 110000
         """
         self.length += field_length
-        value = int.from_bytes(value, byteorder='big')
-        value = value & ((1 << field_length) -1) # extract the field_length least significant bits
+        value = int.from_bytes(value, byteorder='big') # convert to int to do bitwise maniuplations
+        value = value & ((1 << field_length) - 1) # extract the field_length least significant bits
         self.data = (self.data << field_length) | value # and then append to data

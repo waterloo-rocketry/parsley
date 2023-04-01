@@ -1,13 +1,11 @@
 ## Parsley
-```Parsley``` is a library for transcoding between raw Controller Area Network (CAN) messages and human-readable text.
+```Parsley``` is a library for transcoding between Controller Area Network (CAN) messages and human-readable text.
 
-## Features
-- ```bitstring.py```: Provides a custom data structure for storing and reading bits of arbitrary-length.
-- ```fields.py```: Introduces data types for transcoding byte strings, such as ASCII and Numeric.
-- ```parsley_defintions.py```: Offers a new architecture for defining CAN messages
-
-## Requirements
-```Python 3.10``` or newer is required and the required packages can be installed using `pip install -r requirements.txt`
+## Highlights
+- ```bitstring.py```: Provides a custom data structure to store and read bits of arbitrary-length.
+- ```fields.py```:  Defines custom data types for transcoding byte strings such as ASCII and numerical data.
+- ```parsley_defintions.py```: Offers a new architecture for defining CAN messages.
+- Enhanced error handling across all stages of transcoding.
 
 ## Example
 
@@ -53,9 +51,9 @@ result = {
 """
 ```
 
-## Unit Testing
-Run ```pytest``` anywhere in the repository to execute the unit tests located in ```tests/```
+## Requirements
+```Python 3.10``` or newer is required and the required packages can be installed using `pip install -r requirements.txt`
 
-<!-- TODO: Add how to include parsley as a submodule into other libraries once I actually do that-->
+<!-- TODO: Mention how to include parsley as a submodule into other projects. -->
 
-<!-- TODO: I remember the guy who added Omnibus's parsley needed to do some license thing (?) -->
+<!-- TODO: Include LICENSE in project-->

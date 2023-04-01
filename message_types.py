@@ -36,7 +36,7 @@ msg_type = {
     "RADI_VALUE":           0x7A0,
 
     "LEDS_ON":              0x7E0,
-    "LEDS_OFF":             0x7C0,
+    "LEDS_OFF":             0x7C0
 }
 
 board_id = {
@@ -134,7 +134,7 @@ logger_error = {
     "E_SD_FAIL_OPEN_FILE": 9,
     "E_SD_FAIL_WRITE_DATA_RESP": 10,
     # syslog related failures
-    "E_SYSLOG_ALL_BUFFERS_FULL": 11,
+    "E_SYSLOG_ALL_BUFFERS_FULL": 11
 }
 
 sensor_id = {
@@ -154,18 +154,19 @@ sensor_id = {
     "SENSOR_MAG_2": 13,
     "SENSOR_ROCKET_BATT": 14,
     "SENSOR_PRESSURE_PNEUMATICS": 15,
-    "SENSOR_VENT_TEMP": 16
+    "SENSOR_VENT_TEMP": 16,
+    "SENSOR_PICAM_CURRENT": 17
 }
 
 fill_direction = {
     "FILLING": 0,
-    "EMPTYING": 1,
+    "EMPTYING": 1
 }
 
 actuator_id = {
-    "VENT_VALVE": 0,
-    "INJECTOR_VALVE": 1,
-    "MAMA": 2,
+    "ACTUATOR_VENT_VALVE": 0,
+    "ACTUATOR_INJECTOR_VALVE": 1,
+    "MAMA_BOARD_ACTIVATE": 2,
     "PICAM": 3,
-    "CANBUS": 4,
+    "CANBUS": 4
 }

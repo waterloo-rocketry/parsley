@@ -27,10 +27,10 @@ class TestParsley:
         assert res["command"] == "BUS_DOWN_WARNING"
 
     def test_actuator_cmd(self, bit_str3):
-        bit_str3.push(*Enum("actuator", 8, mt.actuator_id).encode("VENT_VALVE"))
+        bit_str3.push(*Enum("actuator", 8, mt.actuator_id).encode("ACTUATOR_VENT_VALVE"))
         bit_str3.push(*Enum("req_state", 8, mt.actuator_states).encode("ACTUATOR_CLOSED"))
         res = parsley.parse("ACTUATOR_CMD", bit_str3)
-        assert res["actuator"] == "VENT_VALVE"
+        assert res["actuator"] == "ACTUATOR_VENT_VALVE"
         assert res["req_state"] == "ACTUATOR_CLOSED"
 
     def test_alt_arm_cmd(self, bit_str3):
@@ -67,11 +67,11 @@ class TestParsley:
         assert res["string"] == "RADIO"
 
     def test_actuator_status(self, bit_str3):
-        bit_str3.push(*Enum("actuator", 8, mt.actuator_id).encode("INJECTOR_VALVE"))
+        bit_str3.push(*Enum("actuator", 8, mt.actuator_id).encode("ACTUATOR_INJECTOR_VALVE"))
         bit_str3.push(*Enum("req_state", 8, mt.actuator_states).encode("ACTUATOR_CLOSED"))
         bit_str3.push(*Enum("cur_state", 8, mt.actuator_states).encode("ACTUATOR_UNK"))
         res = parsley.parse("ACTUATOR_STATUS", bit_str3)
-        assert res["actuator"] == "INJECTOR_VALVE"
+        assert res["actuator"] == "ACTUATOR_INJECTOR_VALVE"
         assert res["req_state"] == "ACTUATOR_CLOSED"
         assert res["cur_state"] == "ACTUATOR_UNK"
 

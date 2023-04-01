@@ -1,14 +1,15 @@
+from typing import Dict
 from bitstring import BitString
 from fields import Switch
 from parsley_definitions import MESSAGE_TYPE, BOARD_ID, FIELDS
 
 import message_types as mt
 
-def parse(msg_type, bit_str):
+def parse(msg_type: str, bit_str: BitString) -> Dict:
     """
-    Parses binary data from a BitString using a predefined structure specified in
-    parsley_definitions.py. This function iterates over the respective message type from
-    FIELDS and decodes data based on how the individual fields are defined.
+    Parses binary data stored in a BitString using a predefined structure specified in
+    parsley_definitions.py. The function iterates over the respective field types from
+    FIELDS and decodes data based on how the individual fields are implemented.
     """
     res = {}
     for field in FIELDS[msg_type]:
@@ -21,10 +22,10 @@ def parse(msg_type, bit_str):
                 res[nested_field.name] = nested_field.decode(data)
     return res
 
-def parse_raw(msg_sid, msg_data):
+def parse_raw(msg_sid: bytes, msg_data: bytes) -> Dict:
     """
     Interprets raw binary data and extracts metadata, such as message type and board ID. 
-    This information is then passed to the ```parse()``` function for further processing. 
+    This information is then passed to the parse function for further processing. 
     Upon reading poorly formatted data, the error is caught and returned in the dictionary.
     """
     msg_sid = int.from_bytes(msg_sid, byteorder='big', signed=False)
