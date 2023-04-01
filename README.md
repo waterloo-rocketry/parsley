@@ -29,7 +29,7 @@ The data encoded in bit_str looks like:
           |       |--------|
 \x30\x39\x61\x23\x54\x5f\x54
 |------|   |---|
-|        line of 123
+|        line of 0x123
 |=> 12345 milliseconds
 """
 
@@ -54,6 +54,4 @@ result = {
 ## Requirements
 ```Python 3.10``` or newer is required and the required packages can be installed using `pip install -r requirements.txt`
 
-<!-- TODO: Mention how to include parsley as a submodule into other projects. -->
-
-<!-- TODO: Include LICENSE in project-->
+<!-- TODO: Mention how to include parsley as a submodule into other projects -->
