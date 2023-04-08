@@ -9,7 +9,7 @@ import message_types as mt
 import test_utils as tu
 
 class TestCANMetadata:
-    # our TIMESTAMP_2 can store ~65.5minutes
+    # our TIMESTAMP_2 can store ~65.5 minutes
     def test_timestamp2(self):
         TIMESTAMP_2.encode(0)
         TIMESTAMP_2.encode(65)
@@ -21,7 +21,7 @@ class TestCANMetadata:
         with pytest.raises(ValueError):
             TIMESTAMP_2.encode(66)
 
-    # our TIMESTAMP_3 can store ~16777minutes = 11.65 days
+    # our TIMESTAMP_3 can store ~16777 minutes = 11.65 days
     def test_timestamp3(self):
         TIMESTAMP_3.encode(0)
         TIMESTAMP_3.encode(16777)

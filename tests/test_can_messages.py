@@ -13,7 +13,7 @@ class TestCANMessage:
     Our full CAN message is of the form:
         MESSAGE_TYPE + BOARD_ID + MESSAGE_DATA
     but for the purposes of testing our CAN message type parsing,
-    BOARD_ID and MESSAGE_DATA's TIMESTAMP will be excluded from this file
+    BOARD_ID and MESSAGE_DATA's TIMESTAMP will be excluded from these unit tests
     """
     @pytest.fixture()
     def bit_str2(self, request):
@@ -69,7 +69,7 @@ class TestCANMessage:
         assert res["line"] == 0x123
         assert res["data"] == 'AC'
 
-    # these guys don't have a timestamp, so we can't use pytest fixture
+    # these message types don't contain timestamps, so we can't use pytest fixture
     def test_debug_printf(self):
         bit_str = BitString()
         bit_str.push(*MESSAGE_TYPE.encode("DEBUG_PRINTF"))
@@ -77,7 +77,7 @@ class TestCANMessage:
         res = parsley.parse(bit_str, CAN_MSG)
         assert res["string"] == "ABCDEFGH"
 
-    # these guys don't have a timestamp, so we can't use pytest fixture
+    # these message types don't contain timestamps, so we can't use pytest fixture
     def test_debug_radio_cmd(self):
         bit_str = BitString()
         bit_str.push(*MESSAGE_TYPE.encode("DEBUG_RADIO_CMD"))

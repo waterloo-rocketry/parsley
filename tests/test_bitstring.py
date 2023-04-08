@@ -2,8 +2,6 @@ import pytest
 
 from bitstring import BitString
 
-# TODO: enhance unit tests with this direct initailzation
-# also add unit test for when there are a lot of intentional leading zero
 class TestBitString:
     def test_bitstring(self):
         bit_str = BitString()
@@ -12,9 +10,20 @@ class TestBitString:
         bit_str.push(b'\xCC', 8)
         assert bit_str.pop(24) == b'\xAA\xBB\xCC'
 
-    def test_bitstring_init(self):
+    def test_bitstring_direct_init(self):
         bit_str = BitString(b'\x31\x41')
         assert bit_str.pop(16) == b'\x31\x41'
+
+    def test_bitstring_direct_init_padding(self):
+        bit_str = BitString(b'\x03\x14')
+        assert bit_str.pop(4) == b'\x00'
+        assert bit_str.pop(12) == b'\x03\x14'
+
+    # direct initialization of non-byte-aligned data may induce unintentional malding
+    # please specify the desired bit_length if you wish to use direct initialization
+    def test_bitstring_direct_init_size(self):
+        bit_str = BitString(b'\x03\x14', 12)
+        assert bit_str.pop(12) == b'\x03\x14'
 
     def test_bitstring_empty(self):
         bit_str = BitString()
