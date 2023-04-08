@@ -25,7 +25,7 @@ def parse(bit_str: BitString, fields: Switch) -> dict:
 
 def parse_raw(msg_sid: bytes, msg_data: bytes) -> dict:
     """
-    Extracts metadata from message_sid and with message_data, constructs a parse-able CAN message.
+    Extracts metadata from message_sid and along with message_data, constructs a parse-able CAN message.
     Upon reading poorly formatted data, the error is caught and returned in the dictionary.
     If BOARD_ID fails to parse, we will try to salvage the rest of the CAN message.
     """
@@ -41,10 +41,12 @@ def parse_raw(msg_sid: bytes, msg_data: bytes) -> dict:
         res["data"] = parse(bit_str_can_msg, CAN_MSG)
     except (ValueError, IndexError) as error:
         res = {
-            "msg_type": str(encoded_msg_type),
             "board_id": str(encoded_board_id),
-            "data": str(msg_data),
-            "error": str(error)
+            "data": {
+                "msg_type": str(encoded_msg_type),
+                "msg_data": str(msg_data),
+                "error": str(error)
+            }
         }
     return res
 

@@ -66,7 +66,7 @@ class Enum(Field):
         value_size = len(self.map_key_val.values())
         unique_value_size = len(set(self.map_key_val.values()))
         if value_size != unique_value_size:
-            # weakening the proposition (since this property is for injective-ness) but this makes more sense
+            # weakening the proposition but this message should be clearer
             raise ValueError(f"Mapping '{self.name}' is not bijective: has {value_size} values but only {unique_value_size} are unique")
 
         for k, v in map_key_val.items():

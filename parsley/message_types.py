@@ -39,7 +39,7 @@ msg_type = {
     "LEDS_OFF":             0x7C0
 }
 
-# message types are 6-bit, so we need to adjust canlib's 12-bit msg_type definition
+# message types are 6-bit so we need to adjust canlib's 12-bit msg_type definition
 adjusted_msg_type = {k: v >> 5 for k, v in msg_type.items()}
 
 board_id = {
