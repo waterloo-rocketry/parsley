@@ -1,8 +1,8 @@
-from bitstring import BitString
-from fields import Switch
-from parsley_definitions import CAN_MSG, MESSAGE_TYPE, BOARD_ID, MSG_SID
+from parsley.bitstring import BitString
+from parsley.fields import Switch
+from parsley.parsley_definitions import CAN_MSG, MESSAGE_TYPE, BOARD_ID, MSG_SID
 
-import message_types as mt
+import parsley.message_types as mt
 
 def parse(bit_str: BitString, fields: Switch) -> dict:
     """

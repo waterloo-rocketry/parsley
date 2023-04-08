@@ -1,6 +1,6 @@
-from fields import ASCII, Enum, Numeric, Switch
+from parsley.fields import ASCII, Enum, Numeric, Switch
 
-import message_types as mt
+import parsley.message_types as mt
 
 # returns data scaled in seconds (ie. reads raw data in milliseconds and outputs seconds)
 TIMESTAMP_2 = Numeric("time", 16, scale=1/1000)
