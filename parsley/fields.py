@@ -6,7 +6,7 @@ class Field:
     """
     Abstract base class for a message field.
     """
-    def __init__(self, name, length, optional=False):
+    def __init__(self, name: str, length: int, optional=False):
         self.name = name
         self.length = length # length in bits
         self.optional = optional # serves no purpose in parsley but is required in omnibus
@@ -54,7 +54,7 @@ class Enum(Field):
     """
     Provides bijective mapping between (key, value) pairs.
     """
-    def __init__(self, name, length, map_key_val):
+    def __init__(self, name: str, length: int, map_key_val: dict):
         super().__init__(name, length)
 
         self.map_key_val = map_key_val
@@ -89,10 +89,11 @@ class Enum(Field):
     
 class Numeric(Field):
     """
-    Provides transcoding between binary data and (un)signed numbers.
+    Provides transcoding between binary data and (un)signed numbers,
+    where 'Number'is defined as either a floating or integer type.
     Offers value scaling between conversions (note: there may be imprecision).
     """
-    def __init__(self, name, length, scale = 1, signed = False):
+    def __init__(self, name: str, length: int, scale = 1, signed = False):
         super().__init__(name, length)
         self.scale = scale
         self.signed = signed
@@ -125,17 +126,17 @@ class Switch(Field):
     """
     Wrapper for Enum and provides surjective mapping for enum keys and an another dictionary.
     """
-    def __init__(self, enum, map_key_enum):
+    def __init__(self, enum: Enum, map_key_enum: dict):
         super().__init__(enum.name, enum.length)
         self.enum = enum
         self.map_key_enum = map_key_enum
         self.name = enum.name
         self.length = enum.length
 
-    def decode(self, data):
+    def decode(self, data: bytes):
         return self.enum.decode(data)
 
-    def encode(self, value):
+    def encode(self, value) -> Tuple[bytes, int]:
         return self.enum.encode(value)
     
     def get_fields(self, key):

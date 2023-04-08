@@ -42,6 +42,6 @@ class BitString:
         Prepends the next field_length least significant bits of data from value.
         """
         value = int.from_bytes(value, byteorder='big')
-        self.data = (value << self.length) | self.data
+        self.data = (value << self.length) | self.data # append value to the front of self.data
         self.length += field_length
         

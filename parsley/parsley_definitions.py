@@ -71,9 +71,9 @@ FIELDS = {
     "LEDS_OFF":             []
 }
 
-# the entry point for all CAN messages
-CAN_MSG = Switch(Enum("msg_type", 6, mt.new_msg_type), FIELDS)
-
-MESSAGE_TYPE = Enum("msg_type", 6, mt.new_msg_type)
+MESSAGE_TYPE = Enum("msg_type", 6, mt.adjusted_msg_type)
 BOARD_ID = Enum("msg_type", 5, mt.board_id)
-MSG_SID = Enum("msg_sid", MESSAGE_TYPE.length + BOARD_ID.length, {}) # used purely as a constant
+MSG_SID = Enum("msg_sid", MESSAGE_TYPE.length + BOARD_ID.length, {}) # used purely as a length constant
+
+# entire CAN message with board_id extracted out (format of how we parse CAN messages)
+CAN_MSG = Switch(Enum("msg_type", MESSAGE_TYPE.length, mt.adjusted_msg_type), FIELDS)

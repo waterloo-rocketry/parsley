@@ -1,8 +1,8 @@
 """
-Everything defined here tracks the information from canlib
-If this file and canlib differ, canlib is the source of truth.
-"""
+REMINDER: Any changes to this file should be reflected in canlib.
 
+If canlib and this file differ, canlib is the source of truth.
+"""
 msg_type = {
     "GENERAL_CMD":          0x060,
     "ACTUATOR_CMD":         0x0C0,
@@ -39,46 +39,8 @@ msg_type = {
     "LEDS_OFF":             0x7C0
 }
 
-
-new_msg_type = {
-    "GENERAL_CMD":          0x03,
-    "ACTUATOR_CMD":         0x06,
-    "ALT_ARM_CMD":          0x0A,
-    "RESET_CMD":            0x0B,
-
-    "DEBUG_MSG":            0x0C,
-    "DEBUG_PRINTF":         0x0F,
-    "DEBUG_RADIO_CMD":      0x10,
-
-    "ALT_ARM_STATUS":       0x22,
-    "ACTUATOR_STATUS":      0x23,
-    "GENERAL_BOARD_STATUS": 0x29,
-
-    "SENSOR_TEMP":          0x2A,
-    "SENSOR_ALTITUDE":      0x2B,
-    "SENSOR_ACC":           0x2C,
-    "SENSOR_ACC2":          0x2D,
-    "SENSOR_GYRO":          0x2F,
-    "SENSOR_MAG":           0x32,
-    "SENSOR_ANALOG":        0x35,
-
-    "GPS_TIMESTAMP":        0x36,
-    "GPS_LATITUDE":         0x37,
-    "GPS_LONGITUDE":        0x38,
-    "GPS_ALTITUDE":         0x39,
-    "GPS_INFO":             0x3A,
-
-    "FILL_LVL":             0x3C,
-
-    "RADI_VALUE":           0x3D,
-
-    "LEDS_ON":              0x3F,
-    "LEDS_OFF":             0x3E
-}
-# generated via vvv
-# new_msg_type = {k: v >> 5 for k, v in msg_type.items()}
-# for k, v in new_msg_type.items():
-#     print(f"\"{k}\": 0x{hex(v).upper()[2:].zfill(2)},")
+# message types are 6-bit, so we need to adjust canlib's 12-bit msg_type definition
+adjusted_msg_type = {k: v >> 5 for k, v in msg_type.items()}
 
 board_id = {
     "ANY":                  0x00,

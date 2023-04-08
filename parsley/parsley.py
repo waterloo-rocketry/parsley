@@ -1,11 +1,10 @@
-from typing import Dict
 from bitstring import BitString
 from fields import Switch
 from parsley_definitions import CAN_MSG, MESSAGE_TYPE, BOARD_ID, MSG_SID
 
 import message_types as mt
 
-def parse(bit_str: BitString, fields: Switch) -> Dict:
+def parse(bit_str: BitString, fields: Switch) -> dict:
     """
     Parses binary data stored in a BitString using a predefined structure specified in
     parsley_definitions.py. The function iterates over the respective field types decoded from
@@ -22,7 +21,7 @@ def parse(bit_str: BitString, fields: Switch) -> Dict:
         res[field.name] = field.decode(data)
     return res
 
-def parse_raw(msg_sid: bytes, msg_data: bytes) -> Dict:
+def parse_raw(msg_sid: bytes, msg_data: bytes) -> dict:
     """
     Interprets raw binary data and extracts metadata, such as message type and board ID. 
     This information is then passed to the parse function for further processing. 
