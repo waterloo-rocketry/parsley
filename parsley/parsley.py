@@ -10,7 +10,7 @@ def parse(bit_str: BitString, fields: Switch) -> dict:
     """
     Parses binary data stored in a BitString using a predefined structure specified in
     parsley_definitions.py. The function iterates over the respective field types decoded from
-    a Switch Field, which acts as a forkroad changing how data is parsed based on the BitString data.
+    a Switch Field, which acts as a forkroad changing how data is parsed depending on the BitString data.
     """
     res = {}
     data = bit_str.pop(fields.length)
@@ -25,7 +25,7 @@ def parse(bit_str: BitString, fields: Switch) -> dict:
 
 def parse_raw(msg_sid: bytes, msg_data: bytes) -> dict:
     """
-    Extracts metadata from message_sid and with message_data, constructs a parseable CAN message.
+    Extracts metadata from message_sid and with message_data, constructs a parse-able CAN message.
     Upon reading poorly formatted data, the error is caught and returned in the dictionary.
     If BOARD_ID fails to parse, we will try to salvage the rest of the CAN message.
     """
@@ -39,7 +39,6 @@ def parse_raw(msg_sid: bytes, msg_data: bytes) -> dict:
     res = parse_board_id(encoded_board_id)
     try:
         res["data"] = parse(bit_str_can_msg, CAN_MSG)
-        # res.update(parse(bit_str_can_msg, CAN_MSG))
     except (ValueError, IndexError) as error:
         res = {
             "msg_type": str(encoded_msg_type),
@@ -111,7 +110,7 @@ def format_line(parsed_data: dict) -> str:
     msg_type = parsed_data['data']['msg_type']
     board_id = parsed_data['board_id']
     data = parsed_data['data']
-    data.pop('msg_type') # changed where msg_type exists in the dict, removing to avoid duplicates
+    data.pop('msg_type') # msg_type is now nested in data, removing to avoid duplicates
     res = f"[ {msg_type:<{MSG_TYPE_LEN}} {board_id:<{BOARD_ID_LEN}} ]"
     for k, v in data.items():
         res += f" {k}: {v}"
