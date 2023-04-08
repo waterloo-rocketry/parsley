@@ -35,6 +35,8 @@ class ASCII(Field):
     Provides transcoding between binary data and ASCII-encoded text.
     """
     def decode(self, data: bytes) -> str:
+        # ASCIIs are automatically padded with leading \x00 to ensure correct alignment
+        # therefore when decoding, we must adjust to return the original encoded data
         return data.replace(b'\x00', b'').decode('ascii')
     
     def encode(self, value: str) -> Tuple[bytes, int]:
