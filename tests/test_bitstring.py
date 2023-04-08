@@ -2,6 +2,8 @@ import pytest
 
 from bitstring import BitString
 
+# TODO: enhance unit tests with this direct initailzation
+# also add unit test for when there are a lot of intentional leading zero
 class TestBitString:
     def test_bitstring(self):
         bit_str = BitString()

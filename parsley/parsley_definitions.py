@@ -2,9 +2,6 @@ from fields import ASCII, Enum, Numeric, Switch
 
 import message_types as mt
 
-MESSAGE_TYPE = Enum("msg_type", 12, mt.msg_type)
-BOARD_ID = Enum("msg_type", 12, mt.board_id)
-
 # returns data scaled in seconds (ie. reads raw data in milliseconds and outputs seconds)
 TIMESTAMP_2 = Numeric("time", 16, scale=1/1000)
 TIMESTAMP_3 = Numeric("time", 24, scale=1/1000)
@@ -73,3 +70,10 @@ FIELDS = {
     "LEDS_ON":              [],
     "LEDS_OFF":             []
 }
+
+# the entry point for all CAN messages
+CAN_MSG = Switch(Enum("msg_type", 6, mt.new_msg_type), FIELDS)
+
+MESSAGE_TYPE = Enum("msg_type", 6, mt.new_msg_type)
+BOARD_ID = Enum("msg_type", 5, mt.board_id)
+MSG_SID = Enum("msg_sid", MESSAGE_TYPE.length + BOARD_ID.length, {}) # used purely as a constant

@@ -1,7 +1,7 @@
 from bitstring import BitString
 from fields import ASCII, Enum, Numeric, Switch
 from parsley_definitions import (
-    MESSAGE_TYPE, BOARD_ID,
+    CAN_MSG, MESSAGE_TYPE, BOARD_ID, MSG_SID,
     TIMESTAMP_2, TIMESTAMP_3,
     BOARD_STATUS, FIELDS
 )

@@ -1,25 +1,25 @@
 from typing import Dict
 from bitstring import BitString
 from fields import Switch
-from parsley_definitions import MESSAGE_TYPE, BOARD_ID, FIELDS
+from parsley_definitions import CAN_MSG, MESSAGE_TYPE, BOARD_ID, MSG_SID, FIELDS
 
 import message_types as mt
 
-def parse(msg_type: str, bit_str: BitString) -> Dict:
+def parse(bit_str: BitString, fields: Switch) -> Dict:
     """
     Parses binary data stored in a BitString using a predefined structure specified in
     parsley_definitions.py. The function iterates over the respective field types from
     FIELDS and decodes data based on how the individual fields are implemented.
     """
     res = {}
-    for field in FIELDS[msg_type]:
+    data = bit_str.pop(fields.length)
+    res[fields.name] = fields.decode(data)
+    for field in fields.get_fields(res[fields.name]):
+        if isinstance(field, Switch):
+            res.update(parse(bit_str, field))
+            continue
         data = bit_str.pop(field.length)
         res[field.name] = field.decode(data)
-        if isinstance(field, Switch):
-            nested_fields = field.get_fields(res[field.name])
-            for nested_field in nested_fields:
-                data = bit_str.pop(nested_field.length)
-                res[nested_field.name] = nested_field.decode(data)
     return res
 
 def parse_raw(msg_sid: bytes, msg_data: bytes) -> Dict:
@@ -28,29 +28,32 @@ def parse_raw(msg_sid: bytes, msg_data: bytes) -> Dict:
     This information is then passed to the parse function for further processing. 
     Upon reading poorly formatted data, the error is caught and returned in the dictionary.
     """
-    msg_sid = int.from_bytes(msg_sid, byteorder='big', signed=False)
-    encoded_msg_type = (msg_sid & 0x7e0).to_bytes(3, byteorder='big')
-    encoded_board_id = (msg_sid & 0x1f).to_bytes(3, byteorder='big')
+    bit_msg_sid = BitString(msg_sid, MSG_SID.length)
+    encoded_msg_type = bit_msg_sid.pop(MESSAGE_TYPE.length)
+    encoded_board_id = bit_msg_sid.pop(BOARD_ID.length)
+    bit_can_msg = BitString(msg_data)
+    bit_can_msg.push_front(encoded_msg_type, MESSAGE_TYPE.length)
 
-    # if board_id throws, try to continue parsing the rest of the messsage
-    # one day, this won't ever be the case, in which case, move BOARD_ID.decode
-    # into the same try block as MESSAEG_TYPE.decode (more aesthetic)
+    res = parse_board_id(encoded_board_id)
     try:
-        board_id = BOARD_ID.decode(encoded_board_id)
-    except:
-        board_id = f"unknown: {encoded_board_id}"
-    try:
-        msg_type = MESSAGE_TYPE.decode(encoded_msg_type)
-        res = {"msg_type": msg_type, "board_id": board_id}
-        res.update(parse(msg_type, BitString(msg_data)))
+        res.update(parse(bit_can_msg, CAN_MSG))
     except (ValueError, IndexError) as error:
         res = {
             "msg_type": str(encoded_msg_type),
             "board_id": str(encoded_board_id),
-            "data": msg_data,
+            "data": str(msg_data),
             "error": str(error)
         }
     return res
+
+# even if we cant parse the board_id, lets try to salvage the rest of the message
+def parse_board_id(encoded_board_id: bytes):
+    try:
+        board_id = BOARD_ID.decode(encoded_board_id)
+    except:
+        board_id = f"unknown: {encoded_board_id}"
+    finally:
+        return {"board_id": board_id}
 
 def parse_live_telemetry(line):
     line = line.lstrip(' \0')

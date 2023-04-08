@@ -4,12 +4,12 @@ class BitString:
     arbitrary-length bits from the front. We need to operate at the bit level since some fields
     are non-byte-aligned (eg. DEBUG_MSG's 4-bit DEBUG_LEVEL and DEBUG_MSG's 12-bit LINE_NUM)
     """
-    def __init__(self, data=b''):
-        self.length = len(data) * 8 # length in bits
+    def __init__(self, data=b'', data_bit_length=0):
+        self.length = data_bit_length or len(data) * 8  # length in bits
         # store the data as an int which is unbounded and lets us do bitwise manipulations
         self.data = int.from_bytes(data, byteorder='big')
 
-    def pop(self, field_length) -> bytes:
+    def pop(self, field_length: int) -> bytes:
         """
         Returns the next field_length most significant bits of data as a bytes object.
 
@@ -24,7 +24,7 @@ class BitString:
         self.data = self.data & ((1 << self.length) - 1) # and then mask them out
         return res.to_bytes((field_length + 7) // 8, byteorder='big') # and convert to a bytes object
 
-    def push(self, value, field_length):
+    def push(self, value: bytes, field_length: int):
         """
         Appends the next field_length least significant bits of data from value.
 
@@ -36,3 +36,12 @@ class BitString:
         value = int.from_bytes(value, byteorder='big') # convert to int to do bitwise maniuplations
         value = value & ((1 << field_length) - 1) # extract the field_length least significant bits
         self.data = (self.data << field_length) | value # and then append to data
+
+    def push_front(self, value: bytes, field_length: int):
+        """
+        Prepends the next field_length least significant bits of data from value.
+        """
+        value = int.from_bytes(value, byteorder='big')
+        self.data = (value << self.length) | self.data
+        self.length += field_length
+        
