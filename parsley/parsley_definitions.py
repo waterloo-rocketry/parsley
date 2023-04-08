@@ -76,5 +76,5 @@ BOARD_ID = Enum("msg_type", 5, mt.board_id)
 MSG_SID = Enum("msg_sid", MESSAGE_TYPE.length + BOARD_ID.length, {}) # used purely as a length constant
 
 # entire CAN message minus board_id 
-# we want to continue parsing even if board_id throws so board_id is parsed seperately
+# board_id is parsed seperately because if it throws, we want to continue parsing
 CAN_MSG = Switch(Enum("msg_type", MESSAGE_TYPE.length, mt.adjusted_msg_type), FIELDS)

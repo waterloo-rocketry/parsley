@@ -7,16 +7,17 @@ from parsley.parsley_definitions import (
     BOARD_STATUS, FIELDS
 )
 from parsley.parsley import (
-    parse, parse_raw,
+    parse, parse_raw, parse_board_id,
     parse_live_telemetry,
     parse_usb_debug,
     parse_logger,
-    format_line
+    format_line,
+    MSG_TYPE_LEN, BOARD_ID_LEN
 )
 import parsley.message_types # allow the entire file to be importable
 from parsley.message_types import (
-    msg_type,  adjusted_msg_type, board_id,
+    msg_type, adjusted_msg_type, board_id,
     gen_cmd, actuator_states, arm_states,
-    board_status, logger_error, sensor_id,
+    board_status,logger_error, sensor_id,
     fill_direction, actuator_id
 )

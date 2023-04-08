@@ -17,6 +17,7 @@ class TestCANMessage:
     """
     @pytest.fixture()
     def bit_str2(self, request):
+        # allows for message type injections from unit test methods
         msg_type = request.param
         bit_str2 = BitString()
         bit_str2.push(*MESSAGE_TYPE.encode(msg_type))
@@ -25,6 +26,7 @@ class TestCANMessage:
 
     @pytest.fixture()
     def bit_str3(self, request):
+        # allows for message type injections from unit test methods
         msg_type = request.param
         bit_str3 = BitString()
         bit_str3.push(*MESSAGE_TYPE.encode(msg_type))
