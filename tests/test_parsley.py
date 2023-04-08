@@ -25,12 +25,15 @@ class TestParsley:
         assert msg_data == b'\x00\x00\x05\x0F\x0F'
 
         res = parsley.parse_raw(msg_sid, msg_data)
+        print(res)
         expected_res = {
-            "msg_type": "GENERAL_BOARD_STATUS",
             "board_id": "PAPA_SPARE",
-            "time": 0.005,
-            "status": "E_SENSOR",
-            "sensor_id": "SENSOR_PRESSURE_PNEUMATICS"
+            "data": {
+                "msg_type": "GENERAL_BOARD_STATUS",
+                "time": 0.005,
+                "status": "E_SENSOR",
+                "sensor_id": "SENSOR_PRESSURE_PNEUMATICS"
+            }
         }
         assert res == expected_res
 
@@ -53,12 +56,14 @@ class TestParsley:
 
         res = parsley.parse_raw(msg_sid, msg_data)
         expected_res = {
-            "msg_type": "DEBUG_MSG",
             "board_id": "ROCKET_PI",
-            "time": 0.133,
-            "level": 15,
-            "line": 3873,
-            "data": "zZz"
+            "data": {
+                "msg_type": "DEBUG_MSG",
+                "time": 0.133,
+                "level": 15,
+                "line": 3873,
+                "data": "zZz"
+            }
         }
         assert res == expected_res
 

@@ -4,7 +4,7 @@ Number = Union[int, float]
 
 class Field:
     """
-    Abstract base class for a message field.
+    Abstract base class for a transcode-able field.
     """
     def __init__(self, name: str, length: int, optional=False):
         self.name = name
@@ -14,9 +14,9 @@ class Field:
     def decode(self, data: bytes) -> Any:
         """
         Converts self.length bits of 'data' to the corresponding python value of the field.
-        This value could be a number, string, etc. depending on the specific field type.
+        This value could be an integer, string, etc. depending on the specific field type.
 
-        'data' should be LSB-aligned which is how BitString.pop currently returns its data.
+        Note: 'data' should be LSB-aligned which is how BitString.pop currently returns its data.
         """
         raise NotImplementedError
 
@@ -26,7 +26,7 @@ class Field:
         Returns a tuple of (encoded_value, self.length) or raises
         a ValueError with an appropiate message if this is not possible.
 
-        'value' should be LSB-aligned which is how BitString.push currently expects its data
+        Note: 'value' should be LSB-aligned which is how BitString.push currently expects its data.
         """
         raise NotImplementedError
 
@@ -35,8 +35,10 @@ class ASCII(Field):
     Provides transcoding between binary data and ASCII-encoded text.
     """
     def decode(self, data: bytes) -> str:
-        # ASCIIs are automatically padded with leading \x00 to ensure correct alignment
-        # therefore when decoding, we must adjust to return the original encoded data
+        """
+        ASCIIs are automatically padded with leading \x00 to ensure correct alignment.
+        Therefore, when decoding, we must perform adjustments to return the original encoded data.
+        """
         return data.replace(b'\x00', b'').decode('ascii')
     
     def encode(self, value: str) -> Tuple[bytes, int]:
@@ -64,7 +66,8 @@ class Enum(Field):
         value_size = len(self.map_key_val.values())
         unique_value_size = len(set(self.map_key_val.values()))
         if value_size != unique_value_size:
-            raise ValueError(f"Mapping '{self.name}' is not injective: has {value_size} values but only {unique_value_size} are unique")
+            # weakening the proposition (since this property is for injective-ness) but this makes more sense
+            raise ValueError(f"Mapping '{self.name}' is not bijective: has {value_size} values but only {unique_value_size} are unique")
 
         for k, v in map_key_val.items():
             if v < 0:
@@ -72,7 +75,6 @@ class Enum(Field):
             if v >= 1 << self.length:
                 raise ValueError(f"Mapping value {v} for key {k} is too large to fit in {self.length} bits")
 
-    # returns the the map's key type
     def decode(self, data: bytes):
         value = int.from_bytes(data, byteorder='big', signed=False)
         if value not in self.map_val_key:
@@ -90,7 +92,7 @@ class Enum(Field):
 class Numeric(Field):
     """
     Provides transcoding between binary data and (un)signed numbers,
-    where 'Number'is defined as either a floating or integer type.
+    where 'Number' is defined as either a floating or integer type.
     Offers value scaling between conversions (note: there may be imprecision).
     """
     def __init__(self, name: str, length: int, scale = 1, signed = False):

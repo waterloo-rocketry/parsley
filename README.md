@@ -10,10 +10,12 @@
 ## Example
 
 ``` python
-import parsley
-import parsley_definitions as pd
+from parsley import (
+    parsley_definitions as pd,
+    parse_raw,
+    BitString
+)
 import tests.test_utils as tu
-from bitstring import BitString
 
 # Encoding a DEBUG_MSG CAN message
 bit_str = BitString()
@@ -38,7 +40,7 @@ msg_sid = tu.create_msg_sid_from_strings("DEBUG_MSG", "PAPA_SPARE")
 msg_data = bit_str.pop(64)
 
 # Decoding a CAN message
-result = parsley.parse_raw(msg_sid, msg_data)
+result = parse_raw(msg_sid, msg_data)
 """
 result = {
     'msg_type' = 'DEBUG_MSG',

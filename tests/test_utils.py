@@ -1,7 +1,11 @@
 import pytest
 
-from bitstring import BitString
-from parsley_definitions import MESSAGE_TYPE, BOARD_ID, MSG_SID
+# changing the import structure in this file because I want people to be able
+# to run the README snippet (our test suite appends to pythonpath)
+from parsley import (
+    BitString,
+    MESSAGE_TYPE, BOARD_ID, MSG_SID
+)
 
 FLOAT_TOLERANCE = 0.01
 

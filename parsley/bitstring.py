@@ -26,7 +26,7 @@ class BitString:
 
     def push(self, value: bytes, field_length: int):
         """
-        Appends the next field_length least significant bits of data from value.
+        Appends the next field_length least significant bits of data from value (to the back).
 
         So for example, appending 6 bits from:
         10110000
@@ -35,13 +35,13 @@ class BitString:
         self.length += field_length
         value = int.from_bytes(value, byteorder='big') # convert to int to do bitwise maniuplations
         value = value & ((1 << field_length) - 1) # extract the field_length least significant bits
-        self.data = (self.data << field_length) | value # and then append to data
+        self.data = (self.data << field_length) | value # and then append value to the back of data
 
     def push_front(self, value: bytes, field_length: int):
         """
-        Prepends the next field_length least significant bits of data from value.
+        Prepends the next field_length least significant bits of data from value (to the front).
         """
         value = int.from_bytes(value, byteorder='big')
-        self.data = (value << self.length) | self.data # append value to the front of self.data
+        self.data = (value << self.length) | self.data # prepend value to the front of data
         self.length += field_length
         
