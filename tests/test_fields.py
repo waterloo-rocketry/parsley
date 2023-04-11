@@ -22,9 +22,25 @@ class TestASCII:
         a = ASCII("string", 32)
         assert a.decode(b'\x57') == 'W'
 
+    # there is an interesting behaviour when encoding partial ASCII data:
+    # we want the text to be left aligned instead of the default right aligned encoding elsewhere
+    def test_ASCII_partial(self):
+        a = ASCII("string", 32)
+        (data, _) = a.encode("a")
+        assert data == b'a\x00\x00\x00'
+
     def test_ASCII_decode_encode(self):
         a = ASCII("string", 32)
         assert a.decode(a.encode('1234')[0]) == '1234'
+
+    def test_ASCII_empty(self):
+        a = ASCII("string", 32, optional=True)
+        assert a.encode("")[0] == b'\x00\x00\x00\x00'
+
+    def test_ASCII_error_empty(self):
+        a = ASCII("string", 32)
+        with pytest.raises(ValueError):
+            a.encode("")
 
     def test_ASCII_error_not_str(self):
         a = ASCII("string", 16)

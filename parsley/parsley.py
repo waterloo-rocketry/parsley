@@ -1,29 +1,29 @@
-from typing import Tuple, Union
+import crc8
+from typing import List, Tuple, Union
 
 from parsley.bitstring import BitString
-from parsley.fields import Switch
-from parsley.parsley_definitions import CAN_MSG, MESSAGE_TYPE, BOARD_ID, MSG_SID
+from parsley.fields import Field, Switch
+from parsley.message_definitions import CAN_MSG, MESSAGE_TYPE, BOARD_ID, MSG_SID
 
 import parsley.message_types as mt
+import parsley.parse_utils as pu
 
-def parse(bit_str: BitString, fields: Switch) -> dict:
+def parse_fields(bit_str: BitString, fields: List[Field]) -> dict:
     """
     Parses binary data stored in a BitString using a predefined structure specified in
     parsley_definitions.py. The function iterates over the respective field types decoded from
     a Switch Field, which acts as a forkroad changing how data is parsed depending on the BitString data.
     """
     res = {}
-    data = bit_str.pop(fields.length)
-    res[fields.name] = fields.decode(data)
-    for field in fields.get_fields(res[fields.name]):
-        if isinstance(field, Switch):
-            res.update(parse(bit_str, field))
-            continue
+    for field in fields:
         data = bit_str.pop(field.length)
         res[field.name] = field.decode(data)
+        if isinstance(field, Switch):
+            nested_fields = field.get_fields(res[field.name])
+            res.update(parse_fields(bit_str, nested_fields))
     return res
 
-def parse_raw(msg_sid: bytes, msg_data: bytes) -> dict:
+def parse(msg_sid: bytes, msg_data: bytes) -> dict:
     """
     Extracts metadata from message_sid and along with message_data, constructs a parse-able CAN message.
     Upon reading poorly formatted data, the error is caught and returned in the dictionary.
@@ -33,28 +33,28 @@ def parse_raw(msg_sid: bytes, msg_data: bytes) -> dict:
     encoded_msg_type = bit_str_msg_sid.pop(MESSAGE_TYPE.length)
     encoded_board_id = bit_str_msg_sid.pop(BOARD_ID.length)
 
-    # we can't append msg_data to msg_type since we don't always know its bit-message size
-    bit_str_can_msg = BitString(msg_data)
-    bit_str_can_msg.push_front(encoded_msg_type, MESSAGE_TYPE.length)
     res = parse_board_id(encoded_board_id)
     try:
-        res["data"] = parse(bit_str_can_msg, CAN_MSG)
+        res["msg_type"] = MESSAGE_TYPE.decode(encoded_msg_type)
+        # we splice the first element since we've manually parsed BOARD_ID seperately
+        # if BOARD_ID throws, we want to try and parse the rest of the CAN message
+        fields = CAN_MSG.get_fields(res["msg_type"])[1:]
+        res["data"] = parse_fields(BitString(msg_data), fields)
     except (ValueError, IndexError) as error:
-        res = {
-            "board_id": str(encoded_board_id),
+        res.update({
+            "msg_type": pu.hexify_msg_sid(encoded_msg_type, is_msg_type=True),
             "data": {
-                "msg_type": str(encoded_msg_type),
-                "msg_data": str(msg_data),
+                "msg_data": pu.hexify(msg_data),
                 "error": str(error)
             }
-        }
+        })
     return res
 
 def parse_board_id(encoded_board_id: bytes) -> dict:
     try:
         board_id = BOARD_ID.decode(encoded_board_id)
-    except:
-        board_id = f"unknown: {encoded_board_id}"
+    except ValueError:
+        board_id = pu.hexify_msg_sid(encoded_board_id)
     finally:
         return {"board_id": board_id}
 
@@ -68,14 +68,12 @@ def parse_live_telemetry(line: bytes) -> Union[Tuple[bytes, bytes], None]:
     msg_data, msg_checksum = msg_data.split(";")
     msg_sid = int(msg_sid, 16)
     msg_data = [int(byte, 16) for byte in msg_data.split(",")]
-    sum1 = 0
-    sum2 = 0
-    for c in line[:-1]:
-        if c.lower() in "0123456789abcdef":
-            sum1 = (sum1 + int(c, 16)) % 15
-            sum2 = (sum1 + sum2) % 15
-    if int(msg_checksum, 16) != sum1 ^ sum2:
-        print(f"Bad checksum, expected {sum1 ^ sum2} but got {msg_checksum}")
+    exp_sum = crc8.crc8(msg_sid.to_bytes(2, byteorder='big'))
+    for c in msg_data:
+        exp_sum.update(c.to_bytes(1, byteorder='big'))
+    exp_sum_value = exp_sum.hexdigest().upper()
+    if msg_checksum != exp_sum_value:
+        print(f"Bad checksum, expected {exp_sum_value} but got {msg_checksum}")
         return None
 
     return msg_sid, msg_data
@@ -109,10 +107,9 @@ BOARD_ID_LEN = max([len(board_id) for board_id in mt.board_id])
 
 # formats a parsed CAN message (dictionary) into a singular line
 def format_line(parsed_data: dict) -> str:
-    msg_type = parsed_data['data']['msg_type']
+    msg_type = parsed_data['msg_type']
     board_id = parsed_data['board_id']
     data = parsed_data['data']
-    data.pop('msg_type') # msg_type is now nested in data, removing to avoid duplicates
     res = f"[ {msg_type:<{MSG_TYPE_LEN}} {board_id:<{BOARD_ID_LEN}} ]"
     for k, v in data.items():
         res += f" {k}: {v}"

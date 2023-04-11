@@ -39,6 +39,7 @@ class ASCII(Field):
         ASCIIs are automatically padded with leading \x00 to ensure correct alignment.
         Therefore, when decoding, we must perform adjustments to return the original encoded data.
         """
+        # we need to manually replace the null bytes to return the original data
         return data.replace(b'\x00', b'').decode('ascii')
     
     def encode(self, value: str) -> Tuple[bytes, int]:
@@ -48,8 +49,11 @@ class ASCII(Field):
             raise ValueError(f"{value} contains non-ascii character(s)")
         if self.length < 8*len(value.encode('ascii')):
             raise ValueError(f"{value} is too large for {self.length//8} character(s)")
+        if not self.optional and not value:
+            raise ValueError(f"{self.name} cannot encode empty strings")
 
-        encoded_data = value.encode('ascii')
+        # we want strings to be left aligned when they are encoded so pad with trailing \x00
+        encoded_data = value.encode('ascii').ljust(self.length // 8, b'\x00')
         return (encoded_data, self.length)
 
 class Enum(Field):
@@ -78,13 +82,13 @@ class Enum(Field):
     def decode(self, data: bytes):
         value = int.from_bytes(data, byteorder='big', signed=False)
         if value not in self.map_val_key:
-            raise ValueError(f"Value '{value}' not found in mapping '{self.name}'")
+            raise ValueError(f"Value '{value}' not found in map '{self.name}'")
 
         return self.map_val_key[value]
 
     def encode(self, key) -> Tuple[bytes, int]:
         if key not in self.map_key_val:
-            raise ValueError(f"Key '{key}' not found in mapping '{self.name}'")
+            raise ValueError(f"Key '{key}' not found in map '{self.name}'")
 
         encoded_data = self.map_key_val[key].to_bytes((self.length + 7) // 8, byteorder='big')
         return (encoded_data, self.length)
