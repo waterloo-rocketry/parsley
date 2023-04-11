@@ -23,7 +23,7 @@ class TestASCII:
         assert a.decode(b'\x57') == 'W'
 
     # there is an interesting behaviour when encoding partial ASCII data:
-    # we want the text to be left aligned instead of the default right aligned encoding elsewhere
+    # we want the text to be left-aligned (instead of the normal right-aligned seen everywhere else)
     def test_ASCII_partial(self):
         a = ASCII("string", 32)
         (data, _) = a.encode("a")

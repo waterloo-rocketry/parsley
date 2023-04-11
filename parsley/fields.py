@@ -4,12 +4,12 @@ Number = Union[int, float]
 
 class Field:
     """
-    Abstract base class for a transcode-able field.
+    Abstract base class for all transcode-able fields.
     """
     def __init__(self, name: str, length: int, optional=False):
         self.name = name
         self.length = length # length in bits
-        self.optional = optional # serves no purpose in parsley but is required in omnibus
+        self.optional = optional # boolean flag for allowing falsy encoded data (ie. empty string)
 
     def decode(self, data: bytes) -> Any:
         """

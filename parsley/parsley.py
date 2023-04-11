@@ -10,9 +10,9 @@ import parsley.parse_utils as pu
 
 def parse_fields(bit_str: BitString, fields: List[Field]) -> dict:
     """
-    Parses binary data stored in a BitString using a predefined structure specified in
-    parsley_definitions.py. The function iterates over the respective field types decoded from
-    a Switch Field, which acts as a forkroad changing how data is parsed depending on the BitString data.
+    Parses binary data stored in a BitString and decodes the data
+    based on each field's decode() implementation. Returns a dictionary
+    of each field's name to its decoded python value.
     """
     res = {}
     for field in fields:
@@ -25,9 +25,8 @@ def parse_fields(bit_str: BitString, fields: List[Field]) -> dict:
 
 def parse(msg_sid: bytes, msg_data: bytes) -> dict:
     """
-    Extracts metadata from message_sid and along with message_data, constructs a parse-able CAN message.
+    Extracts the message_type and board_id from msg_sid to construct a CAN message with message_data.
     Upon reading poorly formatted data, the error is caught and returned in the dictionary.
-    If BOARD_ID fails to parse, we will try to salvage the rest of the CAN message.
     """
     bit_str_msg_sid = BitString(msg_sid, MSG_SID.length)
     encoded_msg_type = bit_str_msg_sid.pop(MESSAGE_TYPE.length)

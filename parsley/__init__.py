@@ -7,6 +7,5 @@ from .parsley import (
     parse_live_telemetry,
     parse_usb_debug,
     parse_logger,
-    MSG_TYPE_LEN, BOARD_ID_LEN,
     format_line
 )

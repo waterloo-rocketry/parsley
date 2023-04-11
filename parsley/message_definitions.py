@@ -8,6 +8,7 @@ TIMESTAMP_3 = Numeric("time", 24, scale=1/1000)
 
 MESSAGE_TYPE = Enum("msg_type", 6, mt.adjusted_msg_type)
 BOARD_ID = Enum("msg_type", 5, mt.board_id)
+MSG_SID = Enum("msg_sid", MESSAGE_TYPE.length + BOARD_ID.length, {}) # used purely as a length constant
 
 BOARD_STATUS = {
     "E_NOMINAL":                [],
@@ -75,8 +76,6 @@ MESSAGES = {
     "LEDS_ON":              [BOARD_ID],
     "LEDS_OFF":             [BOARD_ID]
 }
-
-MSG_SID = Enum("msg_sid", MESSAGE_TYPE.length + BOARD_ID.length, {}) # used purely as a length constant
 
 # entire CAN message minus board_id 
 # board_id is parsed seperately because if it throws, we want to continue parsing

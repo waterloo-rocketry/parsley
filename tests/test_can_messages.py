@@ -10,8 +10,8 @@ import test_utils as tu
 
 class TestCANMessage:
     """
-    We are testing only the message body of CAN messages, which means
-    that the BitString contents won't contain the MSG_SID (message_type | board_id).
+    We are testing only the message body of CAN messages, which means that BitString won't contain
+    a message_sid (ie. message_type | board_id where '|' represents bitwise OR)
     """
     @pytest.fixture()
     def bit_str2(self):

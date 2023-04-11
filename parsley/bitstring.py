@@ -1,8 +1,8 @@
 class BitString:
     """
-    Stores the message data bits that we have yet to parse and lets us read
-    arbitrary-length bits from the front. We need to operate at the bit level since some fields
-    are non-byte-aligned (eg. DEBUG_MSG's 4-bit DEBUG_LEVEL and DEBUG_MSG's 12-bit LINE_NUM)
+    Stores the message data bits that we have yet to parse and lets us read arbitrary-length
+    bits from the front. We need to operate at the bit level since some fields are
+    non-byte-aligned (eg. DEBUG_MSG's 4-bit DEBUG_LEVEL and DEBUG_MSG's 12-bit LINE_NUM)
     """
     def __init__(self, data=b'', data_bit_length=0):
         self.length = data_bit_length or len(data) * 8 # length in bits

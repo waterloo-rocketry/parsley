@@ -1,11 +1,5 @@
 import pytest
 
-# changing the import structure in this file because I want people to be able
-# to run the README snippet (our test suite appends to pythonpath)
-# from parsley import (
-#     BitString,
-#     MESSAGE_TYPE, BOARD_ID, MSG_SID
-# )
 from bitstring import BitString
 from message_definitions import MESSAGE_TYPE, BOARD_ID, MSG_SID
 

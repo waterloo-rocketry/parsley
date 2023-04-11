@@ -1,7 +1,6 @@
 import pytest
 
 from bitstring import BitString
-from fields import ASCII
 
 class TestBitString:
     def test_bitstring(self):
