@@ -25,7 +25,7 @@ def parse_fields(bit_str: BitString, fields: List[Field]) -> dict:
 
 def parse(msg_sid: bytes, msg_data: bytes) -> dict:
     """
-    Extracts the message_type and board_id from msg_sid to construct a CAN message with message_data.
+    Extracts the message_type and board_id from msg_sid to construct a CAN message along with message_data.
     Upon reading poorly formatted data, the error is caught and returned in the dictionary.
     """
     bit_str_msg_sid = BitString(msg_sid, MSG_SID.length)
@@ -34,17 +34,18 @@ def parse(msg_sid: bytes, msg_data: bytes) -> dict:
 
     res = parse_board_id(encoded_board_id)
     try:
-        res["msg_type"] = MESSAGE_TYPE.decode(encoded_msg_type)
-        # we splice the first element since we've manually parsed BOARD_ID seperately
-        # if BOARD_ID throws, we want to try and parse the rest of the CAN message
-        fields = CAN_MSG.get_fields(res["msg_type"])[1:]
-        res["data"] = parse_fields(BitString(msg_data), fields)
+        res['msg_type'] = MESSAGE_TYPE.decode(encoded_msg_type)
+        # we splice the first element since we've already manually parsed BOARD_ID
+        # if BOARD_ID threw an error, we want to try and parse the rest of the CAN message
+        fields = CAN_MSG.get_fields(res['msg_type'])[1:]
+        res['data'] = parse_fields(BitString(msg_data), fields)
     except (ValueError, IndexError) as error:
         res.update({
-            "msg_type": pu.hexify_msg_sid(encoded_msg_type, is_msg_type=True),
-            "data": {
-                "msg_data": pu.hexify(msg_data),
-                "error": str(error)
+            # convert the 6-bit msg_type into its canlib 12-bit form
+            'msg_type': pu.hexify(encoded_msg_type, is_msg_type=True),
+            'data': {
+                'msg_data': pu.hexify(msg_data),
+                'error': str(error)
             }
         })
     return res
@@ -53,47 +54,50 @@ def parse_board_id(encoded_board_id: bytes) -> dict:
     try:
         board_id = BOARD_ID.decode(encoded_board_id)
     except ValueError:
-        board_id = pu.hexify_msg_sid(encoded_board_id)
+        board_id = pu.hexify(encoded_board_id)
     finally:
-        return {"board_id": board_id}
+        return {'board_id': board_id}
 
-def parse_live_telemetry(line: bytes) -> Union[Tuple[bytes, bytes], None]:
+# TODO: check what pyserial returns (I think its a byte string but thees look like strings to me)
+# TODO: might also have to modify msg_data (currently an array), I'm not so sure if it'll work with the current
+# parsley parse function (case we expect a byte string)
+def parse_live_telemetry(line: str) -> Union[Tuple[bytes, bytes], None]:
     line = line.lstrip(' \0')
     if len(line) == 0 or line[0] != '$':
         return None
     line = line[1:]
 
-    msg_sid, msg_data = line.split(":")
-    msg_data, msg_checksum = msg_data.split(";")
+    msg_sid, msg_data = line.split(':')
+    msg_data, msg_checksum = msg_data.split(';')
     msg_sid = int(msg_sid, 16)
-    msg_data = [int(byte, 16) for byte in msg_data.split(",")]
+    msg_data = [int(byte, 16) for byte in msg_data.split(',')]
     exp_sum = crc8.crc8(msg_sid.to_bytes(2, byteorder='big'))
     for c in msg_data:
         exp_sum.update(c.to_bytes(1, byteorder='big'))
     exp_sum_value = exp_sum.hexdigest().upper()
     if msg_checksum != exp_sum_value:
-        print(f"Bad checksum, expected {exp_sum_value} but got {msg_checksum}")
+        print(f'Bad checksum, expected {exp_sum_value} but got {msg_checksum}')
         return None
 
     return msg_sid, msg_data
 
-def parse_usb_debug(line: bytes) -> Union[Tuple[bytes, bytes], None]:
+def parse_usb_debug(line: str) -> Union[Tuple[bytes, bytes], None]:
     line = line.lstrip(' \0')
     if len(line) == 0 or line[0] != '$':
         return None
     line = line[1:]
 
-    if ":" in line:
-        msg_sid, msg_data = line.split(":")
+    if ':' in line:
+        msg_sid, msg_data = line.split(':')
         msg_sid = int(msg_sid, 16)
-        msg_data = [int(byte, 16) for byte in msg_data.split(",")]
+        msg_data = [int(byte, 16) for byte in msg_data.split(',')]
     else:
         msg_sid = int(line, 16)
         msg_data = []
 
     return msg_sid, msg_data
 
-def parse_logger(line: bytes) -> Union[Tuple[bytes, bytes], None]:
+def parse_logger(line: str) -> Union[Tuple[bytes, bytes], None]:
     # see cansw_logger/can_syslog.c for format
     msg_sid, msg_data = line[:3], line[3:]
     msg_sid = int(msg_sid, 16)
@@ -109,7 +113,7 @@ def format_line(parsed_data: dict) -> str:
     msg_type = parsed_data['msg_type']
     board_id = parsed_data['board_id']
     data = parsed_data['data']
-    res = f"[ {msg_type:<{MSG_TYPE_LEN}} {board_id:<{BOARD_ID_LEN}} ]"
+    res = f'[ {msg_type:<{MSG_TYPE_LEN}} {board_id:<{BOARD_ID_LEN}} ]'
     for k, v in data.items():
-        res += f" {k}: {v}"
+        res += f' {k}: {v}'
     return res

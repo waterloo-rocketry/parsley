@@ -21,7 +21,7 @@ bit_str = BitString()
 bit_str.push(*md.TIMESTAMP_3.encode(12.345)) # 12.345 seconds
 bit_str.push(*md.Numeric("level", 4).encode(6))
 bit_str.push(*md.Numeric("line", 12).encode(0x123))
-bit_str.push(*md.ASCII("data", 24, optional=True).encode("T_T"))
+bit_str.push(*md.ASCII("data", 24).encode("T_T"))
 """
 The data encoded in bit_str looks like:
           |=> level of 6
