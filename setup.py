@@ -7,6 +7,9 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
+with open(path.join(here, 'requirements.txt'), encoding='utf-8') as f:
+    requirements = f.read().splitlines()
+
 setup(
     name='parsley',
     version='0.0.1',
@@ -33,5 +36,6 @@ setup(
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries :: Python Modules'
     ],
-    packages=find_packages(include=['parsley'])
+    packages=find_packages(include=['parsley']),
+    install_requires=requirements
 )
