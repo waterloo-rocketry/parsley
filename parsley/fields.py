@@ -8,9 +8,10 @@ class Field:
 
     Note: data is assumed to be LSB-aligned to match the implementation of BitString.
     """
-    def __init__(self, name: str, length: int):
+    def __init__(self, name: str, length: int, unit=""):
         self.name = name
         self.length = length # length in bits
+        self.unit = unit # optional unit description
 
     def decode(self, data: bytes) -> Any:
         """
@@ -95,6 +96,9 @@ class Enum(Field):
         encoded_data = self.map_key_val[key].to_bytes((self.length + 7) // 8, byteorder='big')
         return (encoded_data, self.length)
     
+    def get_keys(self):
+        return self.map_key_val.keys()
+    
 class Numeric(Field):
     """
     Transcodes binary data and numbers (ie. (un)signed and/or floating point)
@@ -103,8 +107,8 @@ class Numeric(Field):
     For example:
     b'\xFC' <=> -4 (two's complement)
     """
-    def __init__(self, name: str, length: int, scale=1, signed=False):
-        super().__init__(name, length)
+    def __init__(self, name: str, length: int, scale=1, signed=False, unit=""):
+        super().__init__(name, length, unit)
         self.scale = scale
         self.signed = signed
 
@@ -146,3 +150,4 @@ class Switch(Enum):
 
     def get_fields(self, key):
         return self.map_key_enum[key]
+    

@@ -3,8 +3,8 @@ from parsley.fields import ASCII, Enum, Numeric, Switch
 import parsley.message_types as mt
 
 # returns data scaled in seconds (ie. reads raw data in milliseconds and outputs seconds)
-TIMESTAMP_2 = Numeric('time', 16, scale=1/1000)
-TIMESTAMP_3 = Numeric('time', 24, scale=1/1000)
+TIMESTAMP_2 = Numeric('time', 16, scale=1/1000, unit="seconds")
+TIMESTAMP_3 = Numeric('time', 24, scale=1/1000, unit="seconds")
 
 MESSAGE_TYPE = Enum('msg_type', 6, mt.adjusted_msg_type)
 BOARD_ID = Enum('msg_type', 5, mt.board_id)
