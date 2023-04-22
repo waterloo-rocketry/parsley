@@ -7,7 +7,7 @@ TIMESTAMP_2 = Numeric('time', 16, scale=1/1000, unit="seconds")
 TIMESTAMP_3 = Numeric('time', 24, scale=1/1000, unit="seconds")
 
 MESSAGE_TYPE = Enum('msg_type', 6, mt.adjusted_msg_type)
-BOARD_ID = Enum('msg_type', 5, mt.board_id)
+BOARD_ID = Enum('board_id', 5, mt.board_id)
 MSG_SID = Enum('msg_sid', MESSAGE_TYPE.length + BOARD_ID.length, {}) # used purely as a length constant
 
 BOARD_STATUS = {

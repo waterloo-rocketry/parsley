@@ -4,6 +4,7 @@ from . import message_definitions
 from . import message_types
 from .parsley import (
     parse_fields, parse, parse_board_id,
+    parse_bitstring,
     parse_live_telemetry,
     parse_usb_debug,
     parse_logger,

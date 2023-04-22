@@ -58,10 +58,12 @@ def parse_board_id(encoded_board_id: bytes) -> dict:
     finally:
         return {'board_id': board_id}
 
-# TODO: check what pyserial returns (I think its a byte string but thees look like strings to me)
-# TODO: might also have to modify msg_data (currently an array), I'm not so sure if it'll work with the current
-# parsley parse function (case we expect a byte string)
-def parse_live_telemetry(line: str) -> Union[Tuple[bytes, bytes], None]:
+def parse_bitstring(bit_str: BitString) -> Tuple[int, int]:
+    msg_sid = int.from_bytes(bit_str.pop(MSG_SID.length), byteorder='big')
+    msg_data = int.from_bytes(bit_str.pop(bit_str.length), byteorder='big')
+    return msg_sid, msg_data
+
+def parse_live_telemetry(line: str) -> Union[Tuple[int, int], None]:
     line = line.lstrip(' \0')
     if len(line) == 0 or line[0] != '$':
         return None
@@ -81,7 +83,7 @@ def parse_live_telemetry(line: str) -> Union[Tuple[bytes, bytes], None]:
 
     return msg_sid, msg_data
 
-def parse_usb_debug(line: str) -> Union[Tuple[bytes, bytes], None]:
+def parse_usb_debug(line: str) -> Union[Tuple[int, int], None]:
     line = line.lstrip(' \0')
     if len(line) == 0 or line[0] != '$':
         return None
@@ -97,7 +99,7 @@ def parse_usb_debug(line: str) -> Union[Tuple[bytes, bytes], None]:
 
     return msg_sid, msg_data
 
-def parse_logger(line: str) -> Union[Tuple[bytes, bytes], None]:
+def parse_logger(line: str) -> Union[Tuple[int, int], None]:
     # see cansw_logger/can_syslog.c for format
     msg_sid, msg_data = line[:3], line[3:]
     msg_sid = int(msg_sid, 16)
