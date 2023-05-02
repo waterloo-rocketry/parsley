@@ -151,3 +151,5 @@ class Switch(Enum):
     def get_fields(self, key):
         return self.map_key_enum[key]
     
+    def get_keys(self):
+        return self.map_key_val.keys()

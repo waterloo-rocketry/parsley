@@ -2,7 +2,7 @@ import parsley
 
 from bitstring import BitString
 from fields import ASCII, Enum, Numeric
-from message_definitions import MESSAGE_TYPE, BOARD_ID, MSG_SID, TIMESTAMP_3
+from message_definitions import MESSAGE_TYPE, BOARD_ID, MESSAGE_SID, TIMESTAMP_3
 
 import message_types as mt
 import test_utils as tu
@@ -78,7 +78,7 @@ class TestParsley:
         bit_msg_sid = BitString()
         bit_msg_sid.push(*MESSAGE_TYPE.encode('LEDS_ON'))
         bit_msg_sid.push(b'\x1F', BOARD_ID.length)
-        msg_sid = bit_msg_sid.pop(MSG_SID.length)
+        msg_sid = bit_msg_sid.pop(MESSAGE_SID.length)
 
         res = parsley.parse(msg_sid, b'')
         assert '0x' in res['board_id'] # when board_id throws, just display the hexadecimal string

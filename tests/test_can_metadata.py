@@ -3,7 +3,7 @@ import parsley
 
 from bitstring import BitString
 from fields import Enum, Numeric
-from message_definitions import TIMESTAMP_2, TIMESTAMP_3, CAN_MSG
+from message_definitions import TIMESTAMP_2, TIMESTAMP_3, CAN_MESSAGE
 
 import message_types as mt
 import test_utils as tu
@@ -39,7 +39,7 @@ class TestCANMetadata:
         msg_data.push(*Numeric('x', 16, scale=8/2**16, signed=True).encode(-2))
         msg_data.push(*Numeric('y', 16, scale=8/2**16, signed=True).encode(-3))
         msg_data.push(*Numeric('z', 16, scale=8/2**16, signed=True).encode(-4))
-        res = parsley.parse_fields(msg_data, CAN_MSG.get_fields('SENSOR_ACC')[1:])
+        res = parsley.parse_fields(msg_data, CAN_MESSAGE.get_fields('SENSOR_ACC')[1:])
         assert res['time'] == tu.approx(1.234)
         assert res['x'] == tu.approx(-2)
         assert res['y'] == tu.approx(-3)
@@ -49,6 +49,6 @@ class TestCANMetadata:
         msg_data = BitString()
         msg_data.push(*TIMESTAMP_3.encode(12.345))
         msg_data.push(*Enum('command', 8, mt.gen_cmd).encode('BUS_DOWN_WARNING'))
-        res = parsley.parse_fields(msg_data, CAN_MSG.get_fields('GENERAL_CMD')[1:])
+        res = parsley.parse_fields(msg_data, CAN_MESSAGE.get_fields('GENERAL_CMD')[1:])
         assert res['time'] == tu.approx(12.345)
         assert res['command'] == 'BUS_DOWN_WARNING'

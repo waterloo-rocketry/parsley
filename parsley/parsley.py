@@ -3,7 +3,7 @@ from typing import List, Tuple, Union
 
 from parsley.bitstring import BitString
 from parsley.fields import Field, Switch
-from parsley.message_definitions import CAN_MSG, MESSAGE_TYPE, BOARD_ID, MSG_SID
+from parsley.message_definitions import CAN_MESSAGE, MESSAGE_TYPE, BOARD_ID, MESSAGE_SID
 
 import parsley.message_types as mt
 import parsley.parse_utils as pu
@@ -28,7 +28,7 @@ def parse(msg_sid: bytes, msg_data: bytes) -> dict:
     Extracts the message_type and board_id from msg_sid to construct a CAN message along with message_data.
     Upon reading poorly formatted data, the error is caught and returned in the dictionary.
     """
-    bit_str_msg_sid = BitString(msg_sid, MSG_SID.length)
+    bit_str_msg_sid = BitString(msg_sid, MESSAGE_SID.length)
     encoded_msg_type = bit_str_msg_sid.pop(MESSAGE_TYPE.length)
     encoded_board_id = bit_str_msg_sid.pop(BOARD_ID.length)
 
@@ -37,7 +37,7 @@ def parse(msg_sid: bytes, msg_data: bytes) -> dict:
         res['msg_type'] = MESSAGE_TYPE.decode(encoded_msg_type)
         # we splice the first element since we've already manually parsed BOARD_ID
         # if BOARD_ID threw an error, we want to try and parse the rest of the CAN message
-        fields = CAN_MSG.get_fields(res['msg_type'])[1:]
+        fields = CAN_MESSAGE.get_fields(res['msg_type'])[1:]
         res['data'] = parse_fields(BitString(msg_data), fields)
     except (ValueError, IndexError) as error:
         res.update({
@@ -58,12 +58,12 @@ def parse_board_id(encoded_board_id: bytes) -> dict:
     finally:
         return {'board_id': board_id}
 
-def parse_bitstring(bit_str: BitString) -> Tuple[int, int]:
-    msg_sid = int.from_bytes(bit_str.pop(MSG_SID.length), byteorder='big')
-    msg_data = int.from_bytes(bit_str.pop(bit_str.length), byteorder='big')
-    return msg_sid, msg_data
+def parse_bitstring(bit_str: BitString) -> Tuple[int, List[int]]:
+    msg_sid = int.from_bytes(bit_str.pop(MESSAGE_SID.length), byteorder='big')
+    msg_data = [byte for byte in bit_str.pop(bit_str.length)]
+    return format_can_message(msg_sid, msg_data)
 
-def parse_live_telemetry(line: str) -> Union[Tuple[int, int], None]:
+def parse_live_telemetry(line: str) -> Union[Tuple[int, List[int]], None]:
     line = line.lstrip(' \0')
     if len(line) == 0 or line[0] != '$':
         return None
@@ -81,9 +81,9 @@ def parse_live_telemetry(line: str) -> Union[Tuple[int, int], None]:
         print(f'Bad checksum, expected {exp_sum_value} but got {msg_checksum}')
         return None
 
-    return msg_sid, msg_data
+    return format_can_message(msg_sid, msg_data)
 
-def parse_usb_debug(line: str) -> Union[Tuple[int, int], None]:
+def parse_usb_debug(line: str) -> Union[Tuple[int, List[int]], None]:
     line = line.lstrip(' \0')
     if len(line) == 0 or line[0] != '$':
         return None
@@ -97,15 +97,22 @@ def parse_usb_debug(line: str) -> Union[Tuple[int, int], None]:
         msg_sid = int(line, 16)
         msg_data = []
 
-    return msg_sid, msg_data
+    return format_can_message(msg_sid, msg_data)
 
-def parse_logger(line: str) -> Union[Tuple[int, int], None]:
+def parse_logger(line: str) -> Union[Tuple[int, List[int]], None]:
     # see cansw_logger/can_syslog.c for format
     msg_sid, msg_data = line[:3], line[3:]
     msg_sid = int(msg_sid, 16)
     # last 'byte' is the recv_timestamp
     msg_data = [int(msg_data[i:i+2], 16) for i in range(0, len(msg_data), 2)]
-    return msg_sid, msg_data
+    return format_can_message(msg_sid, msg_data)
+
+# our existing parsing formats are slightly different from how we actually parse things
+def format_can_message(msg_sid: int, msg_data: List[int]) -> Tuple[bytes, bytes]:
+    msg_sid_length = (msg_sid.bit_length() + 7) // 8
+    formatted_msg_sid = msg_sid.to_bytes(msg_sid_length, byteorder='big')
+    formatted_msg_data = bytes(msg_data)
+    return formatted_msg_sid, formatted_msg_data
 
 MSG_TYPE_LEN = max([len(msg_type) for msg_type in mt.msg_type])
 BOARD_ID_LEN = max([len(board_id) for board_id in mt.board_id])
@@ -119,3 +126,20 @@ def format_line(parsed_data: dict) -> str:
     for k, v in data.items():
         res += f' {k}: {v}'
     return res
+
+# given a dictionary of CAN message data, encode a usb_debug style CAN message
+def encode_usb_debug(parsed_data: dict) -> str:
+    board_id = parsed_data['board_id']
+    msg_type = parsed_data['msg_type']
+    msg_body = parsed_data['data']
+
+    bit_str = BitString()
+    bit_str.push(*BOARD_ID.encode(board_id))
+    bit_str.push(*MESSAGE_TYPE.encode(msg_type))
+    msg_sid = int.from_bytes(bit_str.pop(bit_str.length), byteorder='big')
+
+    for idx, field in enumerate(CAN_MESSAGE.get_fields(msg_type)[1:]):
+        key = list(msg_body.keys())[idx]
+        bit_str.push(*field.encode(msg_body[key]))
+    msg_data = [byte for byte in bit_str.pop(bit_str.length)]
+    return msg_sid, msg_data
