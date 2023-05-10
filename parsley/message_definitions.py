@@ -3,8 +3,8 @@ from parsley.fields import ASCII, Enum, Numeric, Switch
 import parsley.message_types as mt
 
 # returns data scaled in seconds (ie. reads raw data in milliseconds and outputs seconds)
-TIMESTAMP_2 = Numeric('time', 16, scale=1/1000, unit='seconds')
-TIMESTAMP_3 = Numeric('time', 24, scale=1/1000, unit='seconds')
+TIMESTAMP_2 = Numeric('time', 16, scale=1/1000, unit='s')
+TIMESTAMP_3 = Numeric('time', 24, scale=1/1000, unit='s')
 
 MESSAGE_TYPE = Enum('msg_type', 6, mt.adjusted_msg_type)
 BOARD_ID = Enum('board_id', 5, mt.board_id)
@@ -17,6 +17,7 @@ BOARD_STATUS = {
     'E_BUS_UNDER_VOLTAGE':      [Numeric('voltage', 16)],
     'E_BUS_OVER_VOLTAGE':       [Numeric('voltage', 16)],
 
+    'E_BATT_OVER_CURRENT':      [Numeric('current', 16)],
     'E_BATT_UNDER_VOLTAGE':     [Numeric('voltage', 16)],
     'E_BATT_OVER_VOLTAGE':      [Numeric('voltage', 16)],
 

@@ -1,5 +1,5 @@
 ## Parsley
-```Parsley``` is a library for transcoding between Controller Area Network (CAN) messages and human-readable text.
+```Parsley``` is a library to transcode Controller Area Network (CAN) and human-readable messages.
 
 ## Highlights
 - ```bitstring.py```: Provides a custom data structure to store and read bits of arbitrary-length.
@@ -58,6 +58,9 @@ print(format_line(result))
 """
 
 ```
+
+## Using Parsley
+You can include parsley as a submodule in your project with ```git submodule add https://github.com/waterloo-rocketry/parsley.git``` and to pull the submodule as a developer, you can use ```git submodule update --init --recursive```
 
 ## Requirements
 ```Python 3.10``` or newer is required and the required packages can be installed using `pip install -r requirements.txt`
