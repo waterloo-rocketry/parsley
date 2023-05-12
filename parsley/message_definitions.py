@@ -28,7 +28,7 @@ BOARD_STATUS = {
 
     'E_ACTUATOR_STATE':         [Enum('req_state', 8, mt.actuator_states), Enum('cur_state', 8, mt.actuator_states)],
     'E_CANNOT_INIT_DACS':       [],
-    'E_VENT_POT_RANGE':         [Numeric('upper', 8, 1/1000), Numeric('lower', 8, 1/1000), Numeric('pot', 8, 1/1000)],
+    'E_VENT_POT_RANGE':         [Numeric('upper', 8, scale=1/1000), Numeric('lower', 8, scale=1/1000), Numeric('pot', 8, scale=1/1000)],
 
     'E_LOGGING':                [Enum('error', 8, mt.logger_error)],
     'E_GPS':                    [],
