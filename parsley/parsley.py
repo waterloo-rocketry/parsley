@@ -107,7 +107,7 @@ def parse_logger(line: str) -> Union[Tuple[bytes, bytes], None]:
     msg_data = [int(msg_data[i:i+2], 16) for i in range(0, len(msg_data), 2)]
     return format_can_message(msg_sid, msg_data)
 
-# our three parsing functions return ints, but after the rewrite, it should return bytes
+# our three parsing functions create ints, but after the rewrite, they should return bytes
 def format_can_message(msg_sid: int, msg_data: List[int]) -> Tuple[bytes, bytes]:
     msg_sid_length = (msg_sid.bit_length() + 7) // 8
     formatted_msg_sid = msg_sid.to_bytes(msg_sid_length, byteorder='big')
