@@ -32,7 +32,6 @@ msg_type = {
     'GPS_INFO':             0x740,
 
     'FILL_LVL':             0x780,
-
     'RADI_VALUE':           0x7A0,
 
     'LEDS_ON':              0x7E0,
@@ -90,27 +89,27 @@ board_status = {
     'E_BUS_UNDER_VOLTAGE':      0x02,
     'E_BUS_OVER_VOLTAGE':       0x03,
 
-    'E_BATT_OVER_CURRENT':      0x05,
-    'E_BATT_UNDER_VOLTAGE':     0x06,
-    'E_BATT_OVER_VOLTAGE':      0x07,
+    'E_BATT_OVER_CURRENT':      0x04,
+    'E_BATT_UNDER_VOLTAGE':     0x05,
+    'E_BATT_OVER_VOLTAGE':      0x06,
 
-    'E_BOARD_FEARED_DEAD':      0x08,
-    'E_NO_CAN_TRAFFIC':         0x09,
-    'E_MISSING_CRITICAL_BOARD': 0x0A,
-    'E_RADIO_SIGNAL_LOST':      0x0B,
+    'E_BOARD_FEARED_DEAD':      0x07,
+    'E_NO_CAN_TRAFFIC':         0x08,
+    'E_MISSING_CRITICAL_BOARD': 0x09,
+    'E_RADIO_SIGNAL_LOST':      0x0A,
 
-    'E_ACTUATOR_STATE':         0x0C,
-    'E_CANNOT_INIT_DACS':       0x0D,
-    'E_VENT_POT_RANGE':         0x0E,
+    'E_ACTUATOR_STATE':         0x0B,
+    'E_CANNOT_INIT_DACS':       0x0C,
+    'E_VENT_POT_RANGE':         0x0D,
 
-    'E_LOGGING':                0x0F,
-    'E_GPS':                    0x10,
-    'E_SENSOR':                 0x11,
+    'E_LOGGING':                0x0E,
+    'E_GPS':                    0x0F,
+    'E_SENSOR':                 0x10,
 
-    'E_ILLEGAL_CAN_MSG':        0x12,
-    'E_SEGFAULT':               0x13,
-    'E_UNHANDLED_INTERRUPT':    0x14,
-    'E_CODING_FUCKUP':          0x15
+    'E_ILLEGAL_CAN_MSG':        0x11,
+    'E_SEGFAULT':               0x12,
+    'E_UNHANDLED_INTERRUPT':    0x13,
+    'E_CODING_FUCKUP':          0x14
 }
 
 logger_error = {
@@ -135,7 +134,7 @@ sensor_id = {
     'SENSOR_BATT_CURR':             0x01,
     'SENSOR_BATT_VOLT':             0x02,
     'SENSOR_CHARGE_CURR':           0x03,
-    'SENSOR_CHARGE_VOLT':           0x04,
+    'SENSOR_GROUND_VOLT':           0x04,
     'SENSOR_PRESSURE_OX':           0x05,
     'SENSOR_PRESSURE_CC':           0x06,
     'SENSOR_PRESSURE_PNEUMATICS':   0x07,
@@ -158,5 +157,6 @@ actuator_id = {
     'ACTUATOR_INJECTOR_VALVE':  0x01,
     'ACTUATOR_PAYLOAD':         0x02,
     'ACTUATOR_CAMERAS':         0x03,
-    'ACTUATOR_CANBUS':          0x04
+    'ACTUATOR_CANBUS':          0x04,
+    'ACTUATOR_CHARGE':          0x05
 }

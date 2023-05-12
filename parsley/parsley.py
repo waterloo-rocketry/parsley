@@ -130,17 +130,16 @@ def format_line(parsed_data: dict) -> str:
 
 # given a dictionary of CAN message data, encode a usb_debug style CAN message
 def encode_usb_debug(parsed_data: dict) -> str:
-    board_id = parsed_data['board_id']
-    msg_type = parsed_data['msg_type']
-    msg_body = parsed_data['data']
+    msg_type = parsed_data.pop('msg_type')
+    board_id = parsed_data.pop('board_id')
 
     bit_str = BitString()
     bit_str.push(*MESSAGE_TYPE.encode(msg_type))
     bit_str.push(*BOARD_ID.encode(board_id))
     msg_sid = int.from_bytes(bit_str.pop(bit_str.length), byteorder='big')
 
-    for idx, field in enumerate(CAN_MESSAGE.get_fields(msg_type)[1:]):
-        key = list(msg_body.keys())[idx]
-        bit_str.push(*field.encode(msg_body[key]))
+    # skip the first field (board_id) since thats parsed separately
+    for field in CAN_MESSAGE.get_fields(msg_type)[1:]:
+        bit_str.push(*field.encode(parsed_data[field.name]))
     msg_data = [byte for byte in bit_str.pop(bit_str.length)]
     return msg_sid, msg_data
