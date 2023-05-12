@@ -19,10 +19,10 @@ class TestParsley:
 
         bit_str = BitString()
         bit_str.push(*TIMESTAMP_3.encode(0.005)) # 0x005
-        bit_str.push(*Enum('status', 8, mt.board_status).encode('E_SENSOR')) # 0x11
+        bit_str.push(*Enum('status', 8, mt.board_status).encode('E_SENSOR')) # 0x10
         bit_str.push(*Enum('sensor_id', 8, mt.sensor_id).encode('SENSOR_PRESSURE_PNEUMATICS')) # 0x07
         msg_data = bit_str.pop(40)
-        assert msg_data == b'\x00\x00\x05\x11\x07'
+        assert msg_data == b'\x00\x00\x05\x10\x07'
 
         res = parsley.parse(msg_sid, msg_data)
         expected_res = {

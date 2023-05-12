@@ -52,7 +52,7 @@ MESSAGES = {
     'DEBUG_PRINTF':         [BOARD_ID, ASCII('string', 64)],
     'DEBUG_RADIO_CMD':      [BOARD_ID, ASCII('string', 64)],
 
-    'ACTUATOR_STATUS':      [BOARD_ID, TIMESTAMP_3, Enum('actuator', 8, mt.actuator_id), Enum('req_state', 8, mt.actuator_states), Enum('cur_state', 8, mt.actuator_states)],
+    'ACTUATOR_STATUS':      [BOARD_ID, TIMESTAMP_3, Enum('actuator', 8, mt.actuator_id), Enum('cur_state', 8, mt.actuator_states), Enum('req_state', 8, mt.actuator_states)],
     'ALT_ARM_STATUS':       [BOARD_ID, TIMESTAMP_3, Enum('state', 4, mt.arm_states), Numeric('altimeter', 4), Numeric('drogue_v', 16), Numeric('main_v', 16)],
     'GENERAL_BOARD_STATUS': [BOARD_ID, TIMESTAMP_3, Switch('status', 8, mt.board_status, BOARD_STATUS)],
 
