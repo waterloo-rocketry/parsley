@@ -62,7 +62,7 @@ MESSAGES = {
     'SENSOR_ACC2':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, scale=16/2**16, unit='m/s²', signed=True), Numeric('y', 16, scale=16/2**16, unit='m/s²', signed=True), Numeric('z', 16, scale=16/2**16, unit='m/s²', signed=True)],
     'SENSOR_GYRO':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, scale=2000/2**16, unit='°/s', signed=True), Numeric('y', 16, scale=2000/2**16, unit='°/s', signed=True), Numeric('z', 16, scale=2000/2**16, unit='°/s', signed=True)],
     'SENSOR_MAG':           [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='µT', signed=True), Numeric('y', 16, unit='µT', signed=True), Numeric('z', 16, unit='µT', signed=True)],
-    'SENSOR_ANALOG':        [BOARD_ID, TIMESTAMP_2, Enum('sensor_id', 8, mt.sensor_id), Numeric('value', 16)],
+    'SENSOR_ANALOG':        [BOARD_ID, TIMESTAMP_2, Enum('sensor_id', 8, mt.sensor_id), Numeric('value', 16, signed=True)],
 
     'GPS_TIMESTAMP':        [BOARD_ID, TIMESTAMP_3, Numeric('hrs', 8), Numeric('mins', 8), Numeric('secs', 8), Numeric('dsecs', 8)],
     'GPS_LATITUDE':         [BOARD_ID, TIMESTAMP_3, Numeric('degs', 8), Numeric('mins', 8), Numeric('dmins', 16), ASCII('direction', 8)],
