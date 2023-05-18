@@ -199,10 +199,10 @@ class TestCANMessage:
 
     def test_sensor_analog(self, bit_str2):
         bit_str2.push(*Enum('sensor_id', 8, mt.sensor_id).encode('SENSOR_BARO'))
-        bit_str2.push(*Numeric('value', 16).encode(54321))
+        bit_str2.push(*Numeric('value', 16, signed=True).encode(-12345))
         res = parsley.parse_fields(bit_str2, CAN_MESSAGE.get_fields('SENSOR_ANALOG')[1:])
         assert res['sensor_id'] == 'SENSOR_BARO'
-        assert res['value'] == 54321
+        assert res['value'] == -12345
 
     def test_gps_timestamp(self, bit_str3):
         bit_str3.push(*Numeric('hrs', 8).encode(12))
