@@ -74,12 +74,12 @@ class TestCANMessage:
 
     def test_actuator_status(self, bit_str3):
         bit_str3.push(*Enum('actuator', 8, mt.actuator_id).encode('ACTUATOR_INJECTOR_VALVE'))
-        bit_str3.push(*Enum('req_state', 8, mt.actuator_states).encode('ACTUATOR_OFF'))
         bit_str3.push(*Enum('cur_state', 8, mt.actuator_states).encode('ACTUATOR_UNK'))
+        bit_str3.push(*Enum('req_state', 8, mt.actuator_states).encode('ACTUATOR_OFF'))
         res = parsley.parse_fields(bit_str3, CAN_MESSAGE.get_fields('ACTUATOR_STATUS')[1:])
         assert res['actuator'] == 'ACTUATOR_INJECTOR_VALVE'
-        assert res['req_state'] == 'ACTUATOR_OFF'
         assert res['cur_state'] == 'ACTUATOR_UNK'
+        assert res['req_state'] == 'ACTUATOR_OFF'
 
     def test_alt_arm_status(self, bit_str3):
         bit_str3.push(*Enum('state', 4, mt.arm_states).encode('DISARMED'))
