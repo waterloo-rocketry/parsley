@@ -143,3 +143,10 @@ def format_line(parsed_data: dict) -> str:
         formatted_value = f"{v:.3f}" if isinstance(v, float) else v
         res += f' {k}: {formatted_value}'
     return res
+
+# can_message is an array of parsley fields
+def calculate_msg_bit_len(can_message):
+    bit_len = 0
+    for field in can_message:
+        bit_len += field.length
+    return bit_len
