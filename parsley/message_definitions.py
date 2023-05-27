@@ -21,9 +21,9 @@ BOARD_STATUS = {
     'E_BATT_UNDER_VOLTAGE':     [Numeric('voltage', 16)],
     'E_BATT_OVER_VOLTAGE':      [Numeric('voltage', 16)],
 
-    'E_BOARD_FEARED_DEAD':      [Enum('board_id', 8, mt.board_id)],
+    'E_BOARD_FEARED_DEAD':      [Enum('dead_board_id', 8, mt.board_id)],
     'E_NO_CAN_TRAFFIC':         [Numeric('err_time', 16)],
-    'E_MISSING_CRITICAL_BOARD': [Enum('board_id', 8, mt.board_id)],
+    'E_MISSING_CRITICAL_BOARD': [Enum('missing_board_id', 8, mt.board_id)],
     'E_RADIO_SIGNAL_LOST':      [Numeric('err_time', 16)],
 
     'E_ACTUATOR_STATE':         [Enum('req_state', 8, mt.actuator_states), Enum('cur_state', 8, mt.actuator_states)],
@@ -46,7 +46,7 @@ MESSAGES = {
     'GENERAL_CMD':          [BOARD_ID, TIMESTAMP_3, Enum('command', 8, mt.gen_cmd)],
     'ACTUATOR_CMD':         [BOARD_ID, TIMESTAMP_3, Enum('actuator', 8, mt.actuator_id), Enum('req_state', 8, mt.actuator_states)],
     'ALT_ARM_CMD':          [BOARD_ID, TIMESTAMP_3, Enum('state', 4, mt.arm_states), Numeric('altimeter', 4)],
-    'RESET_CMD':            [BOARD_ID, TIMESTAMP_3, Enum('board_id', 8, mt.board_id)],
+    'RESET_CMD':            [BOARD_ID, TIMESTAMP_3, Enum('reset_board_id', 8, mt.board_id)],
 
     'DEBUG_MSG':            [BOARD_ID, TIMESTAMP_3, Numeric('level', 4), Numeric('line', 12), ASCII('data', 24)],
     'DEBUG_PRINTF':         [BOARD_ID, ASCII('string', 64)],
