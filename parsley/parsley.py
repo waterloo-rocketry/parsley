@@ -63,6 +63,12 @@ def parse_bitstring(bit_str: BitString) -> Tuple[bytes, bytes]:
     msg_data = [byte for byte in bit_str.pop(bit_str.length)]
     return format_can_message(msg_sid, msg_data)
 
+def calculate_checksum(msg_sid, msg_data):
+    exp_sum = crc8.crc8(msg_sid.to_bytes(2, byteorder='big'))
+    for c in msg_data:
+        exp_sum.update(c.to_bytes(1, byteorder='big'))
+    return exp_sum.hexdigest().upper()
+
 def parse_live_telemetry(line: str) -> Union[Tuple[bytes, bytes], None]:
     line = line.lstrip(' \0')
     if len(line) == 0 or line[0] != '$':
@@ -73,12 +79,9 @@ def parse_live_telemetry(line: str) -> Union[Tuple[bytes, bytes], None]:
     msg_data, msg_checksum = msg_data.split(';')
     msg_sid = int(msg_sid, 16)
     msg_data = [int(byte, 16) for byte in msg_data.split(',')]
-    exp_sum = crc8.crc8(msg_sid.to_bytes(2, byteorder='big'))
-    for c in msg_data:
-        exp_sum.update(c.to_bytes(1, byteorder='big'))
-    exp_sum_value = exp_sum.hexdigest().upper()
-    if msg_checksum != exp_sum_value:
-        print(f'Bad checksum, expected {exp_sum_value} but got {msg_checksum}')
+    expected_checksum = calculate_checksum(msg_sid, msg_data)
+    if msg_checksum != expected_checksum:
+        print(f'Bad checksum, expected {expected_checksum} but got {msg_checksum}')
         return None
 
     return format_can_message(msg_sid, msg_data)
