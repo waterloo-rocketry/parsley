@@ -31,6 +31,8 @@ msg_type = {
     'GPS_ALTITUDE':         0x720,
     'GPS_INFO':             0x740,
 
+    'STATE_EST':            0x760,
+
     'FILL_LVL':             0x780,
     'RADI_VALUE':           0x7A0,
 

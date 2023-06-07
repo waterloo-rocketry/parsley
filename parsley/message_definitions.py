@@ -70,6 +70,8 @@ MESSAGES = {
     'GPS_ALTITUDE':         [BOARD_ID, TIMESTAMP_3, Numeric('altitude', 16), Numeric('daltitude', 8), ASCII('unit', 8)],
     'GPS_INFO':             [BOARD_ID, TIMESTAMP_3, Numeric('num_sats', 8), Numeric('quality', 8)],
 
+    'STATE_EST':            [BOARD_ID, TIMESTAMP_3, Numeric('numbers', 16), Numeric('decimals', 16)],
+    
     'FILL_LVL':             [BOARD_ID, TIMESTAMP_3, Numeric('level', 8), Enum('direction', 8, mt.fill_direction)],
 
     'RADI_VALUE':           [BOARD_ID, TIMESTAMP_3, Numeric('radi_board', 8), Numeric('radi', 16)],
