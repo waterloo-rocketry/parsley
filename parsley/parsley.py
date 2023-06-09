@@ -63,33 +63,34 @@ def parse_bitstring(bit_str: BitString) -> Tuple[bytes, bytes]:
     msg_data = [byte for byte in bit_str.pop(bit_str.length)]
     return format_can_message(msg_sid, msg_data)
 
-def calculate_checksum(msg_sid, msg_data):
-    exp_sum = crc8.crc8(msg_sid.to_bytes(2, byteorder='big'))
-    for c in msg_data:
-        exp_sum.update(c.to_bytes(1, byteorder='big'))
-    return exp_sum.hexdigest().upper()
+def parse_live_telemetry(frame: bytes) -> Union[Tuple[bytes, bytes], None]:
+    data_len = len(frame) - 5;
+    if data_len <= 0:
+        return None, None
 
-def parse_live_telemetry(line: str) -> Union[Tuple[bytes, bytes], None]:
-    line = line.lstrip(' \0')
-    if len(line) == 0 or line[0] != '$':
-        return None
-    line = line[1:]
+    msg_sid = frame[1] | (frame[2] << 7) | ((frame[data_len+3] << 9) & 0xC000)
 
-    msg_sid, msg_data = line.split(':')
-    msg_data, msg_checksum = msg_data.split(';')
-    msg_sid = int(msg_sid, 16)
-    msg_data = [int(byte, 16) for byte in msg_data.split(',')]
-    expected_checksum = calculate_checksum(msg_sid, msg_data)
-    if msg_checksum != expected_checksum:
-        print(f'Bad checksum, expected {expected_checksum} but got {msg_checksum}')
-        return None
+    msg_data = bytearray()
+    for i in range(data_len):
+        if i < 5:
+            msg_data.append(frame[i+3] | ((frame[data_len+3] << (7-i))   & 0x80))
+        else:
+            msg_data.append(frame[i+3] | ((frame[data_len+4] << (7-i+5)) & 0x80))
+    msg_data = bytes(msg_data)
+
+    exp_crc = (frame[0] & 0x3F) | (frame[data_len+4] << 3 & 0xC0)
+    msg_crc = int.from_bytes(crc8.crc8(msg_sid.to_bytes(2, 'little') + msg_data).digest())
+
+    if msg_crc != exp_crc:
+        print(f'Bad checksum, expected {exp_crc:02X} but got {msg_crc:02X}')
+        return None, None
 
     return format_can_message(msg_sid, msg_data)
 
 def parse_usb_debug(line: str) -> Union[Tuple[bytes, bytes], None]:
     line = line.lstrip(' \0')
     if len(line) == 0 or line[0] != '$':
-        return None
+        return None, None
     line = line[1:]
 
     if ':' in line:
