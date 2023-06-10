@@ -10,6 +10,5 @@ from .parsley import (
     parse_logger,
     format_line,
     encode_data,
-    calculate_msg_bit_len,
-    calculate_checksum
+    calculate_msg_bit_len
 )

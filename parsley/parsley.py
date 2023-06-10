@@ -65,24 +65,24 @@ def parse_bitstring(bit_str: BitString) -> Tuple[bytes, bytes]:
 
 def parse_live_telemetry(frame: bytes) -> Union[Tuple[bytes, bytes], None]:
 
-    if frame[0] != 0x02: return None
+    if len(frame) < 4:   raise ValueError("Incorrect frame length")
+    if frame[0] != 0x02: raise ValueError("Incorrect frame header")
 
     frame_len = frame[1] >> 4
-    msg_sid = ((frame[1] & 0x0F) << 4) | frame[2]
+    msg_sid = ((frame[1] & 0x0F) << 8) | frame[2]
     msg_data = frame[3:frame_len-1]
     exp_crc = frame[frame_len-1]
-    msg_crc = int.from_bytes(crc8.crc8(frame[:frame_len-1]).digest())
+    msg_crc = crc8.crc8(frame[:frame_len-1]).digest()[0]
 
     if msg_crc != exp_crc:
-        print(f'Bad checksum, expected {exp_crc:02X} but got {msg_crc:02X}')
-        return None
+        raise ValueError(f'Bad checksum, expected {exp_crc:02X} but got {msg_crc:02X}')
 
     return format_can_message(msg_sid, msg_data)
 
 def parse_usb_debug(line: str) -> Union[Tuple[bytes, bytes], None]:
-    line = line.lstrip(' \0')
+    line = line.strip(' \0\r\n')
     if len(line) == 0 or line[0] != '$':
-        return None
+        raise ValueError("Incorrect line format")
     line = line[1:]
 
     if ':' in line:
@@ -96,6 +96,7 @@ def parse_usb_debug(line: str) -> Union[Tuple[bytes, bytes], None]:
     return format_can_message(msg_sid, msg_data)
 
 def parse_logger(line: str) -> Union[Tuple[bytes, bytes], None]:
+    line = line.strip(' \0\r\n')
     # see cansw_logger/can_syslog.c for format
     msg_sid, msg_data = line[:3], line[3:]
     msg_sid = int(msg_sid, 16)
@@ -111,7 +112,7 @@ def format_can_message(msg_sid: int, msg_data: List[int]) -> Tuple[bytes, bytes]
     return formatted_msg_sid, formatted_msg_data
 
 # given a dictionary of CAN message data, return the CAN message bits
-def encode_data(parsed_data: dict) -> Tuple[bytes, bytes]:
+def encode_data(parsed_data: dict) -> Tuple[int, List[int]]:
     msg_type = parsed_data.pop('msg_type')
     board_id = parsed_data.pop('board_id')
 
