@@ -9,5 +9,6 @@ from .parsley import (
     parse_usb_debug,
     parse_logger,
     format_line,
-    encode_data
+    encode_data,
+    calculate_msg_bit_len
 )

@@ -107,13 +107,14 @@ class Numeric(Field):
     For example:
     b'\xFC' <=> -4 (two's complement)
     """
-    def __init__(self, name: str, length: int, scale=1, signed=False, unit=""):
+    def __init__(self, name: str, length: int, scale=1, signed=False, big_endian=True, unit=""):
         super().__init__(name, length, unit)
         self.scale = scale
         self.signed = signed
+        self.endian = 'big' if big_endian else 'little'
 
     def decode(self, data: bytes) -> Number:
-        value = int.from_bytes(data, byteorder='big', signed = self.signed)
+        value = int.from_bytes(data, byteorder=self.endian, signed = self.signed)
         return value * self.scale
 
     def encode(self, value: Number) -> Tuple[bytes, int]:
@@ -133,7 +134,7 @@ class Numeric(Field):
             if value < -1 << (self.length - 1):
                 raise ValueError(f'Value "{value}" ({hex_value}) is too small for {self.length} signed bits')
         
-        encoded_data = value.to_bytes((self.length + 7) // 8, byteorder='big', signed=self.signed)
+        encoded_data = value.to_bytes((self.length + 7) // 8, byteorder=self.endian, signed=self.signed)
         return (encoded_data, self.length)
 
 class Switch(Enum):

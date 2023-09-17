@@ -144,7 +144,8 @@ sensor_id = {
     'SENSOR_MAG_1':                 0x0B,
     'SENSOR_MAG_2':                 0x0C,
     'SENSOR_VELOCITY':              0x0D,
-    'SENSOR_VENT_TEMP':             0x0E
+    'SENSOR_VENT_TEMP':             0x0E,
+    'SENSOR_RADIO_CURR':            0x0F
 }
 
 fill_direction = {
@@ -158,5 +159,6 @@ actuator_id = {
     'ACTUATOR_PAYLOAD':         0x02,
     'ACTUATOR_CAMERAS':         0x03,
     'ACTUATOR_CANBUS':          0x04,
-    'ACTUATOR_CHARGE':          0x05
+    'ACTUATOR_CHARGE':          0x05,
+    'ACTUATOR_RADIO':           0x06
 }

@@ -63,30 +63,26 @@ def parse_bitstring(bit_str: BitString) -> Tuple[bytes, bytes]:
     msg_data = [byte for byte in bit_str.pop(bit_str.length)]
     return format_can_message(msg_sid, msg_data)
 
-def parse_live_telemetry(line: str) -> Union[Tuple[bytes, bytes], None]:
-    line = line.lstrip(' \0')
-    if len(line) == 0 or line[0] != '$':
-        return None
-    line = line[1:]
+def parse_live_telemetry(frame: bytes) -> Union[Tuple[bytes, bytes], None]:
 
-    msg_sid, msg_data = line.split(':')
-    msg_data, msg_checksum = msg_data.split(';')
-    msg_sid = int(msg_sid, 16)
-    msg_data = [int(byte, 16) for byte in msg_data.split(',')]
-    exp_sum = crc8.crc8(msg_sid.to_bytes(2, byteorder='big'))
-    for c in msg_data:
-        exp_sum.update(c.to_bytes(1, byteorder='big'))
-    exp_sum_value = exp_sum.hexdigest().upper()
-    if msg_checksum != exp_sum_value:
-        print(f'Bad checksum, expected {exp_sum_value} but got {msg_checksum}')
-        return None
+    if len(frame) < 4:   raise ValueError("Incorrect frame length")
+    if frame[0] != 0x02: raise ValueError("Incorrect frame header")
+
+    frame_len = frame[1] >> 4
+    msg_sid = ((frame[1] & 0x0F) << 8) | frame[2]
+    msg_data = frame[3:frame_len-1]
+    exp_crc = frame[frame_len-1]
+    msg_crc = crc8.crc8(frame[:frame_len-1]).digest()[0]
+
+    if msg_crc != exp_crc:
+        raise ValueError(f'Bad checksum, expected {exp_crc:02X} but got {msg_crc:02X}')
 
     return format_can_message(msg_sid, msg_data)
 
 def parse_usb_debug(line: str) -> Union[Tuple[bytes, bytes], None]:
-    line = line.lstrip(' \0')
+    line = line.strip(' \0\r\n')
     if len(line) == 0 or line[0] != '$':
-        return None
+        raise ValueError("Incorrect line format")
     line = line[1:]
 
     if ':' in line:
@@ -100,6 +96,7 @@ def parse_usb_debug(line: str) -> Union[Tuple[bytes, bytes], None]:
     return format_can_message(msg_sid, msg_data)
 
 def parse_logger(line: str) -> Union[Tuple[bytes, bytes], None]:
+    line = line.strip(' \0\r\n')
     # see cansw_logger/can_syslog.c for format
     msg_sid, msg_data = line[:3], line[3:]
     msg_sid = int(msg_sid, 16)
@@ -115,7 +112,7 @@ def format_can_message(msg_sid: int, msg_data: List[int]) -> Tuple[bytes, bytes]
     return formatted_msg_sid, formatted_msg_data
 
 # given a dictionary of CAN message data, return the CAN message bits
-def encode_data(parsed_data: dict) -> Tuple[bytes, bytes]:
+def encode_data(parsed_data: dict) -> Tuple[int, List[int]]:
     msg_type = parsed_data.pop('msg_type')
     board_id = parsed_data.pop('board_id')
 
@@ -143,3 +140,10 @@ def format_line(parsed_data: dict) -> str:
         formatted_value = f"{v:.3f}" if isinstance(v, float) else v
         res += f' {k}: {formatted_value}'
     return res
+
+# can_message is an array of parsley fields
+def calculate_msg_bit_len(can_message):
+    bit_len = 0
+    for field in can_message:
+        bit_len += field.length
+    return bit_len
