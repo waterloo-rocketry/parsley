@@ -3,6 +3,9 @@ REMINDER: Any changes to this file should be reflected in canlib.
 
 If canlib and this file differ, canlib is the source of truth.
 """
+
+
+
 msg_type = {
     'GENERAL_CMD':          0x060,
     'ACTUATOR_CMD':         0x0C0,
@@ -160,3 +163,5 @@ actuator_id = {
     'ACTUATOR_CANBUS':          0x04,
     'ACTUATOR_CHARGE':          0x05
 }
+
+
