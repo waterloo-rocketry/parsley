@@ -3,7 +3,7 @@ from parsley.message_types import msg_type, board_id, gen_cmd, actuator_states, 
 from parsley.message_definitions import MESSAGES
 from parsley.fields import Enum
 
-def convert_message_types_to_c(msg_type, board_id, gen_cmd, actuator_states, arm_states, board_status, logger_error, sensor_id, fill_direction, actuator_id):
+def convert_message_types_to_c():
     msg_type_lines = []
     board_id_lines = []
     gen_cmd_lines = []
@@ -100,4 +100,4 @@ def convert_message_types_to_c(msg_type, board_id, gen_cmd, actuator_states, arm
        c_file.write("#endif // compile guard" + "\n")
             
             
-convert_message_types_to_c(msg_type, board_id, gen_cmd, actuator_states, arm_states, board_status, logger_error, sensor_id, fill_direction, actuator_id)
+#convert_message_types_to_c(msg_type, board_id, gen_cmd, actuator_states, arm_states, board_status, logger_error, sensor_id, fill_direction, actuator_id)
