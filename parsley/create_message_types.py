@@ -15,8 +15,7 @@ def convert_message_types_to_c(c_file_path="./code_genmessage_types.c"):
             if isinstance(f, Enum):
                 if f.name == 'board_id':
                     define_type_dicts.append({'data_dict':f.map_key_val, 'lines_list':[], 'enum_name': f.name})
-                    
-                    
+                     
                 if f.name not in s1:
                     s1.add(f.name)
                     data_dicts.append({'data_dict':f.map_key_val, 'lines_list':[], 'enum_name': f.name})
