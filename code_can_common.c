@@ -45,7 +45,7 @@ bool build_general_cmd_msg(uint32_t timestamp,
 
 bool build_actuator_cmd_msg(uint32_t timestamp,
                            enum ACTUATOR_ID actuator_id, 
-enum ACTUATOR_STATES actuator_states, 
+                           enum ACTUATOR_STATES actuator_states, 
 
                            
                            can_msg_t *output);
@@ -69,7 +69,7 @@ bool build_reset_cmd_msg(uint32_t timestamp,
 bool build_debug_msg_msg(uint32_t timestamp,
                            
                            uint4_t level, 
-uint12_t line, 
+                           uint12_t line, 
 
                            can_msg_t *output);
 
@@ -88,8 +88,8 @@ bool build_debug_radio_cmd_msg(uint32_t timestamp,
 
 bool build_actuator_status_msg(uint32_t timestamp,
                            enum ACTUATOR_ID actuator_id, 
-enum ACTUATOR_STATES actuator_states, 
-enum ACTUATOR_STATES actuator_states, 
+                           enum ACTUATOR_STATES actuator_states, 
+                           enum ACTUATOR_STATES actuator_states, 
 
                            
                            can_msg_t *output);
@@ -99,8 +99,8 @@ bool build_alt_arm_status_msg(uint32_t timestamp,
                            enum ARM_STATES arm_states, 
 
                            uint4_t altimeter, 
-uint16_t drogue_v, 
-uint16_t main_v, 
+                           uint16_t drogue_v, 
+                           uint16_t main_v, 
 
                            can_msg_t *output);
 
@@ -115,7 +115,7 @@ bool build_general_board_status_msg(uint32_t timestamp,
 bool build_sensor_temp_msg(uint32_t timestamp,
                            
                            uint8_t sensor_id, 
-uint24_t temperature, 
+                           uint24_t temperature, 
 
                            can_msg_t *output);
 
@@ -130,8 +130,8 @@ bool build_sensor_altitude_msg(uint32_t timestamp,
 bool build_sensor_acc_msg(uint32_t timestamp,
                            
                            uint16_t x, 
-uint16_t y, 
-uint16_t z, 
+                           uint16_t y, 
+                           uint16_t z, 
 
                            can_msg_t *output);
 
@@ -139,8 +139,8 @@ uint16_t z,
 bool build_sensor_acc2_msg(uint32_t timestamp,
                            
                            uint16_t x, 
-uint16_t y, 
-uint16_t z, 
+                           uint16_t y, 
+                           uint16_t z, 
 
                            can_msg_t *output);
 
@@ -148,8 +148,8 @@ uint16_t z,
 bool build_sensor_gyro_msg(uint32_t timestamp,
                            
                            uint16_t x, 
-uint16_t y, 
-uint16_t z, 
+                           uint16_t y, 
+                           uint16_t z, 
 
                            can_msg_t *output);
 
@@ -157,8 +157,8 @@ uint16_t z,
 bool build_sensor_mag_msg(uint32_t timestamp,
                            
                            uint16_t x, 
-uint16_t y, 
-uint16_t z, 
+                           uint16_t y, 
+                           uint16_t z, 
 
                            can_msg_t *output);
 
@@ -174,9 +174,9 @@ bool build_sensor_analog_msg(uint32_t timestamp,
 bool build_gps_timestamp_msg(uint32_t timestamp,
                            
                            uint8_t hrs, 
-uint8_t mins, 
-uint8_t secs, 
-uint8_t dsecs, 
+                           uint8_t mins, 
+                           uint8_t secs, 
+                           uint8_t dsecs, 
 
                            can_msg_t *output);
 
@@ -184,8 +184,8 @@ uint8_t dsecs,
 bool build_gps_latitude_msg(uint32_t timestamp,
                            
                            uint8_t degs, 
-uint8_t mins, 
-uint16_t dmins, 
+                           uint8_t mins, 
+                           uint16_t dmins, 
 
                            can_msg_t *output);
 
@@ -193,8 +193,8 @@ uint16_t dmins,
 bool build_gps_longitude_msg(uint32_t timestamp,
                            
                            uint8_t degs, 
-uint8_t mins, 
-uint16_t dmins, 
+                           uint8_t mins, 
+                           uint16_t dmins, 
 
                            can_msg_t *output);
 
@@ -202,7 +202,7 @@ uint16_t dmins,
 bool build_gps_altitude_msg(uint32_t timestamp,
                            
                            uint16_t altitude, 
-uint8_t daltitude, 
+                           uint8_t daltitude, 
 
                            can_msg_t *output);
 
@@ -210,7 +210,7 @@ uint8_t daltitude,
 bool build_gps_info_msg(uint32_t timestamp,
                            
                            uint8_t num_sats, 
-uint8_t quality, 
+                           uint8_t quality, 
 
                            can_msg_t *output);
 
@@ -226,19 +226,7 @@ bool build_fill_lvl_msg(uint32_t timestamp,
 bool build_radi_value_msg(uint32_t timestamp,
                            
                            uint8_t radi_board, 
-uint16_t radi, 
+                           uint16_t radi, 
 
-                           can_msg_t *output);
-
-
-bool build_leds_on_msg(uint32_t timestamp,
-                           
-                           
-                           can_msg_t *output);
-
-
-bool build_leds_off_msg(uint32_t timestamp,
-                           
-                           
                            can_msg_t *output);
 

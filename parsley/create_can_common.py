@@ -52,13 +52,19 @@ typedef enum {
             enums_string = ''
             if len(enums) > 0:
                 for enum in enums[1:]:
-                    enums_string += f'enum {enum_names[enum.name].upper()} {enum_names[enum.name]}, \n'
+                    if enums[1:].index(enum) != 0:
+                        enums_string += f'                           enum {enum_names[enum.name].upper()} {enum_names[enum.name]}, \n'
+                    else:
+                        enums_string += f'enum {enum_names[enum.name].upper()} {enum_names[enum.name]}, \n'
             return enums_string
         def renderNumerics():
             numerics_string = ''
             if len(numerics) > 0:
                 for num in numerics[1:]:
-                    numerics_string += f'uint{num.length}_t {num.name}, \n'
+                    if numerics[1:].index(num) != 0:
+                        numerics_string += f'                           uint{num.length}_t {num.name}, \n'
+                    else:
+                        numerics_string += f'uint{num.length}_t {num.name}, \n'
             return numerics_string
         #print(enumVal.values)
         c_code = f'''
@@ -68,10 +74,11 @@ bool build_{name.lower()}_msg(uint32_t timestamp,
                            can_msg_t *output);
 '''
         return c_code
+    
     with open(c_file_path, "w") as c_file:
        c_file.write(constant_c_code)
        
-       for k, v in MESSAGES.items():
+       for k, v in list(MESSAGES.items())[:-2]:
            enums = []
            numerics = []
            for i in v:
