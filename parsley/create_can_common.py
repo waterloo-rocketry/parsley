@@ -77,18 +77,23 @@ bool build_{name.lower()}_msg(uint32_t timestamp,
     
     
     def convert_to_c_get_function(name, numerics):
+        int_or_bool = 'int'
+        if len(numerics) != 1:
+            int_or_bool = 'bool'
+        else:
+            int_or_bool = 'int'
         def renderNumerics():
             numerics_string = ''
             if len(numerics) > 0:
                 for num in numerics[1:]:
                     if num.length > 4:
                         if numerics[1:].index(num) != 0:
-                            numerics_string += f'                           uint{num.length}_t {num.name}, \n'
+                            numerics_string += f'                           uint{num.length}_t *{num.name}, \n'
                         else:
-                            numerics_string += f'uint{num.length}_t {num.name}, \n'
-            return numerics_string
+                            numerics_string += f'uint{num.length}_t *{num.name}, \n'
+                return numerics_string
         c_code = f'''
-int get_{name.lower()}(const can_msg_t *msg,
+{int_or_bool} get_{name.lower()}(const can_msg_t *msg,
                         {renderNumerics()});
 '''
         return c_code

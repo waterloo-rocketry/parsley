@@ -237,15 +237,15 @@ int get_general_cmd(const can_msg_t *msg,
 int get_actuator_cmd(const can_msg_t *msg,
                         );
 
-int get_alt_arm_cmd(const can_msg_t *msg,
+bool get_alt_arm_cmd(const can_msg_t *msg,
                         );
 
 int get_reset_cmd(const can_msg_t *msg,
                         );
 
-int get_debug_msg(const can_msg_t *msg,
-                                                   uint12_t line, 
-                           uint24_t data, 
+bool get_debug_msg(const can_msg_t *msg,
+                                                   uint12_t *line, 
+                           uint24_t *data, 
 );
 
 int get_debug_printf(const can_msg_t *msg,
@@ -257,88 +257,88 @@ int get_debug_radio_cmd(const can_msg_t *msg,
 int get_actuator_status(const can_msg_t *msg,
                         );
 
-int get_alt_arm_status(const can_msg_t *msg,
-                                                   uint16_t drogue_v, 
-                           uint16_t main_v, 
+bool get_alt_arm_status(const can_msg_t *msg,
+                                                   uint16_t *drogue_v, 
+                           uint16_t *main_v, 
 );
 
 int get_general_board_status(const can_msg_t *msg,
                         );
 
-int get_sensor_temp(const can_msg_t *msg,
-                        uint8_t sensor_id, 
-                           uint24_t temperature, 
+bool get_sensor_temp(const can_msg_t *msg,
+                        uint8_t *sensor_id, 
+                           uint24_t *temperature, 
 );
 
-int get_sensor_altitude(const can_msg_t *msg,
-                        uint32_t altitude, 
+bool get_sensor_altitude(const can_msg_t *msg,
+                        uint32_t *altitude, 
 );
 
-int get_sensor_acc(const can_msg_t *msg,
-                        uint16_t x, 
-                           uint16_t y, 
-                           uint16_t z, 
+bool get_sensor_acc(const can_msg_t *msg,
+                        uint16_t *x, 
+                           uint16_t *y, 
+                           uint16_t *z, 
 );
 
-int get_sensor_acc2(const can_msg_t *msg,
-                        uint16_t x, 
-                           uint16_t y, 
-                           uint16_t z, 
+bool get_sensor_acc2(const can_msg_t *msg,
+                        uint16_t *x, 
+                           uint16_t *y, 
+                           uint16_t *z, 
 );
 
-int get_sensor_gyro(const can_msg_t *msg,
-                        uint16_t x, 
-                           uint16_t y, 
-                           uint16_t z, 
+bool get_sensor_gyro(const can_msg_t *msg,
+                        uint16_t *x, 
+                           uint16_t *y, 
+                           uint16_t *z, 
 );
 
-int get_sensor_mag(const can_msg_t *msg,
-                        uint16_t x, 
-                           uint16_t y, 
-                           uint16_t z, 
+bool get_sensor_mag(const can_msg_t *msg,
+                        uint16_t *x, 
+                           uint16_t *y, 
+                           uint16_t *z, 
 );
 
-int get_sensor_analog(const can_msg_t *msg,
-                        uint16_t value, 
+bool get_sensor_analog(const can_msg_t *msg,
+                        uint16_t *value, 
 );
 
-int get_gps_timestamp(const can_msg_t *msg,
-                        uint8_t hrs, 
-                           uint8_t mins, 
-                           uint8_t secs, 
-                           uint8_t dsecs, 
+bool get_gps_timestamp(const can_msg_t *msg,
+                        uint8_t *hrs, 
+                           uint8_t *mins, 
+                           uint8_t *secs, 
+                           uint8_t *dsecs, 
 );
 
-int get_gps_latitude(const can_msg_t *msg,
-                        uint8_t degs, 
-                           uint8_t mins, 
-                           uint16_t dmins, 
-                           uint8_t direction, 
+bool get_gps_latitude(const can_msg_t *msg,
+                        uint8_t *degs, 
+                           uint8_t *mins, 
+                           uint16_t *dmins, 
+                           uint8_t *direction, 
 );
 
-int get_gps_longitude(const can_msg_t *msg,
-                        uint8_t degs, 
-                           uint8_t mins, 
-                           uint16_t dmins, 
-                           uint8_t direction, 
+bool get_gps_longitude(const can_msg_t *msg,
+                        uint8_t *degs, 
+                           uint8_t *mins, 
+                           uint16_t *dmins, 
+                           uint8_t *direction, 
 );
 
-int get_gps_altitude(const can_msg_t *msg,
-                        uint16_t altitude, 
-                           uint8_t daltitude, 
-                           uint8_t unit, 
+bool get_gps_altitude(const can_msg_t *msg,
+                        uint16_t *altitude, 
+                           uint8_t *daltitude, 
+                           uint8_t *unit, 
 );
 
-int get_gps_info(const can_msg_t *msg,
-                        uint8_t num_sats, 
-                           uint8_t quality, 
+bool get_gps_info(const can_msg_t *msg,
+                        uint8_t *num_sats, 
+                           uint8_t *quality, 
 );
 
-int get_fill_lvl(const can_msg_t *msg,
-                        uint8_t level, 
+bool get_fill_lvl(const can_msg_t *msg,
+                        uint8_t *level, 
 );
 
-int get_radi_value(const can_msg_t *msg,
-                        uint8_t radi_board, 
-                           uint16_t radi, 
+bool get_radi_value(const can_msg_t *msg,
+                        uint8_t *radi_board, 
+                           uint16_t *radi, 
 );
