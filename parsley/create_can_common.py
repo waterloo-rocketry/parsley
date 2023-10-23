@@ -1,6 +1,6 @@
 
 from parsley.message_definitions import MESSAGES
-from parsley.fields import Enum, Numeric, Switch
+from parsley.fields import Enum, Numeric, Switch, ASCII
 
 
 def convert_can_common_to_c(c_file_path="./code_can_common.c"):
@@ -75,6 +75,24 @@ bool build_{name.lower()}_msg(uint32_t timestamp,
 '''
         return c_code
     
+    
+    def convert_to_c_get_function(name, numerics):
+        def renderNumerics():
+            numerics_string = ''
+            if len(numerics) > 0:
+                for num in numerics[1:]:
+                    if num.length > 4:
+                        if numerics[1:].index(num) != 0:
+                            numerics_string += f'                           uint{num.length}_t {num.name}, \n'
+                        else:
+                            numerics_string += f'uint{num.length}_t {num.name}, \n'
+            return numerics_string
+        c_code = f'''
+int get_{name.lower()}(const can_msg_t *msg,
+                        {renderNumerics()});
+'''
+        return c_code
+    
     with open(c_file_path, "w") as c_file:
        c_file.write(constant_c_code)
        
@@ -88,6 +106,13 @@ bool build_{name.lower()}_msg(uint32_t timestamp,
                    numerics.append(i)
                    
            c_file.write(convert_to_c_build_function(k, enums, numerics) + '\n')
+           
+       for k, v in list(MESSAGES.items())[:-2]:
+            numerics = []
+            for i in v:  
+                if isinstance(i, Numeric) or isinstance(i, ASCII):
+                    numerics.append(i)
+            c_file.write(convert_to_c_get_function(k, numerics))
        
 
 
