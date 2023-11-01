@@ -3,7 +3,7 @@ from parsley.message_definitions import MESSAGES
 from parsley.fields import Enum, Numeric, Switch, ASCII
 
 
-def convert_can_common_to_c(c_file_path="./code_can_common.c"):
+def convert_can_common_to_h(c_file_path="./gen_code_can_common.h"):
     constant_c_code = """#ifndef CAN_COMMON_H_
 #define CAN_COMMON_H_
 

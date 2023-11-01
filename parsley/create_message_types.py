@@ -1,21 +1,9 @@
 from parsley.message_definitions import MESSAGES, MESSAGE_TYPE
 from parsley.fields import Enum
 
-def convert_alt_message_types_to_c(c_file_path="./code_genmessage_types.c"):
-    with open(c_file_path, "w") as c_file:
-       c_file.write("#ifndef MESSAGE_TYPES_H_" + "\n")
-       c_file.write("#define MESSAGE_TYPES_H_" + "\n")
-       c_file.write("\n")
-       
-       for k, v in MESSAGES.items():
-           c_file.write(v.convert_msg_type_to_define_msg_c() + "\n")
-           
-       for k, v in MESSAGES.items():
-           c_file.write(v.convert_msg_type_to_board_msg_c() + "\n")
-       
-       c_file.write("#endif // compile guard" + "\n")
 
-def convert_message_types_to_c(c_file_path="./code_genmessage_types.c"):
+
+def convert_message_types_to_h(c_file_path="./gen_message_types.h"):
     
     s1 = set(['board_id'])
     data_dicts = []
