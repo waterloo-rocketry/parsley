@@ -1,6 +1,19 @@
 from parsley.message_definitions import MESSAGES, MESSAGE_TYPE
 from parsley.fields import Enum
 
+def convert_alt_message_types_to_c(c_file_path="./code_genmessage_types.c"):
+    with open(c_file_path, "w") as c_file:
+       c_file.write("#ifndef MESSAGE_TYPES_H_" + "\n")
+       c_file.write("#define MESSAGE_TYPES_H_" + "\n")
+       c_file.write("\n")
+       
+       for k, v in MESSAGES.items():
+           c_file.write(v.convert_msg_type_to_define_msg_c() + "\n")
+           
+       for k, v in MESSAGES.items():
+           c_file.write(v.convert_msg_type_to_board_msg_c() + "\n")
+       
+       c_file.write("#endif // compile guard" + "\n")
 
 def convert_message_types_to_c(c_file_path="./code_genmessage_types.c"):
     
@@ -11,7 +24,8 @@ def convert_message_types_to_c(c_file_path="./code_genmessage_types.c"):
     define_type_dicts.append({'data_dict':MESSAGE_TYPE.map_key_val, 'lines_list':[], 'enum_name': MESSAGE_TYPE.name})
 
     for k, v in MESSAGES.items():
-        for f in v:
+        print(v.layoutBits[0].map_key_val)
+        for f in v.layoutBits:
             if isinstance(f, Enum):
                 if f.name == 'board_id':
                     define_type_dicts.append({'data_dict':f.map_key_val, 'lines_list':[], 'enum_name': f.name})
@@ -55,8 +69,10 @@ def convert_message_types_to_c(c_file_path="./code_genmessage_types.c"):
        c_file.write("#define MESSAGE_TYPES_H_" + "\n")
        c_file.write("\n")
        
-       for dict in range(len(define_type_dicts)):
+
        
+       for dict in range(len(define_type_dicts)):
+
         for key, value in define_type_dicts[dict]['data_dict'].items():
             if dict == 0:
                 c_file.write(convert_msg_type_to_c_string((key, value),  "MSG") + "\n")

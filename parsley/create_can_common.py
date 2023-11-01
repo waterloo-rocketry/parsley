@@ -43,81 +43,19 @@ typedef enum {
     } while(0)
 """
     
-    def convert_to_c_build_function(name, enums, numerics):
-        enum_names = {'command': 'gen_cmd', 'actuator': 'actuator_id', 'req_state': 'actuator_states',
-            'state': 'arm_states', 'board_id': 'board_id', 'status': 'board_status', 'sensor_id': 'sensor_id',
-            'direction': 'fill_direction', 'cur_state': 'actuator_states'         
-        }
-        def renderEnums():
-            enums_string = ''
-            if len(enums) > 0:
-                for enum in enums[1:]:
-                    if enums[1:].index(enum) != 0:
-                        enums_string += f'                           enum {enum_names[enum.name].upper()} {enum_names[enum.name]}, \n'
-                    else:
-                        enums_string += f'enum {enum_names[enum.name].upper()} {enum_names[enum.name]}, \n'
-            return enums_string
-        def renderNumerics():
-            numerics_string = ''
-            if len(numerics) > 0:
-                for num in numerics[1:]:
-                    if numerics[1:].index(num) != 0:
-                        numerics_string += f'                           uint{num.length}_t {num.name}, \n'
-                    else:
-                        numerics_string += f'uint{num.length}_t {num.name}, \n'
-            return numerics_string
-        #print(enumVal.values)
-        c_code = f'''
-bool build_{name.lower()}_msg(uint32_t timestamp,
-                           {renderEnums()}
-                           {renderNumerics()}
-                           can_msg_t *output);
-'''
-        return c_code
     
-    
-    def convert_to_c_get_function(name, numerics):
-        int_or_bool = 'int'
-        if len(numerics) != 1:
-            int_or_bool = 'bool'
-        else:
-            int_or_bool = 'int'
-        def renderNumerics():
-            numerics_string = ''
-            if len(numerics) > 0:
-                for num in numerics[1:]:
-                    if num.length > 4:
-                        if numerics[1:].index(num) != 0:
-                            numerics_string += f'                           uint{num.length}_t *{num.name}, \n'
-                        else:
-                            numerics_string += f'uint{num.length}_t *{num.name}, \n'
-                return numerics_string
-        c_code = f'''
-{int_or_bool} get_{name.lower()}(const can_msg_t *msg,
-                        {renderNumerics()});
-'''
-        return c_code
     
     with open(c_file_path, "w") as c_file:
        c_file.write(constant_c_code)
+       for k, v in list(MESSAGES.items())[:-2]:
+               c_file.write(v.convert_to_c_build_function())
+               
+       for k, v in list(MESSAGES.items())[:-2]:
+               c_file.write(v.convert_to_c_get_function())
+               
        
-       for k, v in list(MESSAGES.items())[:-2]:
-           enums = []
-           numerics = []
-           for i in v:
-               if isinstance(i, Enum) or isinstance(i, Switch):
-                   enums.append(i)
-               elif isinstance(i, Numeric):
-                   numerics.append(i)
-                   
-           c_file.write(convert_to_c_build_function(k, enums, numerics) + '\n')
-           
-       for k, v in list(MESSAGES.items())[:-2]:
-            numerics = []
-            for i in v:  
-                if isinstance(i, Numeric) or isinstance(i, ASCII):
-                    numerics.append(i)
-            c_file.write(convert_to_c_get_function(k, numerics))
+      
+       c_file.write('#endif // compile guard')
        
 
 

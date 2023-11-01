@@ -12,4 +12,5 @@ from .parsley import (
     encode_data
 )
 from .create_message_types import convert_message_types_to_c
+from .create_message_types import convert_alt_message_types_to_c
 from .create_can_common import convert_can_common_to_c

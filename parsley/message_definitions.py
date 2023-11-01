@@ -2,6 +2,8 @@ from parsley.fields import ASCII, Enum, Numeric, Switch
 
 import parsley.message_types as mt
 
+from parsley.message_object import Message
+
 # returns data scaled in seconds (ie. reads raw data in milliseconds and outputs seconds)
 TIMESTAMP_2 = Numeric('time', 16, scale=1/1000, unit='s')
 TIMESTAMP_3 = Numeric('time', 24, scale=1/1000, unit='s')
@@ -26,7 +28,7 @@ BOARD_STATUS = {
     'E_MISSING_CRITICAL_BOARD': [Enum('board_id', 8, mt.board_id)],
     'E_RADIO_SIGNAL_LOST':      [Numeric('err_time', 16)],
 
-    'E_ACTUATOR_STATE':         [Enum('req_state', 8, mt.actuator_states), Enum('cur_state', 8, mt.actuator_states)],
+    'E_ACTUATOR_STATE':         [Enum('actuator_states', 8, mt.actuator_states), Enum('actuator_states', 8, mt.actuator_states)],
     'E_CANNOT_INIT_DACS':       [],
     'E_VENT_POT_RANGE':         [Numeric('upper', 8, scale=1/1000), Numeric('lower', 8, scale=1/1000), Numeric('pot', 8, scale=1/1000)],
 
@@ -42,40 +44,42 @@ BOARD_STATUS = {
 
 # we parse BOARD_ID seperately from the CAN message (since we want to continue parsing even if BOARD_ID throws)
 # but BOARD_ID is still here so that Omnibus has all the fields it needs when creating messages to send
+
+
 MESSAGES = {
-    'GENERAL_CMD':          [BOARD_ID, TIMESTAMP_3, Enum('command', 8, mt.gen_cmd)],
-    'ACTUATOR_CMD':         [BOARD_ID, TIMESTAMP_3, Enum('actuator', 8, mt.actuator_id), Enum('req_state', 8, mt.actuator_states)],
-    'ALT_ARM_CMD':          [BOARD_ID, TIMESTAMP_3, Enum('state', 4, mt.arm_states), Numeric('altimeter', 4)],
-    'RESET_CMD':            [BOARD_ID, TIMESTAMP_3, Enum('board_id', 8, mt.board_id)],
+    'GENERAL_CMD':          Message('GENERAL_CMD',[BOARD_ID, TIMESTAMP_3, Enum('gen_cmd', 8, mt.gen_cmd)]),
+    'ACTUATOR_CMD':         Message('ACTUATOR_CMD', [BOARD_ID, TIMESTAMP_3, Enum('actuator_id', 8, mt.actuator_id), Enum('actuator_states', 8, mt.actuator_states)]),
+    'ALT_ARM_CMD':          Message('ALT_ARM_CMD', [BOARD_ID, TIMESTAMP_3, Enum('arm_states', 4, mt.arm_states), Numeric('altimeter', 4)]),
+    'RESET_CMD':            Message('RESET_CMD', [BOARD_ID, TIMESTAMP_3, Enum('board_id', 8, mt.board_id)]),
 
-    'DEBUG_MSG':            [BOARD_ID, TIMESTAMP_3, Numeric('level', 4), Numeric('line', 12), ASCII('data', 24)],
-    'DEBUG_PRINTF':         [BOARD_ID, ASCII('string', 64)],
-    'DEBUG_RADIO_CMD':      [BOARD_ID, ASCII('string', 64)],
+    'DEBUG_MSG':            Message('DEBUG_MSG', [BOARD_ID, TIMESTAMP_3, Numeric('level', 4), Numeric('line', 12), ASCII('data', 24)]),
+    'DEBUG_PRINTF':         Message('DEBUG_PRINTF', [BOARD_ID, ASCII('string', 64)]),
+    'DEBUG_RADIO_CMD':      Message('DEBUG_RADIO_CMD', [BOARD_ID, ASCII('string', 64)]) ,
 
-    'ACTUATOR_STATUS':      [BOARD_ID, TIMESTAMP_3, Enum('actuator', 8, mt.actuator_id), Enum('cur_state', 8, mt.actuator_states), Enum('req_state', 8, mt.actuator_states)],
-    'ALT_ARM_STATUS':       [BOARD_ID, TIMESTAMP_3, Enum('state', 4, mt.arm_states), Numeric('altimeter', 4), Numeric('drogue_v', 16), Numeric('main_v', 16)],
-    'GENERAL_BOARD_STATUS': [BOARD_ID, TIMESTAMP_3, Switch('status', 8, mt.board_status, BOARD_STATUS)],
+    'ACTUATOR_STATUS':      Message('ACTUATOR_STATUS', [BOARD_ID, TIMESTAMP_3, Enum('actuator_id', 8, mt.actuator_id), Enum('actuator_states', 8, mt.actuator_states), Enum('actuator_states', 8, mt.actuator_states)]),
+    'ALT_ARM_STATUS':       Message('ALT_ARM_STATUS', [BOARD_ID, TIMESTAMP_3, Enum('arm_states', 4, mt.arm_states), Numeric('altimeter', 4), Numeric('drogue_v', 16), Numeric('main_v', 16)]),
+    'GENERAL_BOARD_STATUS': Message('GENERAL_BOARD_STATUS', [BOARD_ID, TIMESTAMP_3, Switch('board_status', 8, mt.board_status, BOARD_STATUS)]),
 
-    'SENSOR_TEMP':          [BOARD_ID, TIMESTAMP_3, Numeric('sensor_id', 8), Numeric('temperature', 24, scale=1/2**10, unit='°C', signed=True)],
-    'SENSOR_ALTITUDE':      [BOARD_ID, TIMESTAMP_3, Numeric('altitude', 32, signed=True)],
-    'SENSOR_ACC':           [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, scale=8/2**16, unit='m/s²', signed=True), Numeric('y', 16, scale=8/2**16, unit='m/s²', signed=True), Numeric('z', 16, scale=8/2**16, unit='m/s²', signed=True)],
-    'SENSOR_ACC2':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, scale=16/2**16, unit='m/s²', signed=True), Numeric('y', 16, scale=16/2**16, unit='m/s²', signed=True), Numeric('z', 16, scale=16/2**16, unit='m/s²', signed=True)],
-    'SENSOR_GYRO':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, scale=2000/2**16, unit='°/s', signed=True), Numeric('y', 16, scale=2000/2**16, unit='°/s', signed=True), Numeric('z', 16, scale=2000/2**16, unit='°/s', signed=True)],
-    'SENSOR_MAG':           [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='µT', signed=True), Numeric('y', 16, unit='µT', signed=True), Numeric('z', 16, unit='µT', signed=True)],
-    'SENSOR_ANALOG':        [BOARD_ID, TIMESTAMP_2, Enum('sensor_id', 8, mt.sensor_id), Numeric('value', 16, signed=True)],
+    'SENSOR_TEMP':          Message('SENSOR_TEMP', [BOARD_ID, TIMESTAMP_3, Numeric('sensor_id', 8), Numeric('temperature', 24, scale=1/2**10, unit='°C', signed=True)]),
+    'SENSOR_ALTITUDE':      Message('SENSOR_ALTITUDE', [BOARD_ID, TIMESTAMP_3, Numeric('altitude', 32, signed=True)]),
+    'SENSOR_ACC':           Message('SENSOR_ACC', [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, scale=8/2**16, unit='m/s²', signed=True), Numeric('y', 16, scale=8/2**16, unit='m/s²', signed=True), Numeric('z', 16, scale=8/2**16, unit='m/s²', signed=True)]),
+    'SENSOR_ACC2':          Message('SENSOR_ACC2', [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, scale=16/2**16, unit='m/s²', signed=True), Numeric('y', 16, scale=16/2**16, unit='m/s²', signed=True), Numeric('z', 16, scale=16/2**16, unit='m/s²', signed=True)]),
+    'SENSOR_GYRO':          Message('SENSOR_GYRO', [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, scale=2000/2**16, unit='°/s', signed=True), Numeric('y', 16, scale=2000/2**16, unit='°/s', signed=True), Numeric('z', 16, scale=2000/2**16, unit='°/s', signed=True)]),
+    'SENSOR_MAG':           Message('SENSOR_MAG', [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='µT', signed=True), Numeric('y', 16, unit='µT', signed=True), Numeric('z', 16, unit='µT', signed=True)]),
+    'SENSOR_ANALOG':        Message('SENSOR_ANALOG', [BOARD_ID, TIMESTAMP_2, Enum('sensor_id', 8, mt.sensor_id), Numeric('value', 16, signed=True)]),
 
-    'GPS_TIMESTAMP':        [BOARD_ID, TIMESTAMP_3, Numeric('hrs', 8), Numeric('mins', 8), Numeric('secs', 8), Numeric('dsecs', 8)],
-    'GPS_LATITUDE':         [BOARD_ID, TIMESTAMP_3, Numeric('degs', 8), Numeric('mins', 8), Numeric('dmins', 16), ASCII('direction', 8)],
-    'GPS_LONGITUDE':        [BOARD_ID, TIMESTAMP_3, Numeric('degs', 8), Numeric('mins', 8), Numeric('dmins', 16), ASCII('direction', 8)],
-    'GPS_ALTITUDE':         [BOARD_ID, TIMESTAMP_3, Numeric('altitude', 16), Numeric('daltitude', 8), ASCII('unit', 8)],
-    'GPS_INFO':             [BOARD_ID, TIMESTAMP_3, Numeric('num_sats', 8), Numeric('quality', 8)],
+    'GPS_TIMESTAMP':        Message('GPS_TIMESTAMP', [BOARD_ID, TIMESTAMP_3, Numeric('hrs', 8), Numeric('mins', 8), Numeric('secs', 8), Numeric('dsecs', 8)]),
+    'GPS_LATITUDE':         Message('GPS_LATITUDE', [BOARD_ID, TIMESTAMP_3, Numeric('degs', 8), Numeric('mins', 8), Numeric('dmins', 16), ASCII('fill_direction', 8)]),
+    'GPS_LONGITUDE':        Message('GPS_LONGITUDE', [BOARD_ID, TIMESTAMP_3, Numeric('degs', 8), Numeric('mins', 8), Numeric('dmins', 16), ASCII('fill_direction', 8)]),
+    'GPS_ALTITUDE':         Message('GPS_ALTITUDE', [BOARD_ID, TIMESTAMP_3, Numeric('altitude', 16), Numeric('daltitude', 8), ASCII('unit', 8)]),
+    'GPS_INFO':             Message('GPS_INFO', [BOARD_ID, TIMESTAMP_3, Numeric('num_sats', 8), Numeric('quality', 8)]),
 
-    'FILL_LVL':             [BOARD_ID, TIMESTAMP_3, Numeric('level', 8), Enum('direction', 8, mt.fill_direction)],
+    'FILL_LVL':             Message('FILL_LVL', [BOARD_ID, TIMESTAMP_3, Numeric('level', 8), Enum('fill_direction', 8, mt.fill_direction)]),
 
-    'RADI_VALUE':           [BOARD_ID, TIMESTAMP_3, Numeric('radi_board', 8), Numeric('radi', 16)],
+    'RADI_VALUE':           Message('RADI_VALUE', [BOARD_ID, TIMESTAMP_3, Numeric('radi_board', 8), Numeric('radi', 16)]),
 
-    'LEDS_ON':              [BOARD_ID],
-    'LEDS_OFF':             [BOARD_ID]
+    'LEDS_ON':              Message('LEDS_ON', [BOARD_ID]),
+    'LEDS_OFF':             Message('LEDS_OFF', [BOARD_ID])
 }
 
 # entire CAN message minus board_id 
