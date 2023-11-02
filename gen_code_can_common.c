@@ -545,3 +545,296 @@ bool build_radi_value_msg(uint32_t timestamp,
     return true;
 }
         
+int get_general_cmd(const can_msg_t *msg,
+                        )
+
+{
+    if (!msg){ return false; }
+    
+
+}
+
+int get_actuator_cmd(const can_msg_t *msg,
+                        )
+
+{
+    if (!msg){ return false; }
+    
+
+}
+
+bool get_alt_arm_cmd(const can_msg_t *msg,
+                        uint4_t altimeter, 
+)
+
+{
+    if (!msg){ return false; }
+    if (!altimeter) { return false; } 
+
+
+}
+
+int get_reset_cmd(const can_msg_t *msg,
+                        )
+
+{
+    if (!msg){ return false; }
+    
+
+}
+
+bool get_debug_msg(const can_msg_t *msg,
+                        uint4_t level, 
+                           uint12_t line, 
+)
+
+{
+    if (!msg){ return false; }
+    if (!level) { return false; } 
+    if (!line) { return false; } 
+
+
+}
+
+bool get_debug_printf(const can_msg_t *msg,
+                        )
+
+{
+    if (!msg){ return false; }
+    
+
+}
+
+bool get_debug_radio_cmd(const can_msg_t *msg,
+                        )
+
+{
+    if (!msg){ return false; }
+    
+
+}
+
+int get_actuator_status(const can_msg_t *msg,
+                        )
+
+{
+    if (!msg){ return false; }
+    
+
+}
+
+bool get_alt_arm_status(const can_msg_t *msg,
+                        uint4_t altimeter, 
+                           uint16_t drogue_v, 
+                           uint16_t main_v, 
+)
+
+{
+    if (!msg){ return false; }
+    if (!altimeter) { return false; } 
+    if (!drogue_v) { return false; } 
+    if (!main_v) { return false; } 
+
+
+}
+
+int get_general_board_status(const can_msg_t *msg,
+                        )
+
+{
+    if (!msg){ return false; }
+    
+
+}
+
+bool get_sensor_temp(const can_msg_t *msg,
+                        uint8_t sensor_id, 
+                           uint24_t temperature, 
+)
+
+{
+    if (!msg){ return false; }
+    if (!sensor_id) { return false; } 
+    if (!temperature) { return false; } 
+
+
+}
+
+bool get_sensor_altitude(const can_msg_t *msg,
+                        uint32_t altitude, 
+)
+
+{
+    if (!msg){ return false; }
+    if (!altitude) { return false; } 
+
+
+}
+
+bool get_sensor_acc(const can_msg_t *msg,
+                        uint16_t x, 
+                           uint16_t y, 
+                           uint16_t z, 
+)
+
+{
+    if (!msg){ return false; }
+    if (!x) { return false; } 
+    if (!y) { return false; } 
+    if (!z) { return false; } 
+
+
+}
+
+bool get_sensor_acc2(const can_msg_t *msg,
+                        uint16_t x, 
+                           uint16_t y, 
+                           uint16_t z, 
+)
+
+{
+    if (!msg){ return false; }
+    if (!x) { return false; } 
+    if (!y) { return false; } 
+    if (!z) { return false; } 
+
+
+}
+
+bool get_sensor_gyro(const can_msg_t *msg,
+                        uint16_t x, 
+                           uint16_t y, 
+                           uint16_t z, 
+)
+
+{
+    if (!msg){ return false; }
+    if (!x) { return false; } 
+    if (!y) { return false; } 
+    if (!z) { return false; } 
+
+
+}
+
+bool get_sensor_mag(const can_msg_t *msg,
+                        uint16_t x, 
+                           uint16_t y, 
+                           uint16_t z, 
+)
+
+{
+    if (!msg){ return false; }
+    if (!x) { return false; } 
+    if (!y) { return false; } 
+    if (!z) { return false; } 
+
+
+}
+
+bool get_sensor_analog(const can_msg_t *msg,
+                        uint16_t value, 
+)
+
+{
+    if (!msg){ return false; }
+    if (!value) { return false; } 
+
+
+}
+
+bool get_gps_timestamp(const can_msg_t *msg,
+                        uint8_t hrs, 
+                           uint8_t mins, 
+                           uint8_t secs, 
+                           uint8_t dsecs, 
+)
+
+{
+    if (!msg){ return false; }
+    if (!hrs) { return false; } 
+    if (!mins) { return false; } 
+    if (!secs) { return false; } 
+    if (!dsecs) { return false; } 
+
+
+}
+
+bool get_gps_latitude(const can_msg_t *msg,
+                        uint8_t degs, 
+                           uint8_t mins, 
+                           uint16_t dmins, 
+)
+
+{
+    if (!msg){ return false; }
+    if (!degs) { return false; } 
+    if (!mins) { return false; } 
+    if (!dmins) { return false; } 
+
+
+}
+
+bool get_gps_longitude(const can_msg_t *msg,
+                        uint8_t degs, 
+                           uint8_t mins, 
+                           uint16_t dmins, 
+)
+
+{
+    if (!msg){ return false; }
+    if (!degs) { return false; } 
+    if (!mins) { return false; } 
+    if (!dmins) { return false; } 
+
+
+}
+
+bool get_gps_altitude(const can_msg_t *msg,
+                        uint16_t altitude, 
+                           uint8_t daltitude, 
+)
+
+{
+    if (!msg){ return false; }
+    if (!altitude) { return false; } 
+    if (!daltitude) { return false; } 
+
+
+}
+
+bool get_gps_info(const can_msg_t *msg,
+                        uint8_t num_sats, 
+                           uint8_t quality, 
+)
+
+{
+    if (!msg){ return false; }
+    if (!num_sats) { return false; } 
+    if (!quality) { return false; } 
+
+
+}
+
+bool get_fill_lvl(const can_msg_t *msg,
+                        uint8_t level, 
+)
+
+{
+    if (!msg){ return false; }
+    if (!level) { return false; } 
+
+
+}
+
+bool get_radi_value(const can_msg_t *msg,
+                        uint8_t radi_board, 
+                           uint16_t radi, 
+)
+
+{
+    if (!msg){ return false; }
+    if (!radi_board) { return false; } 
+    if (!radi) { return false; } 
+
+
+}

@@ -87,7 +87,10 @@ bool build_{self.name.lower()}_msg(uint32_t timestamp,
         '''
         return bodyCode
     
-    def convert_to_c_get_function(self):
+    def convert_to_c_get_function(self, hasBody=False):
+        endVal = ';'
+        if hasBody:
+            endVal = ''
         int_or_bool = 'int'
         if len(self.numerics) != 1:
             int_or_bool = 'bool'
@@ -96,9 +99,30 @@ bool build_{self.name.lower()}_msg(uint32_t timestamp,
         
         c_code = f'''
 {int_or_bool} get_{self.name.lower()}(const can_msg_t *msg,
-                        {self.renderNumerics()});
+                        {self.renderNumerics()}){endVal}
 '''
         return c_code
+    
+    def convert_c_to_get_body(self):
+        def renderbodyNumericData():
+            numerics_body_string = ''
+            if len(self.numerics) > 0:
+                for num in self.numerics[1:]:
+                    if self.numerics[1:].index(num) == 0:
+                        numerics_body_string += f'if (!{num.name}) {"{ return false; }"} \n'
+                    else:
+                        numerics_body_string += f'    if (!{num.name}) {"{ return false; }"} \n'
+                        
+            return numerics_body_string
+        bodyCode = f'''
+{'{'}
+    if (!msg){"{ return false; }"}
+    {renderbodyNumericData()}
+
+{'}'}
+'''
+        
+        return bodyCode
     
     
     
