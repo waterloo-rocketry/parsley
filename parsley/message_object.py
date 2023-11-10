@@ -16,6 +16,24 @@ class Message:
                elif isinstance(i, Numeric):
                    self.numerics.append(i)
                    
+                   
+    def renderBody(self):
+        body_string = ''
+        if len(self.layoutBits) > 0:
+            for item in self.layoutBits[1:]:
+                if isinstance(item, Enum) or isinstance(item, Switch):
+                    if self.layoutBits[1:].index(item) != 0:
+                        body_string += f'                           enum {item.name.upper()} {item.name}, \n'
+                    else:
+                        body_string += f'enum {item.name.upper()} {item.name}, \n'
+                elif isinstance(item, Numeric):
+                   if item.length % 8 == 0:
+                        if self.layoutBits[1:].index(item) != 0:
+                            body_string += f'                           uint{item.length}_t {item.name}, \n'
+                        else:
+                            body_string += f'uint{item.length}_t {item.name}, \n'
+        return body_string
+    
     def renderEnums(self):
             enums_string = ''
             if len(self.enums) > 0:
@@ -30,10 +48,11 @@ class Message:
             numerics_string = ''
             if len(self.numerics) > 0:
                 for num in self.numerics[1:]:
-                    if self.numerics[1:].index(num) != 0:
-                        numerics_string += f'                           uint{num.length}_t {num.name}, \n'
-                    else:
-                        numerics_string += f'uint{num.length}_t {num.name}, \n'
+                    if num.length % 8 == 0:
+                        if self.numerics[1:].index(num) != 0:
+                            numerics_string += f'                           uint{num.length}_t {num.name}, \n'
+                        else:
+                            numerics_string += f'uint{num.length}_t {num.name}, \n'
             return numerics_string
         
         
@@ -54,8 +73,7 @@ class Message:
             endVal = ''
         c_code = f'''
 bool build_{self.name.lower()}_msg(uint32_t timestamp,
-                        {self.renderEnums()}
-                        {self.renderNumerics()}
+                        {self.renderBody()}
                         can_msg_t *output){endVal}
 '''
         return c_code
