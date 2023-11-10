@@ -771,8 +771,6 @@ bool get_gps_latitude(const can_msg_t *msg,
     if (!mins) { return false; } 
     if (!dmins) { return false; } 
 
-    
-
 
 }
 
