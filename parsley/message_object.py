@@ -22,16 +22,15 @@ class Message:
         if len(self.layoutBits) > 0:
             for item in self.layoutBits[1:]:
                 if isinstance(item, Enum) or isinstance(item, Switch):
-                    if self.layoutBits[1:].index(item) != 0:
-                        body_string += f'                           enum {item.name.upper()} {item.name}, \n'
-                    else:
-                        body_string += f'enum {item.name.upper()} {item.name}, \n'
+                    
+                        body_string += f'       enum {item.name.upper()} {item.name}, \n'
                 elif isinstance(item, Numeric):
                    if item.length % 8 == 0:
-                        if self.layoutBits[1:].index(item) != 0:
-                            body_string += f'                           uint{item.length}_t {item.name}, \n'
-                        else:
-                            body_string += f'uint{item.length}_t {item.name}, \n'
+                        if item.name != 'time':
+                            if self.layoutBits[1:].index(item) != 0:
+                                body_string += f'                           uint{item.length}_t {item.name}, \n'
+                            else:
+                                body_string += f'uint{item.length}_t {item.name}, \n'
         return body_string
     
     def renderEnums(self):
@@ -79,16 +78,23 @@ bool build_{self.name.lower()}_msg(uint32_t timestamp,
         return c_code
     
     def convert_to_c_build_body(self):
-        def renderbodyNumericData():
-            numerics_body_string = ''
-            if len(self.numerics) > 0:
-                for num in self.numerics[1:]:
-                    if self.numerics[1:].index(num) == 0:
-                        numerics_body_string += f'output->data[{self.numerics[1:].index(num)+3}] = {num.name}; \n'
-                    else:
-                        numerics_body_string += f'    output->data[{self.numerics[1:].index(num)+3}] = {num.name}; \n'
+        def renderBodyData():
+            body_string = ''
+            if len(self.layoutBits) > 0:
+                for item in self.layoutBits[1:]:
+                    if isinstance(item, Enum) or isinstance(item, Switch):
+                        if self.layoutBits[1:].index(item) == 0:
+                            body_string += f'output->data[{self.layoutBits[1:].index(item)+2}] = (uint8_t) {item.name}; \n'
+                        else:
+                            body_string += f'    output->data[{self.layoutBits[1:].index(item)+2}] = (uint8_t) {item.name}; \n'
+                    elif isinstance(item, Numeric):
+                        if item.name != 'time':
+                            if self.layoutBits[1:].index(item) == 0:
+                                body_string += f'output->data[{self.layoutBits[1:].index(item)+2}] = {item.name}; \n'
+                            else:
+                                body_string += f'    output->data[{self.layoutBits[1:].index(item)+2}] = {item.name}; \n'
                         
-            return numerics_body_string
+            return body_string
         bodyCode = f'''
 {'{'}
     if (!output) {'{'} return false; {'}'}
@@ -96,9 +102,9 @@ bool build_{self.name.lower()}_msg(uint32_t timestamp,
     output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
     write_timestamp_3bytes(timestamp, output);        
     
-    {renderbodyNumericData()}
+    {renderBodyData()}
     
-    output->data_len = {len(self.numerics[1:])+3};
+    output->data_len = {len(self.layoutBits[1:])+2};
 
     return true;
 {'}'}
