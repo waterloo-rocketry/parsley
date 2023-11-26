@@ -99,6 +99,18 @@ class Enum(Field):
     def get_keys(self):
         return self.map_key_val.keys()
     
+    def render_enum(self):
+        nl = '\n'
+        output = f'enum {self.name} {{{nl}'
+        
+        for idx, (k,v) in enumerate(self.map_key_val.items()):
+            output += f'    {k}{"" if idx else f" = {v}"}{nl}'
+
+        output += '}\n'
+
+        return output
+    
+    
 class Numeric(Field):
     """
     Transcodes binary data and numbers (ie. (un)signed and/or floating point)

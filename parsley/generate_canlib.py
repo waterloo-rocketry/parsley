@@ -99,8 +99,8 @@ typedef enum {
     define_type_dicts.append({'data_dict':MESSAGE_TYPE.map_key_val, 'lines_list':[], 'enum_name': MESSAGE_TYPE.name})
 
     for k, v in MESSAGES.items():
-        print(v.layoutBits[0].map_key_val)
-        for f in v.layoutBits:
+        print(v.field_layout[0].map_key_val)
+        for f in v.field_layout:
             if isinstance(f, Enum):
                 if f.name == 'board_id':
                     define_type_dicts.append({'data_dict':f.map_key_val, 'lines_list':[], 'enum_name': f.name})

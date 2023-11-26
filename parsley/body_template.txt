@@ -1,0 +1,8 @@
+    if (!output) { return false; }
+
+    output->sid = %(msg_define)s | BOARD_UNIQUE_ID;
+    write_timestamp_%(time_stamp_bytes)sbytes(timestamp, output);
+    output->data[3] = (uint8_t) cmd;
+    output->data_len = 4;   // 3 bytes timestamp, 1 byte data
+
+    return true;
