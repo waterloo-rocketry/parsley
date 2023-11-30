@@ -1,6 +1,7 @@
+{{ 
     if (!output) {{ return false; }}
 
-    output->sid = {msg_define}s | BOARD_UNIQUE_ID;
+    output->sid = {msg_define} | BOARD_UNIQUE_ID;
     {time_stamp_bytes}
 
 {output_data}
@@ -8,3 +9,4 @@
     output->data_len = {data_len};
 
     return true;
+}}

@@ -42,40 +42,27 @@ class Message:
         return f'MSG_{self.name}'
     
     def get_builder_body(self):
-        def renderBodyData():
-            body_string = ''
-            if len(self.field_layout) > 0:
-                for item in self.field_layout[1:]:
-                    if isinstance(item, Enum) or isinstance(item, Switch):
-                        if self.field_layout[1:].index(item) == 0:
-                            body_string += f'output->data[{self.field_layout[1:].index(item)+2}] = (uint8_t) {item.name}; \n'
-                        else:
-                            body_string += f'    output->data[{self.field_layout[1:].index(item)+2}] = (uint8_t) {item.name}; \n'
-                    elif isinstance(item, Numeric):
-                        if item.name != 'time':
-                            if self.field_layout[1:].index(item) == 0:
-                                body_string += f'output->data[{self.field_layout[1:].index(item)+2}] = {item.name}; \n'
-                            else:
-                                body_string += f'    output->data[{self.field_layout[1:].index(item)+2}] = {item.name}; \n'
-                        
-            return body_string
         with open('body_template.txt') as f:
             body_template = f.read()
 
         data_lines = []
         idx = int(self.field_layout[1].length/8)
-        for field in self.field_layout:
+        for i, field in enumerate(self.field_layout[2:]):
             length = int(field.length/8)
-            for i in range(length):
-                pass
+            for j in range(length):
+                data_lines.append(f'\toutput->data[{idx}] = (uint_8) (arg{i}{f" >> {8 * j}" if j > 0 else ''}) & 0xff\n')
+                idx += 1
 
-        body_template.format(
+        data = '\n'.join(data_lines)
+
+        bodyCode = body_template.format(
             msg_define=self.get_msg_type_define(),
             data_len=f'{sum([int(f.length/8) for f in self.field_layout[1:]])}', # Crop out boardID
-            time_stamp_bytes='' if len(self.field_layout) == 1 else f'write_timestamp_bytes{int(self.field_layout[1].length/8)}(timestamp, output);'
+            time_stamp_bytes='' if len(self.field_layout) == 1 else f'write_timestamp_bytes{int(self.field_layout[1].length/8)}(timestamp, output);',
+            output_data=data
             )
 
-        #return bodyCode
+        return bodyCode
     
     def convert_to_c_get_function(self, hasBody=False):
         endVal = ';'
