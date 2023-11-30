@@ -28,9 +28,9 @@ def convert_message_types_to_h(c_file_path="./gen_message_types.h"):
         key = python_line[0]
         value = python_line[1]
         if type == 'MSG':
-            c_line = f"#define MSG_{key.strip().upper().replace(' ', '_'):<25} {value:#06X}\n"
+            c_line = f"#define MSG_{key} {value:#06X}\n"
         else:
-            c_line = f"#define BOARD_ID_{key.strip().upper().replace(' ', '_'):<25} {value:#06X}\n"
+            c_line = f"#define BOARD_ID_{key} {value:#06X}\n"
         
         return c_line
     

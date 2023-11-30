@@ -38,6 +38,9 @@ class Message:
         c_code = f"bool build_{self.name.lower()}_msg(uint32_t timestamp,{self.render_arguments()}, can_msg_t *output){';' if hasBody else ''}"
         return c_code
     
+    def get_msg_type_define(self):
+        return f'MSG_{self.name}'
+    
     def get_builder_body(self):
         def renderBodyData():
             body_string = ''
@@ -56,21 +59,23 @@ class Message:
                                 body_string += f'    output->data[{self.field_layout[1:].index(item)+2}] = {item.name}; \n'
                         
             return body_string
-        bodyCode = f'''
-{'{'}
-    if (!output) {'{'} return false; {'}'}
+        with open('body_template.txt') as f:
+            body_template = f.read()
 
-    output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
-    write_timestamp_3bytes(timestamp, output);        
-    
-    {renderBodyData()}
-    
-    output->data_len = {len(self.field_layout[1:])+2};
+        data_lines = []
+        idx = int(self.field_layout[1].length/8)
+        for field in self.field_layout:
+            length = int(field.length/8)
+            for i in range(length):
+                pass
 
-    return true;
-{'}'}
-        '''
-        return bodyCode
+        body_template.format(
+            msg_define=self.get_msg_type_define(),
+            data_len=f'{sum([int(f.length/8) for f in self.field_layout[1:]])}', # Crop out boardID
+            time_stamp_bytes='' if len(self.field_layout) == 1 else f'write_timestamp_bytes{int(self.field_layout[1].length/8)}(timestamp, output);'
+            )
+
+        #return bodyCode
     
     def convert_to_c_get_function(self, hasBody=False):
         endVal = ';'
