@@ -50,7 +50,7 @@ class Message:
         for i, field in enumerate(self.field_layout[2:]):
             length = int(field.length/8)
             for j in range(length):
-                data_lines.append(f'\toutput->data[{idx}] = (uint_8) (arg{i}{f" >> {8 * j}" if j > 0 else ''}) & 0xff\n')
+                data_lines.append(f'\toutput->data[{idx}] = (uint_8) (arg{i}{f" >> {8 * j}" if j > 0 else ''}) & 0x00FF;')
                 idx += 1
 
         data = '\n'.join(data_lines)
