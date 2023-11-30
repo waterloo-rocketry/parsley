@@ -48,7 +48,7 @@ typedef enum {
     with open(c_file_path, "w") as c_file:
        c_file.write(constant_c_code)
        for k, v in list(MESSAGES.items())[:-2]:
-               c_file.write(v.convert_to_c_build_function())
+               c_file.write(v.get_builder_signature())
                
        for k, v in list(MESSAGES.items())[:-2]:
                c_file.write(v.convert_to_c_get_function())

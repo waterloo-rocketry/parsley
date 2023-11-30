@@ -20,7 +20,7 @@ class Message:
 
     @staticmethod
     def render_enum_arg(item : Field, idx : int):
-        return f'enum {item.name()} arg{idx}_{item.name}'
+        return f'enum {item.name} arg{idx}_{item.name}'
     
     @staticmethod
     def render_numeric_arg(item : Numeric, idx : int):
@@ -42,15 +42,20 @@ class Message:
         return f'MSG_{self.name}'
     
     def get_builder_body(self):
-        with open('body_template.txt') as f:
+        with open('parsley/body_template.txt') as f:
             body_template = f.read()
+            
+        
 
         data_lines = []
         idx = int(self.field_layout[1].length/8)
         for i, field in enumerate(self.field_layout[2:]):
             length = int(field.length/8)
             for j in range(length):
-                data_lines.append(f'\toutput->data[{idx}] = (uint_8) (arg{i}{f" >> {8 * j}" if j > 0 else ''}) & 0x00FF;')
+                if j != 0:   
+                    data_lines.append(f'\toutput->data[{idx}] = (uint8_t)((arg{i} >> {8 * j}) & 0x00FF);')
+                else:
+                    data_lines.append(f'\toutput->data[{idx}] = (uint8_t)((arg{i}) & 0x00FF);')
                 idx += 1
 
         data = '\n'.join(data_lines)
@@ -76,7 +81,7 @@ class Message:
         
         c_code = f'''
 {int_or_bool} get_{self.name.lower()}(const can_msg_t *msg,
-                        {self.renderNumerics()}){endVal}
+                        {self.render_arguments()}){endVal}
 '''
         return c_code
     

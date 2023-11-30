@@ -33,10 +33,10 @@ static void write_timestamp_3bytes(uint32_t timestamp, can_msg_t *output)
     with open(c_file_path, "w") as c_file:
         c_file.write(constant_c_code)
         for k, v in list(MESSAGES.items())[:-2]:
-               c_file.write(v.convert_to_c_build_function(hasBody=True))
-               c_file.write(v.convert_to_c_build_body())
+               c_file.write(v.get_builder_signature(hasBody=True))
+               c_file.write(v.get_builder_body())
         for k, v in list(MESSAGES.items())[:-2]:
-               c_file.write(v.convert_to_c_get_function(hasBody=True))
-               c_file.write(v.convert_c_to_get_body())
+               c_file.write(v.get_builder_signature(hasBody=True))
+               c_file.write(v.get_builder_body())
                
         

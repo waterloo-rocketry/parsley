@@ -12,7 +12,7 @@ def convert_message_types_to_h(c_file_path="./gen_message_types.h"):
     define_type_dicts.append({'data_dict':MESSAGE_TYPE.map_key_val, 'lines_list':[], 'enum_name': MESSAGE_TYPE.name})
 
     for k, v in MESSAGES.items():
-        print(v.field_layout[0].map_key_val)
+        #print(v.field_layout[0].map_key_val)
         for f in v.field_layout:
             if isinstance(f, Enum):
                 if f.name == 'board_id':
@@ -71,7 +71,7 @@ def convert_message_types_to_h(c_file_path="./gen_message_types.h"):
             lines = enum_info['lines_list']
             enum_name = enum_info['enum_name']
             
-            c_file.write(f"enum {enum_name} {{\n")
+            c_file.write(f"enum {enum_name.upper()} {{\n")
             
             for idx, python_line in enumerate(lines):
                 c_file.write(convert_gen_cmd_to_c_string(python_line) + "\n")
