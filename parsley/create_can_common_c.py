@@ -38,5 +38,8 @@ static void write_timestamp_3bytes(uint32_t timestamp, can_msg_t *output)
         for k, v in list(MESSAGES.items())[:-2]:
                c_file.write(v.get_builder_signature(hasBody=True))
                c_file.write(v.get_builder_body())
+        for k, v in list(MESSAGES.items())[:-2]:
+               c_file.write(v.getter_signature())
+               c_file.write(v.get_getter_body())
                
         

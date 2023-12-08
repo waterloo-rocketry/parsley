@@ -34,8 +34,22 @@ class Message:
         ]
         return ', '.join(args)
     
+    def render_numeric_arguments(self):
+        args = []
+        
+        for idx, f in enumerate(self.field_layout[2:]):
+            if isinstance(f, Numeric):
+                args.append(Message.render_numeric_arg(f, idx))
+        
+        return ', '.join(args)
+    
     def get_builder_signature(self, hasBody=False):
         c_code = f"bool build_{self.name.lower()}_msg(uint32_t timestamp,{self.render_arguments()}, can_msg_t *output){';' if hasBody else ''}"
+        return c_code
+    
+    def getter_signature(self):
+        c_code = f"\nint get_{self.name.lower()}_msg(const can_msg_t *msg, {self.render_numeric_arguments()})\n"
+        
         return c_code
     
     def get_msg_type_define(self):
@@ -66,6 +80,31 @@ class Message:
             time_stamp_bytes='' if len(self.field_layout) == 1 else f'write_timestamp_bytes{int(self.field_layout[1].length/8)}(timestamp, output);',
             output_data=data
             )
+
+        return bodyCode
+    
+    def get_getter_body(self):
+        bodyCode = '''
+            '''
+        bodyCode +=  "{\n"  
+        bodyCode +=  "    if (!msg) { return false; }\n"
+        bodyCode += "\n"
+        for numeric in self.numerics:
+            bodyCode += f'    if (!{numeric.name}) {"{ return false; }"}\n'
+            
+        bodyCode += '    if (get_message_type(msg) != MSG_GPS_INFO) { return false; }'
+        bodyCode += "\n"
+        
+        for numeric in self.numerics:
+            bodyCode += f'    *{numeric.name} = msg->data[{self.numerics.index(numeric) + 3}];\n'
+            
+        bodyCode +=  "    return true;\n"
+        bodyCode += "}"
+            
+        
+        
+           
+                
 
         return bodyCode
     
