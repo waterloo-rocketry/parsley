@@ -113,8 +113,8 @@ def format_can_message(msg_sid: int, msg_data: List[int]) -> Tuple[bytes, bytes]
 
 # given a dictionary of CAN message data, return the CAN message bits
 def encode_data(parsed_data: dict) -> Tuple[int, List[int]]:
-    msg_type = parsed_data.pop('msg_type')
-    board_id = parsed_data.pop('board_id')
+    msg_type = parsed_data['msg_type']
+    board_id = parsed_data['board_id']
 
     bit_str = BitString()
     bit_str.push(*MESSAGE_TYPE.encode(msg_type))
