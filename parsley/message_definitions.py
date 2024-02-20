@@ -1,4 +1,4 @@
-from parsley.fields import ASCII, Enum, Numeric, Switch
+from parsley.fields import ASCII, Enum, Numeric, Switch, Raw
 
 import parsley.message_types as mt
 
@@ -49,7 +49,8 @@ MESSAGES = {
     'RESET_CMD':            [BOARD_ID, TIMESTAMP_3, Enum('reset_board_id', 8, mt.board_id)],
 
     'DEBUG_MSG':            [BOARD_ID, TIMESTAMP_3, Numeric('level', 4), Numeric('line', 12), ASCII('data', 24)],
-    'DEBUG_PRINTF':         [BOARD_ID, ASCII('string', 64)],
+    'DEBUG_PRINTF':         [BOARD_ID, Raw('string', 64)],
+
     'DEBUG_RADIO_CMD':      [BOARD_ID, ASCII('string', 64)],
 
     'ACTUATOR_STATUS':      [BOARD_ID, TIMESTAMP_3, Enum('actuator', 8, mt.actuator_id), Enum('cur_state', 8, mt.actuator_states), Enum('req_state', 8, mt.actuator_states)],

@@ -154,3 +154,16 @@ class Switch(Enum):
     
     def get_keys(self):
         return self.map_key_val.keys()
+    
+class Raw(Field):
+    """
+    Does not do any transcoding, works as a conveience class to echo back the same value
+    """
+
+    def decode(self, data: bytes) -> str:
+        return data
+    
+    def encode(self, value: str) -> Tuple[bytes, int]:
+        return value
+    
+
