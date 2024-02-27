@@ -110,42 +110,42 @@ bool build_{self.name.lower()}_msg(uint32_t timestamp,
 {'}'}
         '''
         return bodyCode
-    
-    def convert_to_c_get_function(self, hasBody=False):
-        endVal = ';'
-        if hasBody:
-            endVal = ''
-        int_or_bool = 'int'
-        if len(self.numerics) != 1:
-            int_or_bool = 'bool'
-        else:
-            int_or_bool = 'int'
-        
-        c_code = f'''
-{int_or_bool} get_{self.name.lower()}(const can_msg_t *msg,
-                        {self.renderNumerics()}){endVal}
-'''
-        return c_code
-    
-    def convert_to_c_get_body(self):
-        def renderbodyNumericData():
-            numerics_body_string = ''
-            if len(self.numerics) > 0:
-                for num in self.numerics[1:]:
-                    if self.numerics[1:].index(num) == 0:
-                        numerics_body_string += f'if (!{num.name}) {"{ return false; }"} \n'
-                    else:
-                        numerics_body_string += f'    if (!{num.name}) {"{ return false; }"} \n'
-                        
-            return numerics_body_string
-        bodyCode = f'''
-{'{'}
-    if (!msg){"{ return false; }"}
-    {renderbodyNumericData()}
 
-{'}'}
-'''
-        
+    def convert_to_c_get_function(self, hasBody=False):
+        endVal = '' if hasBody else ';'
+        int_or_bool = 'bool' if len(self.numerics) != 1 else 'int'
+        c_code = (f''
+                  f'{int_or_bool} get_{self.name.lower()}(const can_msg_t *msg,'
+                  f'{self.renderNumerics()}){endVal}')
+        if self.renderNumerics() == '': c_code = c_code.replace(',', '')
+        return c_code
+
+    def convert_to_c_get_body(self):
+        body_string = ''
+
+        if len(self.numerics) > 0:
+            for num in self.numerics[1:]:
+                body_string += f'\tif (!{num.name}) {"{ return false; }"}\n'
+
+        body_string += f'\tif (get_message_type(msg) != MSG_{self.name}) {"{"}return false;{"}"}\n'
+        body_string += '\n'
+
+        if len(self.numerics) > 0:
+            for num in self.numerics:
+                if num.name != 'time':
+                    if isinstance(num, Numeric) and num.length > 8:
+                        for i in range(1, int(num.length / 8) + 1):
+                            body_string += f'\t*{num.name} = (uint{num.length}_t)msg->data[{self.layoutBits[1:].index(num) + i + 1}] << {int(num.length / i)} | msg->data[{self.layoutBits[1:].index(num) + i + 2}];\n'
+                    else:
+                        body_string += f'\t*{num.name} = msg->data[{self.layoutBits[1:].index(num) + 2}];\n'
+
+        bodyCode = (f'\n'
+                    f'{"{"}\n'
+                    f'\tif (!msg) {"{ return false; }"}\n'
+                    f'{body_string}\n'
+                    f'\treturn true;\n'
+                    f'{"}"}\n')
+
         return bodyCode
     
     
