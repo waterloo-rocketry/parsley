@@ -127,7 +127,7 @@ bool build_{self.name.lower()}_msg(uint32_t timestamp,
 '''
         return c_code
     
-    def convert_c_to_get_body(self):
+    def convert_to_c_get_body(self):
         def renderbodyNumericData():
             numerics_body_string = ''
             if len(self.numerics) > 0:
