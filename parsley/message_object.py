@@ -9,110 +9,89 @@ class Message:
         self.enums = []
         self.numerics = []
         self.map_key_val = self.layoutBits[0].map_key_val
-        
+
         for i in self.layoutBits:
-               if isinstance(i, Enum) or isinstance(i, Switch):
-                   self.enums.append(i)
-               elif isinstance(i, Numeric):
-                   self.numerics.append(i)
-                   
-                   
+            if isinstance(i, Enum) or isinstance(i, Switch):
+                self.enums.append(i)
+            elif isinstance(i, Numeric):
+                self.numerics.append(i)
+
     def renderBody(self):
         body_string = ''
         if len(self.layoutBits) > 0:
             for item in self.layoutBits[1:]:
                 if isinstance(item, Enum) or isinstance(item, Switch):
-                    
-                        body_string += f'enum {item.name.upper()} {item.name}, '
+                    body_string += f'enum {item.name.upper()} {item.name}, '
                 elif isinstance(item, Numeric):
-                   if item.length % 8 == 0:
-                        if item.name != 'time':
-                            if self.layoutBits[1:].index(item) != 0:
-                                body_string += f'uint{item.length}_t {item.name}, '
-                            else:
-                                body_string += f'uint{item.length}_t {item.name}, \n'
+                    if item.length % 8 == 0 and item.name != 'time':
+                        body_string += f'uint{item.length}_t {item.name}, '
+                        if self.layoutBits[1:].index(item) == 0:
+                            body_string += '\n'
+
         return body_string
-    
+
     def renderEnums(self):
-            enums_string = ''
-            if len(self.enums) > 0:
-                for enum in self.enums[1:]:
-                    if self.enums[1:].index(enum) != 0:
-                        enums_string += f'\tenum {enum.name.upper()} {enum.name}, \n'
-                    else:
-                        enums_string += f'\tenum {enum.name.upper()} {enum.name}, \n'
-            return enums_string
-        
+        enums_string = ''
+        if len(self.enums) > 0:
+            for enum in self.enums[1:]:
+                enums_string += f'\tenum {enum.name.upper()} {enum.name}, \n'
+        return enums_string
+
     def renderNumerics(self):
-            numerics_string = ''
-            if len(self.numerics) > 0:
-                for num in self.numerics[1:]:
-                    if num.length % 8 == 0:
-                        if self.numerics[1:].index(num) != 0:
-                            numerics_string += f'\tuint{num.length}_t {num.name}, \n'
-                        else:
-                            numerics_string += f'\tuint{num.length}_t {num.name}, \n'
-            return numerics_string
-        
-        
+        numerics_string = ''
+        if len(self.numerics) > 0:
+            for num in self.numerics[1:]:
+                if num.length % 8 == 0:
+                    numerics_string += f'\tuint{num.length}_t {num.name}, \n'
+        return numerics_string
+
     def convert_msg_type_to_define_msg_c(self):
-        c_line = f"#define MSG_{self.name.strip().upper().replace(' ', '_'):<25} {0:#06X}\n"
-        
-        return c_line
-    
+        return f"#define MSG_{self.name.strip().upper().replace(' ', '_'):<25} {0:#06X}\n"
+
     def convert_msg_type_to_board_msg_c(self):
-        c_line = f"#define BOARD_ID_{self.name.strip().upper().replace(' ', '_'):<25} {0:#06X}\n"
-        
-        return c_line
-    
+        return f"#define BOARD_ID_{self.name.strip().upper().replace(' ', '_'):<25} {0:#06X}\n"
+
     def convert_to_c_build_function(self, hasBody=False):
-        
+
         endVal = ';'
         if hasBody:
             endVal = ''
-        c_code = f'''
-bool build_{self.name.lower()}_msg(uint32_t timestamp, {self.renderBody()}can_msg_t *output){endVal}
-'''
-        return c_code
-    
+        return (f'\n'
+                f'bool build_{self.name.lower()}_msg(uint32_t timestamp, {self.renderBody()}can_msg_t *output){endVal}'
+                f'\n')
+
     def convert_to_c_build_body(self):
         def renderBodyData():
             body_string = ''
             if len(self.layoutBits) > 0:
                 for item in self.layoutBits[1:]:
                     if isinstance(item, Enum) or isinstance(item, Switch):
-                        if self.layoutBits[1:].index(item) == 0:
-                            body_string += f'\toutput->data[{self.layoutBits[1:].index(item)+2}] = (uint8_t) {item.name}; \n'
-                        else:
-                            body_string += f'\toutput->data[{self.layoutBits[1:].index(item)+2}] = (uint8_t) {item.name}; \n'
-                    elif isinstance(item, Numeric):
-                        if item.name != 'time':
-                            if self.layoutBits[1:].index(item) == 0:
-                                body_string += f'\toutput->data[{self.layoutBits[1:].index(item)+2}] = {item.name}; \n'
-                            else:
-                                body_string += f'\toutput->data[{self.layoutBits[1:].index(item)+2}] = {item.name}; \n'
-                        
+                        body_string += f'\toutput->data[{self.layoutBits[1:].index(item) + 2}] = (uint8_t) {item.name}; \n'
+                    elif isinstance(item, Numeric) and item.name != 'time':
+                            body_string += f'\toutput->data[{self.layoutBits[1:].index(item) + 2}] = {item.name}; \n'
+
             return body_string
-        bodyCode = f'''
-{'{'}
-    if (!output) {'{'} return false; {'}'}
 
-    output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
-    write_timestamp_3bytes(timestamp, output);        
-    
-{renderBodyData()}
-    output->data_len = {len(self.layoutBits[1:])+2};
+        bodyCode = (f'\n'
+                    f'{"{"}\n'
+                    f'\tif (!output) {"{"} return false; {"}"}\n'
+                    f'\n'
+                    f'\toutput->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;\n'
+                    f'\twrite_timestamp_3bytes(timestamp, output);\n'
+                    f'\n'
+                    f'{renderBodyData()}'
+                    f'\toutput->data_len = {len(self.layoutBits[1:]) + 2};\n'
+                    f'\n'
+                    f'\treturn true;\n'
+                    f'{"}"}\n'
+                    f'\n')
 
-    return true;
-{'}'}
-        '''
         return bodyCode
 
     def convert_to_c_get_function(self, hasBody=False):
         endVal = '' if hasBody else ';'
         int_or_bool = 'bool' if len(self.numerics) != 1 else 'int'
-        c_code = (f''
-                  f'{int_or_bool} get_{self.name.lower()}(const can_msg_t *msg,'
+        c_code = (f'{int_or_bool} get_{self.name.lower()}(const can_msg_t *msg,'
                   f'{self.renderNumerics()}){endVal}')
         if self.renderNumerics() == '': c_code = c_code.replace(',', '')
         return c_code
@@ -144,9 +123,3 @@ bool build_{self.name.lower()}_msg(uint32_t timestamp, {self.renderBody()}can_ms
                     f'{"}"}\n')
 
         return bodyCode
-    
-    
-    
-        
-        
-
