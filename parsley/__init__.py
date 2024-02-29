@@ -11,7 +11,5 @@ from .parsley import (
     format_line,
     encode_data
 )
-from .create_message_types import convert_message_types_to_h
-from .create_can_common import convert_can_common_to_h
-from .create_can_common_c import convert_can_common_to_c
+
 from .generate_canlib import generate_canlib
