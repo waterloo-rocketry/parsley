@@ -1,0 +1,11 @@
+{{
+    if (!output) {{ return false; }}
+
+    output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
+    write_timestamp_3bytes(timestamp, output);
+
+{body}
+    output->data_len = {len};
+
+    return true;
+}}

@@ -2,31 +2,8 @@ from parsley.message_definitions import MESSAGES, MESSAGE_TYPE
 from parsley.fields import Enum, Numeric, Switch, ASCII
 
 def generate_canlib(output_directory='parsley\canlib'):
-    constant_c_code = """#include "can_common.h"
-#include "message_types.h"
-#include <stddef.h>
-
-// this symbol should be defined in the project's Makefile, but if it
-// isn't, issue a warning and set it to 0
-#ifndef  BOARD_UNIQUE_ID
-#warning BOARD_UNIQUE_ID not defined, please set that up in project
-#define  BOARD_UNIQUE_ID 0
-#endif
-
-// Helper function for populating CAN messages
-static void write_timestamp_2bytes(uint16_t timestamp, can_msg_t *output)
-{
-    output->data[0] = (timestamp >> 8) & 0xff;
-    output->data[1] = (timestamp >> 0) & 0xff;
-}
-
-static void write_timestamp_3bytes(uint32_t timestamp, can_msg_t *output)
-{
-    output->data[0] = (timestamp >> 16) & 0xff;
-    output->data[1] = (timestamp >> 8) & 0xff;
-    output->data[2] = (timestamp >> 0) & 0xff;
-}
-"""
+    with open('Parsley/can_common_c.txt', 'r') as file:
+        constant_c_code = file.read()
 
 
     with open(output_directory+'\gen_code_can_common.c', "w") as c_file:
@@ -37,46 +14,9 @@ static void write_timestamp_3bytes(uint32_t timestamp, can_msg_t *output)
         for k, v in list(MESSAGES.items())[:-2]:
                c_file.write(v.convert_to_c_get_function(hasBody=True))
                c_file.write(v.convert_to_c_get_body())
-               
-               
-    constant_c_common_code = """#ifndef CAN_COMMON_H_
-#define CAN_COMMON_H_
 
-#include <stdint.h>
-#include <stdbool.h>
-#include "can.h"
-#include "message_types.h"
-
-/*
- * Debug levels for the debugging messages (MSG_DEBUG_MSG). Lower
- * numbers are more serious debug things
- */
-typedef enum {
-    NONE      = 0,
-    ERROR     = 1,
-    WARN      = 2,
-    INFO      = 3,
-    DEBUGGING = 4
-} can_debug_level_t;
-
-/*
- * This macro creates a new debug message, and stores it in
- * debug_macro_output. The reason that this is a macro and not a
- * function is that debug messages have the line number at which they
- * are created embedded in their data. This is so that we can review
- * the code later to see where the debug was issued from, and
- * hopefully find the cause of the problem
- */
-#define LOG_MSG(debug_macro_level, debug_macro_timestamp, debug_macro_output) \\
-    do { \\
-        uint8_t debug_macro_data[5] = {(debug_macro_level << 4) | ((__LINE__ >> 8) & 0xF), \\
-                                       __LINE__ & 0xFF, \\
-                                       0,0,0}; \\
-        build_debug_msg( debug_macro_timestamp, \\
-                         debug_macro_data, \\
-                         &debug_macro_output); \\
-    } while(0)
-"""
+    with open('Parsley/can_common_h.txt', 'r') as file:
+        constant_c_common_code = file.read()
     
     
     

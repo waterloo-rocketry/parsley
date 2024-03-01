@@ -1,0 +1,6 @@
+
+{{
+    if (!msg) {{ return false }};
+{}
+    return true;
+}}

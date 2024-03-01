@@ -1,10 +1,4 @@
-
-from parsley.message_definitions import MESSAGES
-from parsley.fields import Enum, Numeric, Switch, ASCII
-
-
-def convert_can_common_to_h(c_file_path="./gen_code_can_common.h"):
-    constant_c_code = """#ifndef CAN_COMMON_H_
+#ifndef CAN_COMMON_H_
 #define CAN_COMMON_H_
 
 #include <stdint.h>
@@ -41,24 +35,3 @@ typedef enum {
                          debug_macro_data, \\
                          &debug_macro_output); \\
     } while(0)
-"""
-    
-    
-    
-    with open(c_file_path, "w") as c_file:
-       c_file.write(constant_c_code)
-       for k, v in list(MESSAGES.items())[:-2]:
-               c_file.write(v.convert_to_c_build_function())
-               
-       for k, v in list(MESSAGES.items())[:-2]:
-               c_file.write(v.convert_to_c_get_function())
-               
-       
-      
-       c_file.write('#endif // compile guard')
-       
-
-
-
-#convert_can_common_to_c()
-       

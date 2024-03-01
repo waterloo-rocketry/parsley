@@ -42,7 +42,7 @@ class Message:
         if len(self.numerics) > 0:
             for num in self.numerics[1:]:
                 if num.length % 8 == 0:
-                    numerics_string += f'\tuint{num.length}_t {num.name}, \n'
+                    numerics_string += f', uint{num.length}_t {num.name}'
         return numerics_string
 
     def convert_msg_type_to_define_msg_c(self):
@@ -72,26 +72,15 @@ class Message:
 
             return body_string
 
-        bodyCode = (f'\n'
-                    f'{"{"}\n'
-                    f'\tif (!output) {"{"} return false; {"}"}\n'
-                    f'\n'
-                    f'\toutput->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;\n'
-                    f'\twrite_timestamp_3bytes(timestamp, output);\n'
-                    f'\n'
-                    f'{renderBodyData()}'
-                    f'\toutput->data_len = {len(self.layoutBits[1:]) + 2};\n'
-                    f'\n'
-                    f'\treturn true;\n'
-                    f'{"}"}\n'
-                    f'\n')
+        with open('Parsley/c_build_function.txt', 'r') as file:
+            bodyCode = file.read().format(body=renderBodyData(), len=len(self.layoutBits[1:]) + 2)
 
         return bodyCode
 
     def convert_to_c_get_function(self, hasBody=False):
         endVal = '' if hasBody else ';'
         int_or_bool = 'bool' if len(self.numerics) != 1 else 'int'
-        c_code = (f'{int_or_bool} get_{self.name.lower()}(const can_msg_t *msg,'
+        c_code = (f'{int_or_bool} get_{self.name.lower()}(const can_msg_t *msg'
                   f'{self.renderNumerics()}){endVal}')
         if self.renderNumerics() == '': c_code = c_code.replace(',', '')
         return c_code
@@ -115,11 +104,7 @@ class Message:
                     else:
                         body_string += f'\t*{num.name} = msg->data[{self.layoutBits[1:].index(num) + 2}];\n'
 
-        bodyCode = (f'\n'
-                    f'{"{"}\n'
-                    f'\tif (!msg) {"{ return false; }"}\n'
-                    f'{body_string}\n'
-                    f'\treturn true;\n'
-                    f'{"}"}\n')
+        with open('Parsley/c_get_function.txt', 'r') as file:
+            bodyCode = file.read().format(body_string)
 
         return bodyCode
