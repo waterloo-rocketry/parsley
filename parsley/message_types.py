@@ -109,7 +109,11 @@ board_status = {
     'E_ILLEGAL_CAN_MSG':        0x11,
     'E_SEGFAULT':               0x12,
     'E_UNHANDLED_INTERRUPT':    0x13,
-    'E_CODING_FUCKUP':          0x14
+    'E_CODING_FUCKUP':          0x14,
+    'IRPTS_OUT':			0x15,
+	'ICONT_OUT':			0x16,
+	'IRPTS_IN':			0x17,
+	'ICONT_IN':			0x18,
 }
 
 logger_error = {
@@ -223,11 +227,16 @@ fill_direction = {
 }
 
 actuator_id = {
-    'ACTUATOR_VENT_VALVE':      0x00,
-    'ACTUATOR_INJECTOR_VALVE':  0x01,
-    'ACTUATOR_PAYLOAD':         0x02,
-    'ACTUATOR_CAMERAS':         0x03,
-    'ACTUATOR_CANBUS':          0x04,
-    'ACTUATOR_CHARGE':          0x05,
-    'ACTUATOR_RADIO':           0x06
+	'VA101':			0x0,
+	'VA201':			0x1,
+	'VA102':			0x2,
+	'VA202':			0x3,
+	'VA301':			0x4,
+	'VA302':			0x5,
+	'VA303':			0x6,
+	'VA304':			0x7,
+	'VA401':			0x8,
+	'VA_SPARE1':			0x9,
+	'VA_SPARE2':			0xa,
+	'VA_SPARE3':			0xb,
 }
