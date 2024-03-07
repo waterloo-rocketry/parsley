@@ -100,7 +100,12 @@ class Message:
                 if num.name != 'time':
                     if isinstance(num, Numeric) and num.length > 8:
                         for i in range(1, int(num.length / 8) + 1):
-                            body_string += f'\t*{num.name} = (uint{num.length}_t)msg->data[{self.layoutBits[1:].index(num) + i + 1}] << {int(num.length / i)} | msg->data[{self.layoutBits[1:].index(num) + i + 2}];\n'
+                            if i == 1:
+                                body_string += f'\t*{num.name} = (uint{num.length}_t)msg->data[{self.layoutBits[1:].index(num) + i + 1}] << {int(num.length / i)} | msg->data[{self.layoutBits[1:].index(num) + i + 2}];\n'
+                            elif i == int(num.length / 8):
+                                body_string += f'\t*{num.name} = msg->data[{self.layoutBits[1:].index(num) + i + 1}]'
+                            else:
+                                body_string += f'\t*{num.name} |= (uint{num.length}_t)msg->data[{self.layoutBits[1:].index(num) + i + 1}] << {int(num.length / i)} | msg->data[{self.layoutBits[1:].index(num) + i + 2}];\n'
                     else:
                         body_string += f'\t*{num.name} = msg->data[{self.layoutBits[1:].index(num) + 2}];\n'
 

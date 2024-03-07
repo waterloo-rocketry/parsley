@@ -465,10 +465,8 @@ bool get_alt_arm_status(const can_msg_t *msg, uint16_t drogue_v, uint16_t main_v
 
 	*altimeter = msg->data[4];
 	*drogue_v = (uint16_t)msg->data[5] << 16 | msg->data[6];
-	*drogue_v = (uint16_t)msg->data[6] << 8 | msg->data[7];
-	*main_v = (uint16_t)msg->data[6] << 16 | msg->data[7];
-	*main_v = (uint16_t)msg->data[7] << 8 | msg->data[8];
-
+	*drogue_v = msg->data[6]	*main_v = (uint16_t)msg->data[6] << 16 | msg->data[7];
+	*main_v = msg->data[7]
     return true;
 }
 int get_general_board_status(const can_msg_t *msg)
@@ -488,9 +486,8 @@ bool get_sensor_temp(const can_msg_t *msg, uint8_t sensor_id, uint24_t temperatu
 
 	*sensor_id = msg->data[3];
 	*temperature = (uint24_t)msg->data[4] << 24 | msg->data[5];
-	*temperature = (uint24_t)msg->data[5] << 12 | msg->data[6];
-	*temperature = (uint24_t)msg->data[6] << 8 | msg->data[7];
-
+	*temperature |= (uint24_t)msg->data[5] << 12 | msg->data[6];
+	*temperature = msg->data[6]
     return true;
 }
 bool get_sensor_altitude(const can_msg_t *msg, uint32_t altitude)
@@ -500,10 +497,9 @@ bool get_sensor_altitude(const can_msg_t *msg, uint32_t altitude)
 	if (get_message_type(msg) != MSG_SENSOR_ALTITUDE) {return false;}
 
 	*altitude = (uint32_t)msg->data[3] << 32 | msg->data[4];
-	*altitude = (uint32_t)msg->data[4] << 16 | msg->data[5];
-	*altitude = (uint32_t)msg->data[5] << 10 | msg->data[6];
-	*altitude = (uint32_t)msg->data[6] << 8 | msg->data[7];
-
+	*altitude |= (uint32_t)msg->data[4] << 16 | msg->data[5];
+	*altitude |= (uint32_t)msg->data[5] << 10 | msg->data[6];
+	*altitude = msg->data[6]
     return true;
 }
 bool get_sensor_acc(const can_msg_t *msg, uint16_t x, uint16_t y, uint16_t z)
@@ -515,12 +511,9 @@ bool get_sensor_acc(const can_msg_t *msg, uint16_t x, uint16_t y, uint16_t z)
 	if (get_message_type(msg) != MSG_SENSOR_ACC) {return false;}
 
 	*x = (uint16_t)msg->data[3] << 16 | msg->data[4];
-	*x = (uint16_t)msg->data[4] << 8 | msg->data[5];
-	*y = (uint16_t)msg->data[4] << 16 | msg->data[5];
-	*y = (uint16_t)msg->data[5] << 8 | msg->data[6];
-	*z = (uint16_t)msg->data[5] << 16 | msg->data[6];
-	*z = (uint16_t)msg->data[6] << 8 | msg->data[7];
-
+	*x = msg->data[4]	*y = (uint16_t)msg->data[4] << 16 | msg->data[5];
+	*y = msg->data[5]	*z = (uint16_t)msg->data[5] << 16 | msg->data[6];
+	*z = msg->data[6]
     return true;
 }
 bool get_sensor_acc2(const can_msg_t *msg, uint16_t x, uint16_t y, uint16_t z)
@@ -532,12 +525,9 @@ bool get_sensor_acc2(const can_msg_t *msg, uint16_t x, uint16_t y, uint16_t z)
 	if (get_message_type(msg) != MSG_SENSOR_ACC2) {return false;}
 
 	*x = (uint16_t)msg->data[3] << 16 | msg->data[4];
-	*x = (uint16_t)msg->data[4] << 8 | msg->data[5];
-	*y = (uint16_t)msg->data[4] << 16 | msg->data[5];
-	*y = (uint16_t)msg->data[5] << 8 | msg->data[6];
-	*z = (uint16_t)msg->data[5] << 16 | msg->data[6];
-	*z = (uint16_t)msg->data[6] << 8 | msg->data[7];
-
+	*x = msg->data[4]	*y = (uint16_t)msg->data[4] << 16 | msg->data[5];
+	*y = msg->data[5]	*z = (uint16_t)msg->data[5] << 16 | msg->data[6];
+	*z = msg->data[6]
     return true;
 }
 bool get_sensor_gyro(const can_msg_t *msg, uint16_t x, uint16_t y, uint16_t z)
@@ -549,12 +539,9 @@ bool get_sensor_gyro(const can_msg_t *msg, uint16_t x, uint16_t y, uint16_t z)
 	if (get_message_type(msg) != MSG_SENSOR_GYRO) {return false;}
 
 	*x = (uint16_t)msg->data[3] << 16 | msg->data[4];
-	*x = (uint16_t)msg->data[4] << 8 | msg->data[5];
-	*y = (uint16_t)msg->data[4] << 16 | msg->data[5];
-	*y = (uint16_t)msg->data[5] << 8 | msg->data[6];
-	*z = (uint16_t)msg->data[5] << 16 | msg->data[6];
-	*z = (uint16_t)msg->data[6] << 8 | msg->data[7];
-
+	*x = msg->data[4]	*y = (uint16_t)msg->data[4] << 16 | msg->data[5];
+	*y = msg->data[5]	*z = (uint16_t)msg->data[5] << 16 | msg->data[6];
+	*z = msg->data[6]
     return true;
 }
 bool get_sensor_mag(const can_msg_t *msg, uint16_t x, uint16_t y, uint16_t z)
@@ -566,12 +553,9 @@ bool get_sensor_mag(const can_msg_t *msg, uint16_t x, uint16_t y, uint16_t z)
 	if (get_message_type(msg) != MSG_SENSOR_MAG) {return false;}
 
 	*x = (uint16_t)msg->data[3] << 16 | msg->data[4];
-	*x = (uint16_t)msg->data[4] << 8 | msg->data[5];
-	*y = (uint16_t)msg->data[4] << 16 | msg->data[5];
-	*y = (uint16_t)msg->data[5] << 8 | msg->data[6];
-	*z = (uint16_t)msg->data[5] << 16 | msg->data[6];
-	*z = (uint16_t)msg->data[6] << 8 | msg->data[7];
-
+	*x = msg->data[4]	*y = (uint16_t)msg->data[4] << 16 | msg->data[5];
+	*y = msg->data[5]	*z = (uint16_t)msg->data[5] << 16 | msg->data[6];
+	*z = msg->data[6]
     return true;
 }
 bool get_sensor_analog(const can_msg_t *msg, uint16_t value)
@@ -581,8 +565,7 @@ bool get_sensor_analog(const can_msg_t *msg, uint16_t value)
 	if (get_message_type(msg) != MSG_SENSOR_ANALOG) {return false;}
 
 	*value = (uint16_t)msg->data[4] << 16 | msg->data[5];
-	*value = (uint16_t)msg->data[5] << 8 | msg->data[6];
-
+	*value = msg->data[5]
     return true;
 }
 bool get_gps_timestamp(const can_msg_t *msg, uint8_t hrs, uint8_t mins, uint8_t secs, uint8_t dsecs)
@@ -612,8 +595,7 @@ bool get_gps_latitude(const can_msg_t *msg, uint8_t degs, uint8_t mins, uint16_t
 	*degs = msg->data[3];
 	*mins = msg->data[4];
 	*dmins = (uint16_t)msg->data[5] << 16 | msg->data[6];
-	*dmins = (uint16_t)msg->data[6] << 8 | msg->data[7];
-
+	*dmins = msg->data[6]
     return true;
 }
 bool get_gps_longitude(const can_msg_t *msg, uint8_t degs, uint8_t mins, uint16_t dmins)
@@ -627,8 +609,7 @@ bool get_gps_longitude(const can_msg_t *msg, uint8_t degs, uint8_t mins, uint16_
 	*degs = msg->data[3];
 	*mins = msg->data[4];
 	*dmins = (uint16_t)msg->data[5] << 16 | msg->data[6];
-	*dmins = (uint16_t)msg->data[6] << 8 | msg->data[7];
-
+	*dmins = msg->data[6]
     return true;
 }
 bool get_gps_altitude(const can_msg_t *msg, uint16_t altitude, uint8_t daltitude)
@@ -639,8 +620,7 @@ bool get_gps_altitude(const can_msg_t *msg, uint16_t altitude, uint8_t daltitude
 	if (get_message_type(msg) != MSG_GPS_ALTITUDE) {return false;}
 
 	*altitude = (uint16_t)msg->data[3] << 16 | msg->data[4];
-	*altitude = (uint16_t)msg->data[4] << 8 | msg->data[5];
-	*daltitude = msg->data[4];
+	*altitude = msg->data[4]	*daltitude = msg->data[4];
 
     return true;
 }
@@ -675,7 +655,6 @@ bool get_radi_value(const can_msg_t *msg, uint8_t radi_board, uint16_t radi)
 
 	*radi_board = msg->data[3];
 	*radi = (uint16_t)msg->data[4] << 16 | msg->data[5];
-	*radi = (uint16_t)msg->data[5] << 8 | msg->data[6];
-
+	*radi = msg->data[5]
     return true;
 }
