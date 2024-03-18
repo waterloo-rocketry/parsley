@@ -24,6 +24,8 @@ msg_type = {
     'SENSOR_GYRO':          0x5E0,
     'SENSOR_MAG':           0x640,
     'SENSOR_ANALOG':        0x6A0,
+    'MSG_SENSOR_RPM':       0x680,
+    'MSG_SENSOR_LEVEL':     0x620,
 
     'GPS_TIMESTAMP':        0x6C0,
     'GPS_LATITUDE':         0x6E0,

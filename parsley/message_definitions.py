@@ -3,8 +3,10 @@ from parsley.fields import ASCII, Enum, Numeric, Switch, Raw
 import parsley.message_types as mt
 
 # returns data scaled in seconds (ie. reads raw data in milliseconds and outputs seconds)
-TIMESTAMP_2 = Numeric('time', 16, scale=1/1000, unit='s')
-TIMESTAMP_3 = Numeric('time', 24, scale=1/1000, unit='s')
+TIMESTAMP_1 = Numeric('time', 8, scale=1/46875, unit='s')
+TIMESTAMP_2 = Numeric('time', 16, scale=1/46875, unit='s')
+TIMESTAMP_3 = Numeric('time', 24, scale=1/46875, unit='s')
+SENSOR_ID = Enum('sensor_id', 8, mt.sensor_id)
 
 MESSAGE_TYPE = Enum('msg_type', 6, mt.adjusted_msg_type)
 BOARD_ID = Enum('board_id', 5, mt.board_id)
@@ -48,7 +50,7 @@ MESSAGES = {
     'ALT_ARM_CMD':          [BOARD_ID, TIMESTAMP_3, Enum('state', 4, mt.arm_states), Numeric('altimeter', 4)],
     'RESET_CMD':            [BOARD_ID, TIMESTAMP_3, Enum('reset_board_id', 8, mt.board_id)],
 
-    'DEBUG_MSG':            [BOARD_ID, TIMESTAMP_3, Numeric('level', 4), Numeric('line', 12), ASCII('data', 24)],
+    'DEBUG_MSG':            [BOARD_ID, TIMESTAMP_3, Numeric('tmrh', 8), Numeric('tmrl', 8), Numeric('typ', 8),Numeric('id', 8)],
     'DEBUG_PRINTF':         [BOARD_ID, Raw('string', 64)],
 
     'DEBUG_RADIO_CMD':      [BOARD_ID, ASCII('string', 64)],
@@ -57,13 +59,14 @@ MESSAGES = {
     'ALT_ARM_STATUS':       [BOARD_ID, TIMESTAMP_3, Enum('state', 4, mt.arm_states), Numeric('altimeter', 4), Numeric('drogue_v', 16), Numeric('main_v', 16)],
     'GENERAL_BOARD_STATUS': [BOARD_ID, TIMESTAMP_3, Switch('status', 8, mt.board_status, BOARD_STATUS)],
 
-    'SENSOR_TEMP':          [BOARD_ID, TIMESTAMP_3, Numeric('sensor_id', 8), Numeric('temperature', 24, scale=1/2**10, unit='°C', signed=True)],
+    'SENSOR_TEMP':          [BOARD_ID, TIMESTAMP_3, SENSOR_ID, Numeric('temperature', 24, unit='°C', signed=True)],
     'SENSOR_ALTITUDE':      [BOARD_ID, TIMESTAMP_3, Numeric('altitude', 32, signed=True)],
-    'SENSOR_ACC':           [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, scale=8/2**16, unit='m/s²', signed=True), Numeric('y', 16, scale=8/2**16, unit='m/s²', signed=True), Numeric('z', 16, scale=8/2**16, unit='m/s²', signed=True)],
+    'SENSOR_ACC':           [BOARD_ID, TIMESTAMP_1, SENSOR_ID, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
     'SENSOR_ACC2':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, scale=16/2**16, unit='m/s²', signed=True), Numeric('y', 16, scale=16/2**16, unit='m/s²', signed=True), Numeric('z', 16, scale=16/2**16, unit='m/s²', signed=True)],
     'SENSOR_GYRO':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, scale=2000/2**16, unit='°/s', signed=True), Numeric('y', 16, scale=2000/2**16, unit='°/s', signed=True), Numeric('z', 16, scale=2000/2**16, unit='°/s', signed=True)],
     'SENSOR_MAG':           [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='µT', signed=True), Numeric('y', 16, unit='µT', signed=True), Numeric('z', 16, unit='µT', signed=True)],
-    'SENSOR_ANALOG':        [BOARD_ID, TIMESTAMP_2, Enum('sensor_id', 8, mt.sensor_id), Numeric('value', 16, signed=True)],
+    'SENSOR_ANALOG':        [BOARD_ID, TIMESTAMP_2, SENSOR_ID, Numeric('value', 16, signed=True)],
+    'SENSOR_RPM':           [BOARD_ID, TIMESTAMP_3, SENSOR_ID, Numeric('rpm_counts', 32)],
 
     'GPS_TIMESTAMP':        [BOARD_ID, TIMESTAMP_3, Numeric('hrs', 8), Numeric('mins', 8), Numeric('secs', 8), Numeric('dsecs', 8)],
     'GPS_LATITUDE':         [BOARD_ID, TIMESTAMP_3, Numeric('degs', 8), Numeric('mins', 8), Numeric('dmins', 16), ASCII('direction', 8)],
