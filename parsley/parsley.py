@@ -82,7 +82,7 @@ def parse_live_telemetry(frame: bytes) -> Union[Tuple[bytes, bytes], None]:
 def parse_usb_debug(line: str) -> Union[Tuple[bytes, bytes], None]:
     line = line.strip(' \0\r\n')
     if len(line) == 0 or line[0] != '$':
-        raise ValueError("Incorrect line format")
+        raise ValueError("Incorrect line formats")
     line = line[1:]
 
     if ':' in line:
@@ -137,7 +137,7 @@ def format_line(parsed_data: dict) -> str:
     data = parsed_data['data']
     res = f'[ {msg_type:<{MSG_TYPE_LEN}} {board_id:<{BOARD_ID_LEN}} ]'
     for k, v in data.items():
-        formatted_value = f"{v:.3f}" if isinstance(v, float) else v
+        formatted_value = f"{v:.6f}" if isinstance(v, float) else v
         res += f' {k}: {formatted_value}'
     return res
 

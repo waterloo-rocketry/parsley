@@ -24,8 +24,8 @@ msg_type = {
     'SENSOR_GYRO':          0x5E0,
     'SENSOR_MAG':           0x640,
     'SENSOR_ANALOG':        0x6A0,
-    'MSG_SENSOR_RPM':       0x680,
-    'MSG_SENSOR_LEVEL':     0x620,
+    'SENSOR_RPM':       0x680,
+    'SENSOR_LEVEL':     0x620,
 
     'GPS_TIMESTAMP':        0x6C0,
     'GPS_LATITUDE':         0x6E0,
@@ -37,7 +37,13 @@ msg_type = {
     'RADI_VALUE':           0x7A0,
 
     'LEDS_ON':              0x7E0,
-    'LEDS_OFF':             0x7C0
+    'LEDS_OFF':             0x7C0,
+    'SENSOR_A501':      0x220,
+    'SENSOR_A502':      0x240,
+    'SENSOR_A503':      0x260,
+    'SENSOR_A504':      0x280,
+    'SENSOR_A505':      0x2A0,
+    'SENSOR_A506':      0x2E0
 }
 
 # canlib's msg_type is defined in 12-bit msg_sid form, so we need to
@@ -204,21 +210,25 @@ sensor_id = {
 	'A502':			0x54,
 	'A503':			0x55,
 	'A504':			0x56,
-	'PIN_T501':			0x63,
-	'PIN_T502':			0x64,
-	'PIN_T503':			0x65,
-	'PIN_T504':			0x66,
-	'PIN_T505':			0x67,
-	'PIN_T506':			0x68,
-	'PIN_T507':			0x69,
-	'PIN_T508':			0x6a,
-	'PIN_T509':			0x6b,
-	'PIN_T510':			0x6c,
-	'L201':			0x58,
-	'L401':			0x59,
-	'L402':			0x5a,
-	'RPM501':			0x5c,
-	'RPM502':			0x5d,
+	'A505':			0x57,
+	'A506':			0x58,
+	'L201':			0x5a,
+	'L401':			0x5b,
+	'L402':			0x5c,
+	'RPM501_S':			0x5f,
+	'RPM502_S':			0x60,
+	'RPM501_H':			0x61,
+	'RPM502_H':			0x62,
+	'T501':			0x64,
+	'T502':			0x65,
+	'T503':			0x66,
+	'T504':			0x67,
+	'T505':			0x68,
+	'T506':			0x69,
+	'T507':			0x6a,
+	'T508':			0x6b,
+	'T509':			0x6c,
+	'T510':			0x6d,
 
 
 }
