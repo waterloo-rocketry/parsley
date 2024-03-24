@@ -12,7 +12,7 @@ msg_type = {
     'DEBUG_MSG':            0x180,
     'DEBUG_PRINTF':         0x1E0,
     'DEBUG_RADIO_CMD':      0x200,
-
+     
     'ALT_ARM_STATUS':       0x440,
     'ACTUATOR_STATUS':      0x460,
     'GENERAL_BOARD_STATUS': 0x520,
@@ -44,26 +44,33 @@ adjusted_msg_type = {k: v >> 5 for k, v in msg_type.items()}
 
 board_id = {
     'ANY':                  0x00,
-    'ACTUATOR_INJ':         0x01,
-    'ACTUATOR_VENT':        0x02,
-    'ACTUATOR_CAM1':        0x03,
-    'ACTUATOR_CAM2':        0x04,
-    'SENSOR_INJ':           0x05,
-    'SENSOR_VENT':          0x06,
-    'SENSOR_PAYLOAD':       0x07,
-    'LOGGER':               0x08,
-    'LOGGER_PAYLOAD':       0x09,
-    'LOGGER_SPARE':         0x0A,
-    'GPS':                  0x0B,
-    'GPS_PAYLOAD':          0x0C,
-    'GPS_SPARE':            0x0D,
-    'CHARGING':             0x0E,
-    'ARMING':               0x0F,
-    'GRANDPAPA':            0x10,
-    'KALMAN':               0x11,
+    # Ground Side
+    'DAQ':                  0x01,
+    'THERMOCOUPLE_1':       0x02,
+    'THERMOCOUPLE_2':       0x03,
+    'THERMOCOUPLE_3':       0x04,
+    'THERMOCOUPLE_4':       0x05,
+    # Injector/Fill Section
+    'PROPULSION_INJ':       0x06,
+    # Vent Section
+    'PROPULSION_VENT':      0x07,
+    'CAMERA_1':             0x08,
+    'CAMERA_2':             0x09,
+    # Airbrake Section
+    'CHARGING_AIRBRAKE':    0x0A,
+    # Payload Section
+    'CHARGING_PAYLOAD':     0x0B,
+    'VIBRATION':            0x0C,
+    # Recovery Electronics(RecElec) Sled
+    'CHARGING_CAN':         0x0D,
+    'LOGGER':               0x0E,
+    'PROCESSOR':            0x0F,
+    'GPS':                  0x10,
+    'ARMING':               0x11,
     'TELEMETRY':            0x12,
-    'USB':                  0x13,
-    'RLCS':                 0x14
+    'CAMERA_3':             0x13,
+    # Debug
+    'USB':                  0x14
 }
 
 gen_cmd = {
