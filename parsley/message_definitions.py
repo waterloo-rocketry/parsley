@@ -74,6 +74,8 @@ MESSAGES = {
     'SENSOR_A504':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
     'SENSOR_A505':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
     'SENSOR_A506':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
+    'FAKE_ACCEL':           [BOARD_ID, TIMESTAMP_2, SENSOR_ID, Numeric('rpm_counts', 32)],
+
 
     'GPS_TIMESTAMP':        [BOARD_ID, TIMESTAMP_3, Numeric('hrs', 8), Numeric('mins', 8), Numeric('secs', 8), Numeric('dsecs', 8)],
     'GPS_LATITUDE':         [BOARD_ID, TIMESTAMP_3, Numeric('degs', 8), Numeric('mins', 8), Numeric('dmins', 16), ASCII('direction', 8)],
