@@ -35,7 +35,7 @@ The data encoded in bit_str looks like:
 """
 
 # Creating the full CAN message
-msg_sid = b'\x01\x8B' # DEBUG_MSG | GPS
+msg_sid = b'\x01\x90' # DEBUG_MSG | GPS
 msg_data = bit_str.pop(64)
 
 # Decoding a CAN message
