@@ -59,13 +59,13 @@ MESSAGES = {
     'ALT_ARM_STATUS':       [BOARD_ID, TIMESTAMP_3, Enum('state', 4, mt.arm_states), Numeric('altimeter', 4), Numeric('drogue_v', 16), Numeric('main_v', 16)],
     'GENERAL_BOARD_STATUS': [BOARD_ID, TIMESTAMP_3, Switch('status', 8, mt.board_status, BOARD_STATUS)],
 
-    'SENSOR_TEMP':          [BOARD_ID, TIMESTAMP_3, SENSOR_ID, Numeric('temperature', 16, unit='°C', signed=True)],
+    'SENSOR_TEMP':          [BOARD_ID, TIMESTAMP_3, SENSOR_ID, Numeric('temperature', 16, unit='°C', scale = 1/4, signed=True)],
     'SENSOR_ALTITUDE':      [BOARD_ID, TIMESTAMP_3, Numeric('altitude', 32, signed=True)],
     'SENSOR_ACC':           [BOARD_ID, TIMESTAMP_1, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
     'SENSOR_ACC2':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, scale=16/2**16, unit='m/s²', signed=True), Numeric('y', 16, scale=16/2**16, unit='m/s²', signed=True), Numeric('z', 16, scale=16/2**16, unit='m/s²', signed=True)],
     'SENSOR_GYRO':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, scale=2000/2**16, unit='°/s', signed=True), Numeric('y', 16, scale=2000/2**16, unit='°/s', signed=True), Numeric('z', 16, scale=2000/2**16, unit='°/s', signed=True)],
     'SENSOR_MAG':           [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='µT', signed=True), Numeric('y', 16, unit='µT', signed=True), Numeric('z', 16, unit='µT', signed=True)],
-    'SENSOR_ANALOG':        [BOARD_ID, TIMESTAMP_3, SENSOR_ID, Numeric('value', 16, signed=True)],
+    'SENSOR_ANALOG':        [BOARD_ID, TIMESTAMP_3, SENSOR_ID, Numeric('value', 16, scale = 1/1000, signed=True)],
     'SENSOR_RPM':           [BOARD_ID, TIMESTAMP_3, SENSOR_ID, Numeric('rpm_counts', 32)],
     'SENSOR_LEVEL':           [BOARD_ID, TIMESTAMP_3, SENSOR_ID],
     'SENSOR_A501':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
@@ -74,7 +74,7 @@ MESSAGES = {
     'SENSOR_A504':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
     'SENSOR_A505':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
     'SENSOR_A506':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
-    'FAKE_ACCEL':           [BOARD_ID, TIMESTAMP_2, SENSOR_ID, Numeric('rpm_counts', 32)],
+    'FAKE_RPM':           [BOARD_ID, TIMESTAMP_3, SENSOR_ID, Numeric('rpm_counts', 32)],
 
 
     'GPS_TIMESTAMP':        [BOARD_ID, TIMESTAMP_3, Numeric('hrs', 8), Numeric('mins', 8), Numeric('secs', 8), Numeric('dsecs', 8)],
