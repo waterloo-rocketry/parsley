@@ -45,6 +45,9 @@ msg_type = {
     'SENSOR_A505':      0x2A0,
     'SENSOR_A506':      0x2E0,
     'FAKE_RPM':       0x2C0,
+    'FAKE_TC':        0x0A0,
+    'FAKE_ANALOG':   0x0E0,
+    'FAKE_LEVEL':   0x030
 }
 
 # canlib's msg_type is defined in 12-bit msg_sid form, so we need to

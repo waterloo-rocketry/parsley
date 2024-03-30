@@ -39,7 +39,7 @@ BOARD_STATUS = {
     'E_ILLEGAL_CAN_MSG':        [],
     'E_SEGFAULT':               [],
     'E_UNHANDLED_INTERRUPT':    [],
-    'E_CODING_SCREWUP':         []
+    'E_CODING_FUCKUP':         []
 }
 
 # we parse BOARD_ID seperately from the CAN message (since we want to continue parsing even if BOARD_ID throws)
@@ -67,14 +67,19 @@ MESSAGES = {
     'SENSOR_MAG':           [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='µT', signed=True), Numeric('y', 16, unit='µT', signed=True), Numeric('z', 16, unit='µT', signed=True)],
     'SENSOR_ANALOG':        [BOARD_ID, TIMESTAMP_3, SENSOR_ID, Numeric('value', 16, scale = 1/1000, signed=True)],
     'SENSOR_RPM':           [BOARD_ID, TIMESTAMP_3, SENSOR_ID, Numeric('rpm_counts', 32)],
-    'SENSOR_LEVEL':           [BOARD_ID, TIMESTAMP_3, SENSOR_ID],
+    'SENSOR_LEVEL':         [BOARD_ID, TIMESTAMP_3, SENSOR_ID],
     'SENSOR_A501':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
     'SENSOR_A502':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
     'SENSOR_A503':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
     'SENSOR_A504':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
     'SENSOR_A505':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
     'SENSOR_A506':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
-    'FAKE_RPM':           [BOARD_ID, TIMESTAMP_3, SENSOR_ID, Numeric('rpm_counts', 32)],
+    'FAKE_RPM':             [BOARD_ID, TIMESTAMP_3, SENSOR_ID, Numeric('rpm_counts', 32)],
+    'FAKE_TC':              [BOARD_ID, TIMESTAMP_3, SENSOR_ID, Numeric('temperature', 16, unit='°C', scale = 1/4, signed=True)],
+    'FAKE_ANALOG':          [BOARD_ID, TIMESTAMP_3, SENSOR_ID, Numeric('value', 16, scale = 1/1000, signed=True)],
+    'FAKE_LEVEL':           [BOARD_ID, TIMESTAMP_3, SENSOR_ID],
+
+
 
 
     'GPS_TIMESTAMP':        [BOARD_ID, TIMESTAMP_3, Numeric('hrs', 8), Numeric('mins', 8), Numeric('secs', 8), Numeric('dsecs', 8)],
