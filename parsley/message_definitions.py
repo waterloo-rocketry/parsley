@@ -75,9 +75,7 @@ MESSAGES = {
     'SENSOR_A505':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
     'SENSOR_A506':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
     'FAKE_RPM':             [BOARD_ID, TIMESTAMP_3, SENSOR_ID, Numeric('rpm_counts', 32)],
-    'FAKE_TC':              [BOARD_ID, TIMESTAMP_3, SENSOR_ID, Numeric('temperature', 16, unit='°C', scale = 1/4, signed=True)],
-    'FAKE_ANALOG':          [BOARD_ID, TIMESTAMP_3, SENSOR_ID, Numeric('value', 16, scale = 1/1000, signed=True)],
-    'FAKE_LEVEL':           [BOARD_ID, TIMESTAMP_3, SENSOR_ID],
+    'SENSOR_SPOOF':         [BOARD_ID, SENSOR_ID, Numeric('value', 16, signed=False)],
 
 
 

@@ -44,10 +44,8 @@ msg_type = {
     'SENSOR_A504':      0x280,
     'SENSOR_A505':      0x2A0,
     'SENSOR_A506':      0x2E0,
-    'FAKE_RPM':       0x2C0,
-    'FAKE_TC':        0x0A0,
-    'FAKE_ANALOG':   0x0E0,
-    'FAKE_LEVEL':   0x030
+    'FAKE_RPM':         0x2C0,
+    'SENSOR_SPOOF':     0x0A0,
 }
 
 # canlib's msg_type is defined in 12-bit msg_sid form, so we need to
@@ -225,6 +223,9 @@ sensor_id = {
 	'T508':			0x6b,
 	'T509':			0x6c,
 	'T510':			0x6d,
+	'I2C_ERROR':			0x71,
+	'CAN_RX_ERROR':			0x72,
+	'CAN_TX_ERROR':			0x73,
 
 
 }
