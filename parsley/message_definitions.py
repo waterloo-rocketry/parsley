@@ -3,9 +3,9 @@ from parsley.fields import ASCII, Enum, Numeric, Switch, Raw
 import parsley.message_types as mt
 
 # returns data scaled in seconds (ie. reads raw data in milliseconds and outputs seconds)
-TIMESTAMP_1 = Numeric('time', 8, scale=1/46875, unit='s')
-TIMESTAMP_2 = Numeric('time', 16, scale=1/46875, unit='s')
-TIMESTAMP_3 = Numeric('time', 24, scale=1/46875, unit='s')
+TIMESTAMP_1 = Numeric('time', 8, scale=1/11718.75, unit='s')
+TIMESTAMP_2 = Numeric('time', 16, scale=1/11718.75, unit='s')
+TIMESTAMP_3 = Numeric('time', 24, scale=1/11718.75, unit='s')
 SENSOR_ID = Enum('sensor_id', 8, mt.sensor_id)
 
 MESSAGE_TYPE = Enum('msg_type', 6, mt.adjusted_msg_type)
