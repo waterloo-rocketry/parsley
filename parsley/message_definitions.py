@@ -76,6 +76,7 @@ MESSAGES = {
     'SENSOR_A506':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
     'FAKE_RPM':             [BOARD_ID, TIMESTAMP_3, SENSOR_ID, Numeric('rpm_counts', 32)],
     'SENSOR_SPOOF':         [BOARD_ID, SENSOR_ID, Numeric('value', 16, signed=False)],
+    'CLEAR_SENSOR_SPOOF':   [BOARD_ID, SENSOR_ID],
 
 
 
