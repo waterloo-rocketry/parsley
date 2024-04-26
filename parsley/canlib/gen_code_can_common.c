@@ -30,9 +30,14 @@ bool build_general_cmd_msg(uint32_t timestamp, enum GEN_CMD gen_cmd, can_msg_t *
     output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
     write_timestamp_3bytes(timestamp, output);
 
-	output->data[3] = (uint8_t) gen_cmd; 
+	output->data[2] = (time >> 16) & 0xff; 
+	output->data[3] = (time >> 8) & 0xff; 
+	output->data[4] = (time >> 0) & 0xff; 
 
-    output->data_len = 4;
+	output->data[6] = gen_cmd; 
+
+
+    output->data_len = 6;
 
     return true;
 }
@@ -44,10 +49,16 @@ bool build_actuator_cmd_msg(uint32_t timestamp, enum ACTUATOR_ID actuator_id, en
     output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
     write_timestamp_3bytes(timestamp, output);
 
-	output->data[3] = (uint8_t) actuator_id; 
-	output->data[4] = (uint8_t) actuator_states; 
+	output->data[2] = (time >> 16) & 0xff; 
+	output->data[3] = (time >> 8) & 0xff; 
+	output->data[4] = (time >> 0) & 0xff; 
 
-    output->data_len = 5;
+	output->data[6] = actuator_id; 
+
+	output->data[7] = actuator_states; 
+
+
+    output->data_len = 7;
 
     return true;
 }
@@ -59,8 +70,12 @@ bool build_alt_arm_cmd_msg(uint32_t timestamp, enum ARM_STATES arm_states, can_m
     output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
     write_timestamp_3bytes(timestamp, output);
 
-	output->data[3] = (uint8_t) arm_states; 
-	output->data[4] = altimeter; 
+	output->data[2] = (time >> 16) & 0xff; 
+	output->data[3] = (time >> 8) & 0xff; 
+	output->data[4] = (time >> 0) & 0xff; 
+
+
+
 
     output->data_len = 5;
 
@@ -74,9 +89,14 @@ bool build_reset_cmd_msg(uint32_t timestamp, enum BOARD_ID board_id, can_msg_t *
     output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
     write_timestamp_3bytes(timestamp, output);
 
-	output->data[3] = (uint8_t) board_id; 
+	output->data[2] = (time >> 16) & 0xff; 
+	output->data[3] = (time >> 8) & 0xff; 
+	output->data[4] = (time >> 0) & 0xff; 
 
-    output->data_len = 4;
+	output->data[6] = board_id; 
+
+
+    output->data_len = 6;
 
     return true;
 }
@@ -88,8 +108,14 @@ bool build_debug_msg_msg(uint32_t timestamp, can_msg_t *output)
     output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
     write_timestamp_3bytes(timestamp, output);
 
-	output->data[3] = level; 
-	output->data[4] = line; 
+	output->data[2] = (time >> 16) & 0xff; 
+	output->data[3] = (time >> 8) & 0xff; 
+	output->data[4] = (time >> 0) & 0xff; 
+
+
+	output->data[5] = (line >> 4) & 0xff; 
+
+
 
     output->data_len = 6;
 
@@ -104,7 +130,8 @@ bool build_debug_printf_msg(uint32_t timestamp, can_msg_t *output)
     write_timestamp_3bytes(timestamp, output);
 
 
-    output->data_len = 3;
+
+    output->data_len = 2;
 
     return true;
 }
@@ -117,7 +144,8 @@ bool build_debug_radio_cmd_msg(uint32_t timestamp, can_msg_t *output)
     write_timestamp_3bytes(timestamp, output);
 
 
-    output->data_len = 3;
+
+    output->data_len = 2;
 
     return true;
 }
@@ -129,11 +157,18 @@ bool build_actuator_status_msg(uint32_t timestamp, enum ACTUATOR_ID actuator_id,
     output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
     write_timestamp_3bytes(timestamp, output);
 
-	output->data[3] = (uint8_t) actuator_id; 
-	output->data[4] = (uint8_t) actuator_states; 
-	output->data[5] = (uint8_t) actuator_states; 
+	output->data[2] = (time >> 16) & 0xff; 
+	output->data[3] = (time >> 8) & 0xff; 
+	output->data[4] = (time >> 0) & 0xff; 
 
-    output->data_len = 6;
+	output->data[6] = actuator_id; 
+
+	output->data[7] = actuator_states; 
+
+	output->data[8] = actuator_states; 
+
+
+    output->data_len = 8;
 
     return true;
 }
@@ -145,12 +180,20 @@ bool build_alt_arm_status_msg(uint32_t timestamp, enum ARM_STATES arm_states, ui
     output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
     write_timestamp_3bytes(timestamp, output);
 
-	output->data[3] = (uint8_t) arm_states; 
-	output->data[4] = altimeter; 
-	output->data[5] = drogue_v; 
-	output->data[6] = main_v; 
+	output->data[2] = (time >> 16) & 0xff; 
+	output->data[3] = (time >> 8) & 0xff; 
+	output->data[4] = (time >> 0) & 0xff; 
 
-    output->data_len = 7;
+
+
+	output->data[5] = (drogue_v >> 8) & 0xff; 
+	output->data[6] = (drogue_v >> 0) & 0xff; 
+
+	output->data[7] = (main_v >> 8) & 0xff; 
+	output->data[8] = (main_v >> 0) & 0xff; 
+
+
+    output->data_len = 9;
 
     return true;
 }
@@ -162,9 +205,14 @@ bool build_general_board_status_msg(uint32_t timestamp, enum BOARD_STATUS board_
     output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
     write_timestamp_3bytes(timestamp, output);
 
-	output->data[3] = (uint8_t) board_status; 
+	output->data[2] = (time >> 16) & 0xff; 
+	output->data[3] = (time >> 8) & 0xff; 
+	output->data[4] = (time >> 0) & 0xff; 
 
-    output->data_len = 4;
+	output->data[6] = board_status; 
+
+
+    output->data_len = 6;
 
     return true;
 }
@@ -176,10 +224,18 @@ bool build_sensor_temp_msg(uint32_t timestamp, uint8_t sensor_id, uint24_t tempe
     output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
     write_timestamp_3bytes(timestamp, output);
 
-	output->data[3] = sensor_id; 
-	output->data[4] = temperature; 
+	output->data[2] = (time >> 16) & 0xff; 
+	output->data[3] = (time >> 8) & 0xff; 
+	output->data[4] = (time >> 0) & 0xff; 
 
-    output->data_len = 5;
+	output->data[5] = (sensor_id >> 0) & 0xff; 
+
+	output->data[6] = (temperature >> 16) & 0xff; 
+	output->data[7] = (temperature >> 8) & 0xff; 
+	output->data[8] = (temperature >> 0) & 0xff; 
+
+
+    output->data_len = 9;
 
     return true;
 }
@@ -191,9 +247,17 @@ bool build_sensor_altitude_msg(uint32_t timestamp, uint32_t altitude, can_msg_t 
     output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
     write_timestamp_3bytes(timestamp, output);
 
-	output->data[3] = altitude; 
+	output->data[2] = (time >> 16) & 0xff; 
+	output->data[3] = (time >> 8) & 0xff; 
+	output->data[4] = (time >> 0) & 0xff; 
 
-    output->data_len = 4;
+	output->data[5] = (altitude >> 24) & 0xff; 
+	output->data[6] = (altitude >> 16) & 0xff; 
+	output->data[7] = (altitude >> 8) & 0xff; 
+	output->data[8] = (altitude >> 0) & 0xff; 
+
+
+    output->data_len = 9;
 
     return true;
 }
@@ -205,11 +269,20 @@ bool build_sensor_acc_msg(uint32_t timestamp, uint16_t x, uint16_t y, uint16_t z
     output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
     write_timestamp_3bytes(timestamp, output);
 
-	output->data[3] = x; 
-	output->data[4] = y; 
-	output->data[5] = z; 
+	output->data[2] = (time >> 8) & 0xff; 
+	output->data[3] = (time >> 0) & 0xff; 
 
-    output->data_len = 6;
+	output->data[4] = (x >> 8) & 0xff; 
+	output->data[5] = (x >> 0) & 0xff; 
+
+	output->data[6] = (y >> 8) & 0xff; 
+	output->data[7] = (y >> 0) & 0xff; 
+
+	output->data[8] = (z >> 8) & 0xff; 
+	output->data[9] = (z >> 0) & 0xff; 
+
+
+    output->data_len = 10;
 
     return true;
 }
@@ -221,11 +294,20 @@ bool build_sensor_acc2_msg(uint32_t timestamp, uint16_t x, uint16_t y, uint16_t 
     output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
     write_timestamp_3bytes(timestamp, output);
 
-	output->data[3] = x; 
-	output->data[4] = y; 
-	output->data[5] = z; 
+	output->data[2] = (time >> 8) & 0xff; 
+	output->data[3] = (time >> 0) & 0xff; 
 
-    output->data_len = 6;
+	output->data[4] = (x >> 8) & 0xff; 
+	output->data[5] = (x >> 0) & 0xff; 
+
+	output->data[6] = (y >> 8) & 0xff; 
+	output->data[7] = (y >> 0) & 0xff; 
+
+	output->data[8] = (z >> 8) & 0xff; 
+	output->data[9] = (z >> 0) & 0xff; 
+
+
+    output->data_len = 10;
 
     return true;
 }
@@ -237,11 +319,20 @@ bool build_sensor_gyro_msg(uint32_t timestamp, uint16_t x, uint16_t y, uint16_t 
     output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
     write_timestamp_3bytes(timestamp, output);
 
-	output->data[3] = x; 
-	output->data[4] = y; 
-	output->data[5] = z; 
+	output->data[2] = (time >> 8) & 0xff; 
+	output->data[3] = (time >> 0) & 0xff; 
 
-    output->data_len = 6;
+	output->data[4] = (x >> 8) & 0xff; 
+	output->data[5] = (x >> 0) & 0xff; 
+
+	output->data[6] = (y >> 8) & 0xff; 
+	output->data[7] = (y >> 0) & 0xff; 
+
+	output->data[8] = (z >> 8) & 0xff; 
+	output->data[9] = (z >> 0) & 0xff; 
+
+
+    output->data_len = 10;
 
     return true;
 }
@@ -253,11 +344,20 @@ bool build_sensor_mag_msg(uint32_t timestamp, uint16_t x, uint16_t y, uint16_t z
     output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
     write_timestamp_3bytes(timestamp, output);
 
-	output->data[3] = x; 
-	output->data[4] = y; 
-	output->data[5] = z; 
+	output->data[2] = (time >> 8) & 0xff; 
+	output->data[3] = (time >> 0) & 0xff; 
 
-    output->data_len = 6;
+	output->data[4] = (x >> 8) & 0xff; 
+	output->data[5] = (x >> 0) & 0xff; 
+
+	output->data[6] = (y >> 8) & 0xff; 
+	output->data[7] = (y >> 0) & 0xff; 
+
+	output->data[8] = (z >> 8) & 0xff; 
+	output->data[9] = (z >> 0) & 0xff; 
+
+
+    output->data_len = 10;
 
     return true;
 }
@@ -269,10 +369,16 @@ bool build_sensor_analog_msg(uint32_t timestamp, enum SENSOR_ID sensor_id, uint1
     output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
     write_timestamp_3bytes(timestamp, output);
 
-	output->data[3] = (uint8_t) sensor_id; 
-	output->data[4] = value; 
+	output->data[2] = (time >> 8) & 0xff; 
+	output->data[3] = (time >> 0) & 0xff; 
 
-    output->data_len = 5;
+	output->data[5] = sensor_id; 
+
+	output->data[5] = (value >> 8) & 0xff; 
+	output->data[6] = (value >> 0) & 0xff; 
+
+
+    output->data_len = 7;
 
     return true;
 }
@@ -284,12 +390,20 @@ bool build_gps_timestamp_msg(uint32_t timestamp, uint8_t hrs, uint8_t mins, uint
     output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
     write_timestamp_3bytes(timestamp, output);
 
-	output->data[3] = hrs; 
-	output->data[4] = mins; 
-	output->data[5] = secs; 
-	output->data[6] = dsecs; 
+	output->data[2] = (time >> 16) & 0xff; 
+	output->data[3] = (time >> 8) & 0xff; 
+	output->data[4] = (time >> 0) & 0xff; 
 
-    output->data_len = 7;
+	output->data[5] = (hrs >> 0) & 0xff; 
+
+	output->data[6] = (mins >> 0) & 0xff; 
+
+	output->data[7] = (secs >> 0) & 0xff; 
+
+	output->data[8] = (dsecs >> 0) & 0xff; 
+
+
+    output->data_len = 9;
 
     return true;
 }
@@ -301,11 +415,20 @@ bool build_gps_latitude_msg(uint32_t timestamp, uint8_t degs, uint8_t mins, uint
     output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
     write_timestamp_3bytes(timestamp, output);
 
-	output->data[3] = degs; 
-	output->data[4] = mins; 
-	output->data[5] = dmins; 
+	output->data[2] = (time >> 16) & 0xff; 
+	output->data[3] = (time >> 8) & 0xff; 
+	output->data[4] = (time >> 0) & 0xff; 
 
-    output->data_len = 7;
+	output->data[5] = (degs >> 0) & 0xff; 
+
+	output->data[6] = (mins >> 0) & 0xff; 
+
+	output->data[7] = (dmins >> 8) & 0xff; 
+	output->data[8] = (dmins >> 0) & 0xff; 
+
+
+
+    output->data_len = 9;
 
     return true;
 }
@@ -317,11 +440,20 @@ bool build_gps_longitude_msg(uint32_t timestamp, uint8_t degs, uint8_t mins, uin
     output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
     write_timestamp_3bytes(timestamp, output);
 
-	output->data[3] = degs; 
-	output->data[4] = mins; 
-	output->data[5] = dmins; 
+	output->data[2] = (time >> 16) & 0xff; 
+	output->data[3] = (time >> 8) & 0xff; 
+	output->data[4] = (time >> 0) & 0xff; 
 
-    output->data_len = 7;
+	output->data[5] = (degs >> 0) & 0xff; 
+
+	output->data[6] = (mins >> 0) & 0xff; 
+
+	output->data[7] = (dmins >> 8) & 0xff; 
+	output->data[8] = (dmins >> 0) & 0xff; 
+
+
+
+    output->data_len = 9;
 
     return true;
 }
@@ -333,10 +465,18 @@ bool build_gps_altitude_msg(uint32_t timestamp, uint16_t altitude, uint8_t dalti
     output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
     write_timestamp_3bytes(timestamp, output);
 
-	output->data[3] = altitude; 
-	output->data[4] = daltitude; 
+	output->data[2] = (time >> 16) & 0xff; 
+	output->data[3] = (time >> 8) & 0xff; 
+	output->data[4] = (time >> 0) & 0xff; 
 
-    output->data_len = 6;
+	output->data[5] = (altitude >> 8) & 0xff; 
+	output->data[6] = (altitude >> 0) & 0xff; 
+
+	output->data[7] = (daltitude >> 0) & 0xff; 
+
+
+
+    output->data_len = 8;
 
     return true;
 }
@@ -348,10 +488,16 @@ bool build_gps_info_msg(uint32_t timestamp, uint8_t num_sats, uint8_t quality, c
     output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
     write_timestamp_3bytes(timestamp, output);
 
-	output->data[3] = num_sats; 
-	output->data[4] = quality; 
+	output->data[2] = (time >> 16) & 0xff; 
+	output->data[3] = (time >> 8) & 0xff; 
+	output->data[4] = (time >> 0) & 0xff; 
 
-    output->data_len = 5;
+	output->data[5] = (num_sats >> 0) & 0xff; 
+
+	output->data[6] = (quality >> 0) & 0xff; 
+
+
+    output->data_len = 7;
 
     return true;
 }
@@ -363,10 +509,16 @@ bool build_fill_lvl_msg(uint32_t timestamp, uint8_t level, enum FILL_DIRECTION f
     output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
     write_timestamp_3bytes(timestamp, output);
 
-	output->data[3] = level; 
-	output->data[4] = (uint8_t) fill_direction; 
+	output->data[2] = (time >> 16) & 0xff; 
+	output->data[3] = (time >> 8) & 0xff; 
+	output->data[4] = (time >> 0) & 0xff; 
 
-    output->data_len = 5;
+	output->data[5] = (level >> 0) & 0xff; 
+
+	output->data[7] = fill_direction; 
+
+
+    output->data_len = 7;
 
     return true;
 }
@@ -378,10 +530,17 @@ bool build_radi_value_msg(uint32_t timestamp, uint8_t radi_board, uint16_t radi,
     output->sid = MSG_GPS_ALTITUDE | BOARD_UNIQUE_ID;
     write_timestamp_3bytes(timestamp, output);
 
-	output->data[3] = radi_board; 
-	output->data[4] = radi; 
+	output->data[2] = (time >> 16) & 0xff; 
+	output->data[3] = (time >> 8) & 0xff; 
+	output->data[4] = (time >> 0) & 0xff; 
 
-    output->data_len = 5;
+	output->data[5] = (radi_board >> 0) & 0xff; 
+
+	output->data[6] = (radi >> 8) & 0xff; 
+	output->data[7] = (radi >> 0) & 0xff; 
+
+
+    output->data_len = 8;
 
     return true;
 }

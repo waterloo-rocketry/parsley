@@ -1,5 +1,5 @@
 
-from parsley.fields import Enum, Numeric, Switch, ASCII
+from parsley.fields import Enum, Numeric, Switch
 
 
 class Message:
@@ -63,17 +63,23 @@ class Message:
     def convert_to_c_build_body(self):
         def renderBodyData():
             body_string = ''
+            count = 0
             if len(self.layoutBits) > 0:
                 for item in self.layoutBits[1:]:
-                    if isinstance(item, Enum) or isinstance(item, Switch):
-                        body_string += f'\toutput->data[{self.layoutBits[1:].index(item) + 2}] = (uint8_t) {item.name}; \n'
-                    elif isinstance(item, Numeric) and item.name != 'time':
-                            body_string += f'\toutput->data[{self.layoutBits[1:].index(item) + 2}] = {item.name}; \n'
-
-            return body_string
+                    if item.name != 'timestamp':
+                        if isinstance(item, Enum) or isinstance(item, Switch):
+                            for i in range(1, int(item.length / 8) + 1):
+                                body_string += f'\toutput->data[{3 + count}] = {item.name}; \n'
+                                count += 1
+                        elif isinstance(item, Numeric):
+                            for i in range(1, int(item.length / 8) + 1):
+                                body_string += f'\toutput->data[{2 + count}] = ({item.name} >> {item.length - (i * 8)}) & 0xff; \n'
+                                count += 1
+                    body_string += '\n'
+            return body_string, count + 2
 
         with open('Parsley/c_build_function.txt', 'r') as file:
-            bodyCode = file.read().format(body=renderBodyData(), len=len(self.layoutBits[1:]) + 2)
+            bodyCode = file.read().format(body=renderBodyData()[0], len=renderBodyData()[1])
 
         return bodyCode
 
