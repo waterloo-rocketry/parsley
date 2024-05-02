@@ -12,6 +12,7 @@ msg_type = {
     'DEBUG_MSG':            0x180,
     'DEBUG_PRINTF':         0x1E0,
     'DEBUG_RADIO_CMD':      0x200,
+    'ACT_ANALOG_CMD':       0x220,
      
     'ALT_ARM_STATUS':       0x440,
     'ACTUATOR_STATUS':      0x460,
@@ -22,9 +23,10 @@ msg_type = {
     'SENSOR_ACC':           0x580,
     'SENSOR_ACC2':          0x5A0,
     'SENSOR_GYRO':          0x5E0,
+
+    'STATE_EST_CALIB':      0x620,
     'SENSOR_MAG':           0x640,
     'SENSOR_ANALOG':        0x6A0,
-
     'GPS_TIMESTAMP':        0x6C0,
     'GPS_LATITUDE':         0x6E0,
     'GPS_LONGITUDE':        0x700,
@@ -32,7 +34,7 @@ msg_type = {
     'GPS_INFO':             0x740,
 
     'FILL_LVL':             0x780,
-    'RADI_VALUE':           0x7A0,
+    'STATE_EST_DATA':       0x7A0,
 
     'LEDS_ON':              0x7E0,
     'LEDS_OFF':             0x7C0
@@ -161,11 +163,32 @@ fill_direction = {
 }
 
 actuator_id = {
-    'ACTUATOR_VENT_VALVE':      0x00,
-    'ACTUATOR_INJECTOR_VALVE':  0x01,
-    'ACTUATOR_PAYLOAD':         0x02,
-    'ACTUATOR_CAMERAS':         0x03,
-    'ACTUATOR_CANBUS':          0x04,
-    'ACTUATOR_CHARGE':          0x05,
-    'ACTUATOR_RADIO':           0x06
+    'ACTUATOR_VENT_VALVE':       0x00,
+    'ACTUATOR_INJECTOR_VALVE':   0x01,
+    'ACTUATOR_CAMERA_1':         0x02,
+    'ACTUATOR_CAMERA_2':         0x03,
+    'ACTUATOR_CANBUS':           0x04,
+    'ACTUATOR_CHARGE':           0x05,
+    'ACTUATOR_RADIO':            0x06,
+    'ACTUATOR_PAYLOAD_SERVO':    0x07,
+    'ACTUATOR_AIRBRAKES_SERVO':  0x08,
+    'ACTUATOR_AIRBRAKES_ENABLE': 0x09
+}
+
+state_id = {
+    'STATE_POS_X':       0x00,
+    'STATE_POS_Y':       0x01,
+    'STATE_POS_Z':       0x02,
+    'STATE_VEL_X':       0x03,
+    'STATE_VEL_Y':       0x04,
+    'STATE_VEL_Z':       0x05,
+    'STATE_ACC_X':       0x06,
+    'STATE_ACC_Y':       0x07,
+    'STATE_ACC_Z':       0x08,
+    'STATE_ANGLE_YAW':   0x09,
+    'STATE_ANGLE_PITCH': 0x0A,
+    'STATE_ANGLE_ROLL':  0x0B,
+    'STATE_RATE_YAW':    0x0C,
+    'STATE_RATE_PITCH':  0x0D,
+    'STATE_RATE_ROLL':   0x0E
 }
