@@ -139,22 +139,26 @@ logger_error = {
 }
 
 sensor_id = {
-    'SENSOR_BUS_CURR':              0x00,
+    'SENSOR_5V_CURR':               0x00,
     'SENSOR_BATT_CURR':             0x01,
     'SENSOR_BATT_VOLT':             0x02,
     'SENSOR_CHARGE_CURR':           0x03,
-    'SENSOR_GROUND_VOLT':           0x04,
-    'SENSOR_PRESSURE_OX':           0x05,
-    'SENSOR_PRESSURE_CC':           0x06,
-    'SENSOR_PRESSURE_PNEUMATICS':   0x07,
-    'SENSOR_BARO':                  0x08,
-    'SENSOR_ARM_BATT_1':            0x09,
-    'SENSOR_ARM_BATT_2':            0x0A,
-    'SENSOR_MAG_1':                 0x0B,
-    'SENSOR_MAG_2':                 0x0C,
-    'SENSOR_VELOCITY':              0x0D,
-    'SENSOR_VENT_TEMP':             0x0E,
-    'SENSOR_RADIO_CURR':            0x0F
+    'SENSOR_13V_CURR':              0x04,
+    'SENSOR_MOTOR_CURR':            0x05,
+    'SENSOR_GROUND_VOLT':           0x06,
+    'SENSOR_PRESSURE_OX':           0x07,
+    'SENSOR_PRESSURE_CC':           0x08,
+    'SENSOR_PRESSURE_PNEUMATICS':   0x09,
+    'SENSOR_BARO':                  0x0A,
+    'SENSOR_ARM_BATT_1':            0x0B,
+    'SENSOR_ARM_BATT_2':            0x0C,
+    'SENSOR_MAG_1':                 0x0D,
+    'SENSOR_MAG_2':                 0x0E,
+    'SENSOR_VELOCITY':              0x0F,
+    'SENSOR_VENT_TEMP':             0x10,
+    'SENSOR_RADIO_CURR':            0x11,
+    'SENSOR_PAYLOAD_TEMP_1':        0x12,
+    'SENSOR_PAYLOAD_TEMP_2':        0x13
 }
 
 fill_direction = {
