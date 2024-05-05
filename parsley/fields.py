@@ -107,21 +107,22 @@ class Numeric(Field):
     For example:
     b'\xFC' <=> -4 (two's complement)
     """
-    def __init__(self, name: str, length: int, scale=1, signed=False, big_endian=True, unit=""):
+    def __init__(self, name: str, length: int, scale=1, offset=0, signed=False, big_endian=True, unit=""):
         super().__init__(name, length, unit)
         self.scale = scale
+        self.offset = offset
         self.signed = signed
         self.endian = 'big' if big_endian else 'little'
 
     def decode(self, data: bytes) -> Number:
         value = int.from_bytes(data, byteorder=self.endian, signed = self.signed)
-        return value * self.scale
+        return value * self.scale + self.offset
 
     def encode(self, value: Number) -> Tuple[bytes, int]:
         if not isinstance(value, Number):
             raise ValueError(f'Value "{value}" is not a valid number')
 
-        value = int(value // self.scale)
+        value = int((value - self.offset) // self.scale)
         hex_value = hex(value)
         if not self.signed:
             if value >= 1 << self.length:

@@ -11,7 +11,11 @@ SENSOR_ID = Enum('sensor_id', 8, mt.sensor_id)
 MESSAGE_TYPE = Enum('msg_type', 6, mt.adjusted_msg_type)
 BOARD_ID = Enum('board_id', 5, mt.board_id)
 MESSAGE_SID = Enum('msg_sid', MESSAGE_TYPE.length + BOARD_ID.length, {}) # used purely as a length constant
-
+PT_SCALE = (1500)/(20.0-4.0);
+PT_OFFSET = -(1500*4)/(20.0-4.0);
+D_SCALE = 4.0/5.0*39.3701/1.00000054;
+D_OFFSET = 0;
+ISNS_SCALE = 1/(50.0*5.0);
 BOARD_STATUS = {
     'E_NOMINAL':                [],
 
@@ -41,6 +45,43 @@ BOARD_STATUS = {
     'E_UNHANDLED_INTERRUPT':    [],
     'E_CODING_FUCKUP':         []
 }
+#0-1500PSIG scaling on PTs
+
+ANALOG_CHANNELS = {
+    #pressure transducers
+    'P501': [Numeric('pressure',16, scale=PT_SCALE, offset=PT_OFFSET)],
+    'P502': [Numeric('pressure',16, scale=PT_SCALE, offset=PT_OFFSET)],
+    'P503': [Numeric('pressure',16, scale=PT_SCALE, offset=PT_OFFSET)],
+    'P504': [Numeric('pressure',16, scale=PT_SCALE, offset=PT_OFFSET)],
+    'P505': [Numeric('pressure',16, scale=PT_SCALE, offset=PT_OFFSET)],
+    'P506': [Numeric('pressure',16, scale=PT_SCALE, offset=PT_OFFSET)],
+    'P301': [Numeric('pressure',16, scale=PT_SCALE, offset=PT_OFFSET)],
+    'P506': [Numeric('pressure',16, scale=PT_SCALE, offset=PT_OFFSET)],
+    'P301': [Numeric('pressure',16, scale=PT_SCALE, offset=PT_OFFSET)],
+    'P506': [Numeric('pressure',16, scale=PT_SCALE, offset=PT_OFFSET)],
+    #displacement
+    'D501': [Numeric('displacement',16, scale=D_SCALE, offset=D_OFFSET)],
+    'D502': [Numeric('displacement',16, scale=D_SCALE, offset=D_OFFSET)],
+    #voltage & current monitoring
+    'ISENSE_24V': [Numeric('current',16, scale=ISNS_SCALE)],
+    'VSENSE_24V': [Numeric('voltage',16, scale=(56+10)/10000.0)],
+    'ISENSE_12VD': [Numeric('current',16, scale=ISNS_SCALE)],
+    'VSENSE_12VD': [Numeric('displacement',16, scale=(22+10)/10000.0, offset=D_OFFSET)],
+    'ISENSE_12VA': [Numeric('current',16, scale=ISNS_SCALE)],
+    'VSENSE_12VA': [Numeric('voltage',16, scale=(22+10)/10000.0)],
+    'ISENSE_5VD': [Numeric('current',16, scale=ISNS_SCALE)],
+    'VSENSE_5VD': [Numeric('voltage',16, scale=(3+10)/10000.0)],
+    'ISENSE_5VD': [Numeric('current',16, scale=ISNS_SCALE)],
+    'VSENSE_5VA': [Numeric('voltage',16, scale=(3+10)/10000.0)],
+    'ISENSE_5VA': [Numeric('current',16, scale=ISNS_SCALE)],
+    'VSENSE_3V3': [Numeric('voltage',16, scale=1/1000.0)],
+    'ISENSE_3V3': [Numeric('current',16, scale=ISNS_SCALE)],
+    'RAW_ISENSE_5V': [Numeric('voltage',16, scale=ISNS_SCALE)],
+    'RAW_ISENSE_12V': [Numeric('current',16, scale=ISNS_SCALE)],
+    'RAW_ISENSE_24V': [Numeric('voltage',16, scale=ISNS_SCALE)],
+    'GOG_ISENSE': [Numeric('current',16, scale=D_SCALE)],
+
+}
 
 # we parse BOARD_ID seperately from the CAN message (since we want to continue parsing even if BOARD_ID throws)
 # but BOARD_ID is still here so that Omnibus has all the fields it needs when creating messages to send
@@ -65,7 +106,7 @@ MESSAGES = {
     'SENSOR_ACC2':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, scale=16/2**16, unit='m/s²', signed=True), Numeric('y', 16, scale=16/2**16, unit='m/s²', signed=True), Numeric('z', 16, scale=16/2**16, unit='m/s²', signed=True)],
     'SENSOR_GYRO':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, scale=2000/2**16, unit='°/s', signed=True), Numeric('y', 16, scale=2000/2**16, unit='°/s', signed=True), Numeric('z', 16, scale=2000/2**16, unit='°/s', signed=True)],
     'SENSOR_MAG':           [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='µT', signed=True), Numeric('y', 16, unit='µT', signed=True), Numeric('z', 16, unit='µT', signed=True)],
-    'SENSOR_ANALOG':        [BOARD_ID, TIMESTAMP_3, SENSOR_ID, Numeric('value', 16, scale = 1/1000, signed=True)],
+    'SENSOR_ANALOG':        [BOARD_ID, TIMESTAMP_3, Switch('sensor_id', 8, mt.sensor_id, ANALOG_CHANNELS)],
     'SENSOR_RPM':           [BOARD_ID, TIMESTAMP_3, SENSOR_ID, Numeric('rpm_counts', 32)],
     'SENSOR_LEVEL':         [BOARD_ID, TIMESTAMP_3, SENSOR_ID],
     'SENSOR_A501':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
