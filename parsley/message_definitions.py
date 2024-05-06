@@ -11,10 +11,10 @@ SENSOR_ID = Enum('sensor_id', 8, mt.sensor_id)
 MESSAGE_TYPE = Enum('msg_type', 6, mt.adjusted_msg_type)
 BOARD_ID = Enum('board_id', 5, mt.board_id)
 MESSAGE_SID = Enum('msg_sid', MESSAGE_TYPE.length + BOARD_ID.length, {}) # used purely as a length constant
-PT_SCALE = (1500)/(20.0-4.0);
-PT_OFFSET = -(1500*4)/(20.0-4.0);
-D_SCALE = 4.0/5.0*39.3701/1.00000054;
-D_OFFSET = 0;
+PT_SCALE = (1500)/((20.0-4.0)*100);
+PT_OFFSET = -PT_SCALE*4*100;
+D_SCALE = 1 #-(4.0/5000.0)*(39.3701/1.00000054)*(3+10)/10.0; #40.99448/1000
+D_OFFSET = 0 #-D_SCALE*5000.0*(10.0)/(3+10.0);#157.6538
 ISNS_SCALE = 1/(50.0*5.0);
 BOARD_STATUS = {
     'E_NOMINAL':                [],
@@ -66,7 +66,7 @@ ANALOG_CHANNELS = {
     'ISENSE_24V': [Numeric('current',16, scale=ISNS_SCALE)],
     'VSENSE_24V': [Numeric('voltage',16, scale=(56+10)/10000.0)],
     'ISENSE_12VD': [Numeric('current',16, scale=ISNS_SCALE)],
-    'VSENSE_12VD': [Numeric('displacement',16, scale=(22+10)/10000.0, offset=D_OFFSET)],
+    'VSENSE_12VD': [Numeric('voltage',16, scale=(22+10)/10000.0, offset=D_OFFSET)],
     'ISENSE_12VA': [Numeric('current',16, scale=ISNS_SCALE)],
     'VSENSE_12VA': [Numeric('voltage',16, scale=(22+10)/10000.0)],
     'ISENSE_5VD': [Numeric('current',16, scale=ISNS_SCALE)],
