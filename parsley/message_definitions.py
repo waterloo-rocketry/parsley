@@ -13,9 +13,10 @@ BOARD_ID = Enum('board_id', 5, mt.board_id)
 MESSAGE_SID = Enum('msg_sid', MESSAGE_TYPE.length + BOARD_ID.length, {}) # used purely as a length constant
 PT_SCALE = (1500)/((20.0-4.0)*100);
 PT_OFFSET = -PT_SCALE*4*100;
-D_SCALE = 1 #-(4.0/5000.0)*(39.3701/1.00000054)*(3+10)/10.0; #40.99448/1000
-D_OFFSET = 0 #-D_SCALE*5000.0*(10.0)/(3+10.0);#157.6538
+D_SCALE = 1 #(4.0/5000.0)*(39.3701/1.00000054)*(3+10)/10.0; #40.99448/1000   should be 102.35 71.46, 90.32, 113.22 
+D_OFFSET = 0 #-D_SCALE*1000.0;#157.6538
 ISNS_SCALE = 1/(50.0*5.0);
+RPM_CONV = 11718.75*60/2.0;
 BOARD_STATUS = {
     'E_NOMINAL':                [],
 
@@ -46,7 +47,12 @@ BOARD_STATUS = {
     'E_CODING_FUCKUP':         []
 }
 #0-1500PSIG scaling on PTs
-
+RPM_CHANNELS = {
+    'RPM501_S': [Numeric('RPM_S',32, scale=RPM_CONV*10)],
+    'RPM502_S': [Numeric('RPM_S',32, scale=RPM_CONV*10)],
+    'RPM501_H': [Numeric('RPM_H',32, scale=RPM_CONV*5000)],
+    'RPM502_H': [Numeric('RPM_H',32, scale=RPM_CONV*5000)],
+}
 ANALOG_CHANNELS = {
     #pressure transducers
     'P501': [Numeric('pressure',16, scale=PT_SCALE, offset=PT_OFFSET)],
@@ -107,7 +113,7 @@ MESSAGES = {
     'SENSOR_GYRO':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, scale=2000/2**16, unit='°/s', signed=True), Numeric('y', 16, scale=2000/2**16, unit='°/s', signed=True), Numeric('z', 16, scale=2000/2**16, unit='°/s', signed=True)],
     'SENSOR_MAG':           [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='µT', signed=True), Numeric('y', 16, unit='µT', signed=True), Numeric('z', 16, unit='µT', signed=True)],
     'SENSOR_ANALOG':        [BOARD_ID, TIMESTAMP_3, Switch('sensor_id', 8, mt.sensor_id, ANALOG_CHANNELS)],
-    'SENSOR_RPM':           [BOARD_ID, TIMESTAMP_3, SENSOR_ID, Numeric('rpm_counts', 32)],
+    'SENSOR_RPM':           [BOARD_ID, TIMESTAMP_3, Switch('sensor_id', 8, mt.sensor_id, RPM_CHANNELS)],
     'SENSOR_LEVEL':         [BOARD_ID, TIMESTAMP_3, SENSOR_ID],
     'SENSOR_A501':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
     'SENSOR_A502':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
