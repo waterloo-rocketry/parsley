@@ -16,7 +16,7 @@ PT_OFFSET = -PT_SCALE*4*100;
 D_SCALE = 1 #(4.0/5000.0)*(39.3701/1.00000054)*(3+10)/10.0; #40.99448/1000   should be 102.35 71.46, 90.32, 113.22 
 D_OFFSET = 0 #-D_SCALE*1000.0;#157.6538
 ISNS_SCALE = 1/(50.0*5.0);
-RPM_CONV = 11718.75*60/2.0;
+RPM_CONV = 60/2.0;
 BOARD_STATUS = {
     'E_NOMINAL':                [],
 
@@ -48,10 +48,10 @@ BOARD_STATUS = {
 }
 #0-1500PSIG scaling on PTs
 RPM_CHANNELS = {
-    'RPM501_S': [Numeric('RPM_S',32, scale=RPM_CONV*10)],
-    'RPM502_S': [Numeric('RPM_S',32, scale=RPM_CONV*10)],
-    'RPM501_H': [Numeric('RPM_H',32, scale=RPM_CONV*5000)],
-    'RPM502_H': [Numeric('RPM_H',32, scale=RPM_CONV*5000)],
+    'RPM501_S': [Numeric('RPM_S',32, scale=RPM_CONV*8.22190)],
+    'RPM502_S': [Numeric('RPM_S',32, scale=RPM_CONV*8.0556)],
+    'RPM501_H': [Numeric('RPM_H',32, scale=RPM_CONV*40.139)],
+    'RPM502_H': [Numeric('RPM_H',32, scale=RPM_CONV*34.05)],
 }
 ANALOG_CHANNELS = {
     #pressure transducers
