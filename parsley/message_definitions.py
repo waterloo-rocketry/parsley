@@ -11,12 +11,12 @@ SENSOR_ID = Enum('sensor_id', 8, mt.sensor_id)
 MESSAGE_TYPE = Enum('msg_type', 6, mt.adjusted_msg_type)
 BOARD_ID = Enum('board_id', 5, mt.board_id)
 MESSAGE_SID = Enum('msg_sid', MESSAGE_TYPE.length + BOARD_ID.length, {}) # used purely as a length constant
-PT_SCALE = (1500)/((20.0-4.0)*100);
+PT_SCALE = (3000)/((20.0-4.0)*100);
 PT_OFFSET = -PT_SCALE*4*100;
 D_SCALE = 1 #(4.0/5000.0)*(39.3701/1.00000054)*(3+10)/10.0; #40.99448/1000   should be 102.35 71.46, 90.32, 113.22 
 D_OFFSET = 0 #-D_SCALE*1000.0;#157.6538
 ISNS_SCALE = 1/(50.0*5.0);
-RPM_CONV = 60/2.0;
+RPM_CONV = 60.0;
 BOARD_STATUS = {
     'E_NOMINAL':                [],
 
