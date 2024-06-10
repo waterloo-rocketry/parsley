@@ -145,22 +145,6 @@ logger_error = {
 }
 
 sensor_id = {
-    'SENSOR_BUS_CURR':              0x00,
-    'SENSOR_BATT_CURR':             0x01,
-    'SENSOR_BATT_VOLT':             0x02,
-    'SENSOR_CHARGE_CURR':           0x03,
-    'SENSOR_GROUND_VOLT':           0x04,
-    'SENSOR_PRESSURE_OX':           0x05,
-    'SENSOR_PRESSURE_CC':           0x06,
-    'SENSOR_PRESSURE_PNEUMATICS':   0x07,
-    'SENSOR_BARO':                  0x08,
-    'SENSOR_ARM_BATT_1':            0x09,
-    'SENSOR_ARM_BATT_2':            0x0A,
-    'SENSOR_MAG_1':                 0x0B,
-    'SENSOR_MAG_2':                 0x0C,
-    'SENSOR_VELOCITY':              0x0D,
-    'SENSOR_VENT_TEMP':             0x0E,
-    'SENSOR_RADIO_CURR':            0x0F,
 	'ISENSE_24V':			0x12,
 	'VSENSE_24V':			0x13,
 	'ISENSE_12VD':			0x14,
@@ -228,8 +212,12 @@ sensor_id = {
 	'I2C_ERROR':			0x71,
 	'CAN_RX_ERROR':			0x72,
 	'CAN_TX_ERROR':			0x73,
-
-
+	'CAN_OPS_RX_TIMEOUT':			0x74,
+	'D501_MAX':			0x75,
+	'D502_MAX':			0x76,
+	'RPM501_MAX':			0x77,
+	'RPM502_MAX':			0x78,
+	'OPS_CAN_STATE_CMD':			0x79,
 }
 
 fill_direction = {

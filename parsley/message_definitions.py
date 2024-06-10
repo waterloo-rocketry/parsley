@@ -52,6 +52,9 @@ RPM_CHANNELS = {
     'RPM502_S': [Numeric('RPM_S',32, scale=RPM_CONV*8.0556)],
     'RPM501_H': [Numeric('RPM_H',32, scale=RPM_CONV*40.139)],
     'RPM502_H': [Numeric('RPM_H',32, scale=RPM_CONV*34.05)],
+
+    'RPM501_MAX': [Numeric('RPM_H_MAX',32, scale=RPM_CONV*40.139)],
+    'RPM502_MAX': [Numeric('RPM_H_MAX',32, scale=RPM_CONV*34.05)]
 }
 ANALOG_CHANNELS = {
     #pressure transducers
