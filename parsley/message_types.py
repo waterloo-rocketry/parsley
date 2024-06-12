@@ -234,4 +234,6 @@ actuator_id = {
 	'VA304':			0x5,
 	'VA401':			0x6,
 	'I501':			0x7,
+
+    'CMD_TRANSITION_TO_PRESTART': 0x8,
 }

@@ -121,7 +121,7 @@ MESSAGES = {
     'SENSOR_MAG':           [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='µT', signed=True), Numeric('y', 16, unit='µT', signed=True), Numeric('z', 16, unit='µT', signed=True)],
     'SENSOR_ANALOG':        [BOARD_ID, TIMESTAMP_3, Switch('sensor_id', 8, mt.sensor_id, ANALOG_CHANNELS)],
     'SENSOR_RPM':           [BOARD_ID, TIMESTAMP_3, Switch('sensor_id', 8, mt.sensor_id, RPM_CHANNELS)],
-    'SENSOR_LEVEL':         [BOARD_ID, TIMESTAMP_3, SENSOR_ID],
+    'SENSOR_LEVEL':         [BOARD_ID, TIMESTAMP_3, SENSOR_ID, Numeric('level_status', 8, signed=False)],
     'SENSOR_A501':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
     'SENSOR_A502':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
     'SENSOR_A503':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
