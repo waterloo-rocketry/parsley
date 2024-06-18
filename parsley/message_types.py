@@ -169,14 +169,15 @@ fill_direction = {
 actuator_id = {
     'ACTUATOR_VENT_VALVE':       0x00,
     'ACTUATOR_INJECTOR_VALVE':   0x01,
-    'ACTUATOR_CAMERA_1':         0x02,
-    'ACTUATOR_CAMERA_2':         0x03,
-    'ACTUATOR_CANBUS':           0x04,
-    'ACTUATOR_CHARGE':           0x05,
-    'ACTUATOR_RADIO':            0x06,
-    'ACTUATOR_PAYLOAD_SERVO':    0x07,
-    'ACTUATOR_AIRBRAKES_SERVO':  0x08,
-    'ACTUATOR_AIRBRAKES_ENABLE': 0x09
+    'ACTUATOR_FILL_DUMP_VALVE':  0x02,
+    'ACTUATOR_CAMERA_1':         0x03,
+    'ACTUATOR_CAMERA_2':         0x04,
+    'ACTUATOR_CANBUS':           0x05,
+    'ACTUATOR_CHARGE':           0x06,
+    'ACTUATOR_RADIO':            0x07,
+    'ACTUATOR_PAYLOAD_SERVO':    0x08,
+    'ACTUATOR_AIRBRAKES_SERVO':  0x09,
+    'ACTUATOR_AIRBRAKES_ENABLE': 0x0A
 }
 
 state_id = {
