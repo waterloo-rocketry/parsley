@@ -156,9 +156,11 @@ class Floating(Field):
             s = struct.pack('<l', data)
         return struct.unpack('>f', s)[0]
 
-    def encode(self, value: float) -> Tuple[bytes, int]:
-        if not isinstance(value, float):
+    def encode(self, value: Number) -> Tuple[bytes, int]:
+        if not isinstance(value, Number):
             raise ValueError(f'Value "{value}" is not a valid float')
+
+        value = float(value)
 
         s = struct.pack('>f', f)
         if self.endian == 'big':
