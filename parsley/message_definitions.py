@@ -74,12 +74,12 @@ MESSAGES = {
     'GPS_INFO':             [BOARD_ID, TIMESTAMP_3, Numeric('num_sats', 8), Numeric('quality', 8)],
 
     'FILL_LVL':             [BOARD_ID, TIMESTAMP_3, Numeric('level', 8), Enum('direction', 8, mt.fill_direction)],
-    'STATE_EST_DATA':       [BOARD_ID, TIMESTAMP_3, Numeric('data', 32), Enum('state_id', 8, mt.state_id)],
+    'STATE_EST_DATA':       [BOARD_ID, TIMESTAMP_3, Floating('data'), Enum('state_id', 8, mt.state_id)],
 
     'LEDS_ON':              [BOARD_ID],
     'LEDS_OFF':             [BOARD_ID]
 }
 
-# entire CAN message minus board_id 
+# entire CAN message minus board_id
 # board_id is parsed seperately because if it throws, we want to continue parsing
 CAN_MESSAGE = Switch('msg_type', MESSAGE_TYPE.length, mt.adjusted_msg_type, MESSAGES)
