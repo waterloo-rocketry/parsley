@@ -94,31 +94,34 @@ arm_states = {
 board_status = {
     'E_NOMINAL':                0x00,
 
-    'E_BUS_OVER_CURRENT':       0x01,
-    'E_BUS_UNDER_VOLTAGE':      0x02,
-    'E_BUS_OVER_VOLTAGE':       0x03,
+    'E_5V_OVER_CURRENT':        0x01,
+    'E_5V_UNDER_VOLTAGE':       0x02,
+    'E_5V_OVER_VOLTAGE':        0x03,
 
     'E_BATT_OVER_CURRENT':      0x04,
     'E_BATT_UNDER_VOLTAGE':     0x05,
     'E_BATT_OVER_VOLTAGE':      0x06,
 
-    'E_BOARD_FEARED_DEAD':      0x07,
-    'E_NO_CAN_TRAFFIC':         0x08,
-    'E_MISSING_CRITICAL_BOARD': 0x09,
-    'E_RADIO_SIGNAL_LOST':      0x0A,
+    'E_13V_OVER_CURRENT':       0x07,
+    'E_MOTOR_OVER_CURRENT':     0x08,
 
-    'E_ACTUATOR_STATE':         0x0B,
-    'E_CANNOT_INIT_DACS':       0x0C,
-    'E_VENT_POT_RANGE':         0x0D,
+    'E_BOARD_FEARED_DEAD':      0x09,
+    'E_NO_CAN_TRAFFIC':         0x0A,
+    'E_MISSING_CRITICAL_BOARD': 0x0B,
+    'E_RADIO_SIGNAL_LOST':      0x0C,
 
-    'E_LOGGING':                0x0E,
-    'E_GPS':                    0x0F,
-    'E_SENSOR':                 0x10,
+    'E_ACTUATOR_STATE':         0x0D,
+    'E_CANNOT_INIT_DACS':       0x0E,
+    'E_VENT_POT_RANGE':         0x0F,
 
-    'E_ILLEGAL_CAN_MSG':        0x11,
-    'E_SEGFAULT':               0x12,
-    'E_UNHANDLED_INTERRUPT':    0x13,
-    'E_CODING_FUCKUP':          0x14
+    'E_LOGGING':                0x10,
+    'E_GPS':                    0x11,
+    'E_SENSOR':                 0x12,
+
+    'E_ILLEGAL_CAN_MSG':        0x13,
+    'E_SEGFAULT':               0x14,
+    'E_UNHANDLED_INTERRUPT':    0x15,
+    'E_CODING_FUCKUP':          0x16
 }
 
 logger_error = {
@@ -181,7 +184,8 @@ actuator_id = {
     'ACTUATOR_RADIO':            0x07,
     'ACTUATOR_PAYLOAD_SERVO':    0x08,
     'ACTUATOR_AIRBRAKES_SERVO':  0x09,
-    'ACTUATOR_AIRBRAKES_ENABLE': 0x0A
+    'ACTUATOR_AIRBRAKES_ENABLE': 0x0A,
+    'ACTUATOR_ROCKET_POWER':     0x0B
 }
 
 state_id = {
