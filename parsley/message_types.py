@@ -12,6 +12,7 @@ msg_type = {
     'DEBUG_MSG':            0x180,
     'DEBUG_PRINTF':         0x1E0,
     'DEBUG_RADIO_CMD':      0x200,
+    'ACT_ANALOG_CMD':       0x220,
      
     'ALT_ARM_STATUS':       0x440,
     'ACTUATOR_STATUS':      0x460,
@@ -22,9 +23,10 @@ msg_type = {
     'SENSOR_ACC':           0x580,
     'SENSOR_ACC2':          0x5A0,
     'SENSOR_GYRO':          0x5E0,
+
+    'STATE_EST_CALIB':      0x620,
     'SENSOR_MAG':           0x640,
     'SENSOR_ANALOG':        0x6A0,
-
     'GPS_TIMESTAMP':        0x6C0,
     'GPS_LATITUDE':         0x6E0,
     'GPS_LONGITUDE':        0x700,
@@ -32,7 +34,7 @@ msg_type = {
     'GPS_INFO':             0x740,
 
     'FILL_LVL':             0x780,
-    'RADI_VALUE':           0x7A0,
+    'STATE_EST_DATA':       0x7A0,
 
     'LEDS_ON':              0x7E0,
     'LEDS_OFF':             0x7C0
@@ -92,31 +94,34 @@ arm_states = {
 board_status = {
     'E_NOMINAL':                0x00,
 
-    'E_BUS_OVER_CURRENT':       0x01,
-    'E_BUS_UNDER_VOLTAGE':      0x02,
-    'E_BUS_OVER_VOLTAGE':       0x03,
+    'E_5V_OVER_CURRENT':        0x01,
+    'E_5V_UNDER_VOLTAGE':       0x02,
+    'E_5V_OVER_VOLTAGE':        0x03,
 
     'E_BATT_OVER_CURRENT':      0x04,
     'E_BATT_UNDER_VOLTAGE':     0x05,
     'E_BATT_OVER_VOLTAGE':      0x06,
 
-    'E_BOARD_FEARED_DEAD':      0x07,
-    'E_NO_CAN_TRAFFIC':         0x08,
-    'E_MISSING_CRITICAL_BOARD': 0x09,
-    'E_RADIO_SIGNAL_LOST':      0x0A,
+    'E_13V_OVER_CURRENT':       0x07,
+    'E_MOTOR_OVER_CURRENT':     0x08,
 
-    'E_ACTUATOR_STATE':         0x0B,
-    'E_CANNOT_INIT_DACS':       0x0C,
-    'E_VENT_POT_RANGE':         0x0D,
+    'E_BOARD_FEARED_DEAD':      0x09,
+    'E_NO_CAN_TRAFFIC':         0x0A,
+    'E_MISSING_CRITICAL_BOARD': 0x0B,
+    'E_RADIO_SIGNAL_LOST':      0x0C,
 
-    'E_LOGGING':                0x0E,
-    'E_GPS':                    0x0F,
-    'E_SENSOR':                 0x10,
+    'E_ACTUATOR_STATE':         0x0D,
+    'E_CANNOT_INIT_DACS':       0x0E,
+    'E_VENT_POT_RANGE':         0x0F,
 
-    'E_ILLEGAL_CAN_MSG':        0x11,
-    'E_SEGFAULT':               0x12,
-    'E_UNHANDLED_INTERRUPT':    0x13,
-    'E_CODING_FUCKUP':          0x14
+    'E_LOGGING':                0x10,
+    'E_GPS':                    0x11,
+    'E_SENSOR':                 0x12,
+
+    'E_ILLEGAL_CAN_MSG':        0x13,
+    'E_SEGFAULT':               0x14,
+    'E_UNHANDLED_INTERRUPT':    0x15,
+    'E_CODING_FUCKUP':          0x16
 }
 
 logger_error = {
@@ -137,22 +142,30 @@ logger_error = {
 }
 
 sensor_id = {
-    'SENSOR_BUS_CURR':              0x00,
+    'SENSOR_5V_CURR':               0x00,
     'SENSOR_BATT_CURR':             0x01,
     'SENSOR_BATT_VOLT':             0x02,
     'SENSOR_CHARGE_CURR':           0x03,
-    'SENSOR_GROUND_VOLT':           0x04,
-    'SENSOR_PRESSURE_OX':           0x05,
-    'SENSOR_PRESSURE_CC':           0x06,
-    'SENSOR_PRESSURE_PNEUMATICS':   0x07,
-    'SENSOR_BARO':                  0x08,
-    'SENSOR_ARM_BATT_1':            0x09,
-    'SENSOR_ARM_BATT_2':            0x0A,
-    'SENSOR_MAG_1':                 0x0B,
-    'SENSOR_MAG_2':                 0x0C,
-    'SENSOR_VELOCITY':              0x0D,
-    'SENSOR_VENT_TEMP':             0x0E,
-    'SENSOR_RADIO_CURR':            0x0F
+    'SENSOR_13V_CURR':              0x04,
+    'SENSOR_MOTOR_CURR':            0x05,
+    'SENSOR_GROUND_VOLT':           0x06,
+    'SENSOR_PRESSURE_OX':           0x07,
+    'SENSOR_PRESSURE_FUEL':         0x08,
+    'SENSOR_PRESSURE_CC':           0x09,
+    'SENSOR_PRESSURE_PNEUMATICS':   0x0A,
+    'SENSOR_HALL_OX_INJ':           0x0B,
+    'SENSOR_HALL_FUEL_INJ':         0x0C,
+    'SENSOR_HALL_FILL':             0x0D,
+    'SENSOR_BARO':                  0x0E,
+    'SENSOR_ARM_BATT_1':            0x0F,
+    'SENSOR_ARM_BATT_2':            0x10,
+    'SENSOR_MAG_1':                 0x11,
+    'SENSOR_MAG_2':                 0x12,
+    'SENSOR_VELOCITY':              0x13,
+    'SENSOR_VENT_TEMP':             0x14,
+    'SENSOR_RADIO_CURR':            0x15,
+    'SENSOR_PAYLOAD_TEMP_1':        0x16,
+    'SENSOR_PAYLOAD_TEMP_2':        0x17
 }
 
 fill_direction = {
@@ -161,11 +174,34 @@ fill_direction = {
 }
 
 actuator_id = {
-    'ACTUATOR_VENT_VALVE':      0x00,
-    'ACTUATOR_INJECTOR_VALVE':  0x01,
-    'ACTUATOR_PAYLOAD':         0x02,
-    'ACTUATOR_CAMERAS':         0x03,
-    'ACTUATOR_CANBUS':          0x04,
-    'ACTUATOR_CHARGE':          0x05,
-    'ACTUATOR_RADIO':           0x06
+    'ACTUATOR_VENT_VALVE':       0x00,
+    'ACTUATOR_INJECTOR_VALVE':   0x01,
+    'ACTUATOR_FILL_DUMP_VALVE':  0x02,
+    'ACTUATOR_CAMERA_1':         0x03,
+    'ACTUATOR_CAMERA_2':         0x04,
+    'ACTUATOR_CANBUS':           0x05,
+    'ACTUATOR_CHARGE':           0x06,
+    'ACTUATOR_RADIO':            0x07,
+    'ACTUATOR_PAYLOAD_SERVO':    0x08,
+    'ACTUATOR_AIRBRAKES_SERVO':  0x09,
+    'ACTUATOR_AIRBRAKES_ENABLE': 0x0A,
+    'ACTUATOR_ROCKET_POWER':     0x0B
+}
+
+state_id = {
+    'STATE_POS_X':       0x00,
+    'STATE_POS_Y':       0x01,
+    'STATE_POS_Z':       0x02,
+    'STATE_VEL_X':       0x03,
+    'STATE_VEL_Y':       0x04,
+    'STATE_VEL_Z':       0x05,
+    'STATE_ACC_X':       0x06,
+    'STATE_ACC_Y':       0x07,
+    'STATE_ACC_Z':       0x08,
+    'STATE_ANGLE_YAW':   0x09,
+    'STATE_ANGLE_PITCH': 0x0A,
+    'STATE_ANGLE_ROLL':  0x0B,
+    'STATE_RATE_YAW':    0x0C,
+    'STATE_RATE_PITCH':  0x0D,
+    'STATE_RATE_ROLL':   0x0E
 }

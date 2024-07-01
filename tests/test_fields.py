@@ -1,6 +1,6 @@
 import pytest
 
-from fields import ASCII, Enum, Numeric, Switch
+from fields import ASCII, Enum, Numeric, Switch, Floating
 
 import message_types as mt
 import test_utils as tu
@@ -132,7 +132,7 @@ class TestNumeric:
             num.encode(-1)
         with pytest.raises(ValueError):
             num.encode(256)
-    
+
     def test_numeric_error_signed(self):
         num = Numeric('num', 8, signed=True)
         num.encode(-128)
@@ -166,6 +166,21 @@ class TestNumeric:
         num.encode(-5)
         with pytest.raises(ValueError):
             num.encode(5)
+
+class TestFloating:
+    def test_floating(self):
+        fl = Floating('Num')
+        # We pick these numbers to be of the form
+        # k/2^i as to avoid floating point rounding
+        # issues
+        assert fl.decode(fl.encode(2.0)[0]) == 2.0
+        assert fl.decode(fl.encode(0.5)[0]) == 0.5
+        assert fl.decode(fl.encode(2.5)[0]) == 2.5
+        assert fl.decode(fl.encode(27.015625)[0]) == 27.015625
+        assert fl.decode(fl.encode(1.3125)[0]) == 1.3125
+        assert fl.decode(fl.encode(69.0)[0]) == 69.0
+        assert fl.decode(fl.encode(420.0)[0]) == 420.0
+
 
 class TestSwitch:
     def test_switch(self):
