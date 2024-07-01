@@ -151,10 +151,9 @@ class Floating(Field):
 
     def decode(self, data: bytes) -> float:
         if self.endian == 'big':
-            s = struct.pack('>l', data)
+            return struct.unpack('>f', data)[0]
         else:
-            s = struct.pack('<l', data)
-        return struct.unpack('>f', s)[0]
+            return struct.unpack('<f', data)[0]
 
     def encode(self, value: Number) -> Tuple[bytes, int]:
         if not isinstance(value, Number):
@@ -162,11 +161,10 @@ class Floating(Field):
 
         value = float(value)
 
-        s = struct.pack('>f', f)
         if self.endian == 'big':
-            encoded_data = struct.unpack('>l', s)[0]
+            encoded_data = struct.pack('>f', value)
         else:
-            encoded_data = struct.unpack('<l', s)[0]
+            encoded_data = struct.pack('<f', value)
 
         return (encoded_data, 32)
 

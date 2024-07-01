@@ -1,4 +1,4 @@
-from parsley.fields import ASCII, Enum, Numeric, Switch
+from parsley.fields import ASCII, Enum, Numeric, Switch, Floating
 
 import parsley.message_types as mt
 
