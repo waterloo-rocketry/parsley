@@ -141,8 +141,13 @@ class Numeric(Field):
 class Floating(Field):
     """
     Transcodes floating point numbers to 32 bit binary
+    IEEE format
+    - Source https://docs.python.org/3/library/struct.html
 
     For example:
+    9.8125 -> b'A\x1d\x00\x00'
+
+    (Note, byte order may be reversed depending on endianess)
 
     """
     def __init__(self, name: str, big_endian=True, unit=""):
