@@ -1,4 +1,5 @@
 from typing import Any, Tuple, Union
+import struct
 
 Number = Union[int, float]
 
@@ -24,7 +25,7 @@ class Field:
         """
         Converts value to `self.length` bits of data and returns a tuple of (encoded_value, self.length)
         or raises a ValueError with an appropiate message if this is not possible.
-        
+
         self.length is returned in order to properly parse leading zeros. For example,
         the following cases are bit-level identical, but are not equilvalent for our purposes:
         2-bit: ______10
@@ -41,8 +42,8 @@ class ASCII(Field):
     b'\x48\x65\x79' <=> 'Hey'
     """
     def decode(self, data: bytes) -> str:
-        return data.replace(b'\x00', b'').decode('ascii') # remove null bytes to return original data 
-    
+        return data.replace(b'\x00', b'').decode('ascii') # remove null bytes to return original data
+
     def encode(self, value: str) -> Tuple[bytes, int]:
         if type(value) != str:
             raise ValueError(f'{value} is not a string')
@@ -95,13 +96,13 @@ class Enum(Field):
 
         encoded_data = self.map_key_val[key].to_bytes((self.length + 7) // 8, byteorder='big')
         return (encoded_data, self.length)
-    
+
     def get_keys(self):
         return self.map_key_val.keys()
-    
+
 class Numeric(Field):
     """
-    Transcodes binary data and numbers (ie. (un)signed and/or floating point)
+    Transcodes binary data and numbers (ie. (un)signed and/or fixed point)
     with an optional scaling factor during transcoding.
 
     For example:
@@ -133,8 +134,43 @@ class Numeric(Field):
                 raise ValueError(f'Value "{value}" ({hex_value}) is too large for {self.length} signed bits')
             if value < -1 << (self.length - 1):
                 raise ValueError(f'Value "{value}" ({hex_value}) is too small for {self.length} signed bits')
-        
+
         encoded_data = value.to_bytes((self.length + 7) // 8, byteorder=self.endian, signed=self.signed)
+        return (encoded_data, self.length)
+
+class Floating(Field):
+    """
+    Transcodes floating point numbers to 32 bit binary
+    IEEE format
+    - Source https://docs.python.org/3/library/struct.html
+
+    For example:
+    9.8125 -> b'A\x1d\x00\x00'
+
+    (Note, byte order may be reversed depending on endianess)
+
+    """
+    def __init__(self, name: str, big_endian=True, unit=""):
+        super().__init__(name, 32, unit)
+        self.endian = 'big' if big_endian else 'little'
+
+    def decode(self, data: bytes) -> float:
+        if self.endian == 'big':
+            return struct.unpack('>f', data)[0]
+        else:
+            return struct.unpack('<f', data)[0]
+
+    def encode(self, value: Number) -> Tuple[bytes, int]:
+        if not isinstance(value, Number):
+            raise ValueError(f'Value "{value}" is not a valid float')
+
+        value = float(value)
+
+        if self.endian == 'big':
+            encoded_data = struct.pack('>f', value)
+        else:
+            encoded_data = struct.pack('<f', value)
+
         return (encoded_data, self.length)
 
 class Switch(Enum):
@@ -151,6 +187,6 @@ class Switch(Enum):
 
     def get_fields(self, key):
         return self.map_key_enum[key]
-    
+
     def get_keys(self):
         return self.map_key_val.keys()

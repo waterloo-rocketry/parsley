@@ -1,4 +1,4 @@
-from parsley.fields import ASCII, Enum, Numeric, Switch
+from parsley.fields import ASCII, Enum, Numeric, Switch, Floating
 
 import parsley.message_types as mt
 
@@ -51,6 +51,7 @@ MESSAGES = {
     'DEBUG_MSG':            [BOARD_ID, TIMESTAMP_3, Numeric('level', 4), Numeric('line', 12), ASCII('data', 24)],
     'DEBUG_PRINTF':         [BOARD_ID, ASCII('string', 64)],
     'DEBUG_RADIO_CMD':      [BOARD_ID, ASCII('string', 64)],
+    'ACT_ANALOG_CMD':       [BOARD_ID, TIMESTAMP_3, Enum('actuator', 8, mt.actuator_id), Numeric('act_state', 8)],
 
     'ACTUATOR_STATUS':      [BOARD_ID, TIMESTAMP_3, Enum('actuator', 8, mt.actuator_id), Enum('cur_state', 8, mt.actuator_states), Enum('req_state', 8, mt.actuator_states)],
     'ALT_ARM_STATUS':       [BOARD_ID, TIMESTAMP_3, Enum('state', 4, mt.arm_states), Numeric('altimeter', 4), Numeric('drogue_v', 16), Numeric('main_v', 16)],
@@ -61,6 +62,8 @@ MESSAGES = {
     'SENSOR_ACC':           [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, scale=8/2**16, unit='m/s²', signed=True), Numeric('y', 16, scale=8/2**16, unit='m/s²', signed=True), Numeric('z', 16, scale=8/2**16, unit='m/s²', signed=True)],
     'SENSOR_ACC2':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, scale=16/2**16, unit='m/s²', signed=True), Numeric('y', 16, scale=16/2**16, unit='m/s²', signed=True), Numeric('z', 16, scale=16/2**16, unit='m/s²', signed=True)],
     'SENSOR_GYRO':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, scale=2000/2**16, unit='°/s', signed=True), Numeric('y', 16, scale=2000/2**16, unit='°/s', signed=True), Numeric('z', 16, scale=2000/2**16, unit='°/s', signed=True)],
+
+    'STATE_EST_CALIB':      [BOARD_ID, TIMESTAMP_3, Numeric('ack_flag', 8), Numeric('apogee', 16)],
     'SENSOR_MAG':           [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='µT', signed=True), Numeric('y', 16, unit='µT', signed=True), Numeric('z', 16, unit='µT', signed=True)],
     'SENSOR_ANALOG':        [BOARD_ID, TIMESTAMP_2, Enum('sensor_id', 8, mt.sensor_id), Numeric('value', 16, signed=True)],
 
@@ -71,13 +74,12 @@ MESSAGES = {
     'GPS_INFO':             [BOARD_ID, TIMESTAMP_3, Numeric('num_sats', 8), Numeric('quality', 8)],
 
     'FILL_LVL':             [BOARD_ID, TIMESTAMP_3, Numeric('level', 8), Enum('direction', 8, mt.fill_direction)],
-
-    'RADI_VALUE':           [BOARD_ID, TIMESTAMP_3, Numeric('radi_board', 8), Numeric('radi', 16)],
+    'STATE_EST_DATA':       [BOARD_ID, TIMESTAMP_3, Floating('data'), Enum('state_id', 8, mt.state_id)],
 
     'LEDS_ON':              [BOARD_ID],
     'LEDS_OFF':             [BOARD_ID]
 }
 
-# entire CAN message minus board_id 
+# entire CAN message minus board_id
 # board_id is parsed seperately because if it throws, we want to continue parsing
 CAN_MESSAGE = Switch('msg_type', MESSAGE_TYPE.length, mt.adjusted_msg_type, MESSAGES)
