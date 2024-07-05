@@ -171,7 +171,7 @@ class Floating(Field):
         else:
             encoded_data = struct.pack('<f', value)
 
-        return (encoded_data, 32)
+        return (encoded_data, self.length)
 
 class Switch(Enum):
     """
