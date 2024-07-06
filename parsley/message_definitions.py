@@ -13,13 +13,16 @@ MESSAGE_SID = Enum('msg_sid', MESSAGE_TYPE.length + BOARD_ID.length, {}) # used 
 BOARD_STATUS = {
     'E_NOMINAL':                [],
 
-    'E_BUS_OVER_CURRENT':       [Numeric('current', 16)],
-    'E_BUS_UNDER_VOLTAGE':      [Numeric('voltage', 16)],
-    'E_BUS_OVER_VOLTAGE':       [Numeric('voltage', 16)],
+    'E_5V_OVER_CURRENT':        [Numeric('current', 16)],
+    'E_5V_UNDER_VOLTAGE':       [Numeric('voltage', 16)],
+    'E_5V_OVER_VOLTAGE':        [Numeric('voltage', 16)],
 
     'E_BATT_OVER_CURRENT':      [Numeric('current', 16)],
     'E_BATT_UNDER_VOLTAGE':     [Numeric('voltage', 16)],
     'E_BATT_OVER_VOLTAGE':      [Numeric('voltage', 16)],
+
+    'E_13V_OVER_CURRENT':       [],
+    'E_MOTOR_OVER_CURRENT':     [],
 
     'E_BOARD_FEARED_DEAD':      [Enum('dead_board_id', 8, mt.board_id)],
     'E_NO_CAN_TRAFFIC':         [Numeric('err_time', 16)],
