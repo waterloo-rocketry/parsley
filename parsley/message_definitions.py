@@ -74,7 +74,7 @@ MESSAGES = {
     'GPS_INFO':             [BOARD_ID, TIMESTAMP_3, Numeric('num_sats', 8), Numeric('quality', 8)],
 
     'FILL_LVL':             [BOARD_ID, TIMESTAMP_3, Numeric('level', 8), Enum('direction', 8, mt.fill_direction)],
-    'STATE_EST_DATA':       [BOARD_ID, TIMESTAMP_3, Floating('data', big_endian=False), Enum('state_id', 8, mt.state_id)],
+    'STATE_EST_DATA':       [BOARD_ID, TIMESTAMP_3, Floating('data'), Enum('state_id', 8, mt.state_id)],
 
     'LEDS_ON':              [BOARD_ID],
     'LEDS_OFF':             [BOARD_ID]
