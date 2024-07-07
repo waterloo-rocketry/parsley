@@ -14,12 +14,12 @@ BOARD_STATUS = {
     'E_NOMINAL':                [],
 
     'E_5V_OVER_CURRENT':        [Numeric('current', 16)],
-    'E_5V_UNDER_VOLTAGE':       [Numeric('voltage', 16)],
-    'E_5V_OVER_VOLTAGE':        [Numeric('voltage', 16)],
+    'E_5V_UNDER_VOLTAGE':       [Numeric('voltage', 16, scale=1/1000, unit='V')],
+    'E_5V_OVER_VOLTAGE':        [Numeric('voltage', 16, scale=1/1000, unit='V')],
 
     'E_BATT_OVER_CURRENT':      [Numeric('current', 16)],
-    'E_BATT_UNDER_VOLTAGE':     [Numeric('voltage', 16)],
-    'E_BATT_OVER_VOLTAGE':      [Numeric('voltage', 16)],
+    'E_BATT_UNDER_VOLTAGE':     [Numeric('voltage', 16, scale=1/1000, unit='V')],
+    'E_BATT_OVER_VOLTAGE':      [Numeric('voltage', 16, scale=1/1000, unit='V')],
 
     'E_13V_OVER_CURRENT':       [],
     'E_MOTOR_OVER_CURRENT':     [],
