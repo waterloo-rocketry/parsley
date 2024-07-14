@@ -167,7 +167,7 @@ sensor_id = {
     'SENSOR_PAYLOAD_TEMP_1':        0x16,
     'SENSOR_PAYLOAD_TEMP_2':        0x17,
     'SENSOR_9V_BATT_CURR_1':        0x18,
-    'SENSOR_9V_BATT_CURR_1':        0x19
+    'SENSOR_9V_BATT_CURR_2':        0x19
 }
 
 fill_direction = {
