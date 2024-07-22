@@ -205,5 +205,8 @@ state_id = {
     'STATE_ANGLE_ROLL':  0x0B,
     'STATE_RATE_YAW':    0x0C,
     'STATE_RATE_PITCH':  0x0D,
-    'STATE_RATE_ROLL':   0x0E
+    'STATE_RATE_ROLL':   0x0E,
+    'STATE_FILTER_YAW':  0x0F,
+    'STATE_FILTER_PITCH':0x10, 
+    'STATE_FILTER_ROLL': 0x11
 }
