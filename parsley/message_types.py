@@ -164,8 +164,8 @@ sensor_id = {
     'SENSOR_VELOCITY':              0x13,
     'SENSOR_VENT_TEMP':             0x14,
     'SENSOR_RADIO_CURR':            0x15,
-    'SENSOR_PAYLOAD_TEMP_1':        0x16,
-    'SENSOR_PAYLOAD_TEMP_2':        0x17,
+    'SENSOR_PAYLOAD_TEMP':          0x16,
+    'SENSOR_PAYLOAD_FLOW_RATE':     0x17,
     'SENSOR_9V_BATT_CURR_1':        0x18,
     'SENSOR_9V_BATT_CURR_2':        0x19
 }
@@ -187,7 +187,9 @@ actuator_id = {
     'ACTUATOR_PAYLOAD_SERVO':    0x08,
     'ACTUATOR_AIRBRAKES_SERVO':  0x09,
     'ACTUATOR_AIRBRAKES_ENABLE': 0x0A,
-    'ACTUATOR_ROCKET_POWER':     0x0B
+    'ACTUATOR_ROCKET_POWER':     0x0B,
+    'ACTUATOR_OX_INJECTOR':      0x0C,
+    'ACTUATOR_FUEL_INJECTOR':    0x0D
 }
 
 state_id = {
