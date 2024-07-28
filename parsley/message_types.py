@@ -5,6 +5,7 @@ If canlib and this file differ, canlib is the source of truth.
 """
 msg_type = {
     'GENERAL_CMD':          0x060,
+    'SENSOR_SPOOF':         0x0A0,
     'ACTUATOR_CMD':         0x0C0,
     'ALT_ARM_CMD':          0x140,
     'RESET_CMD':            0x160,
@@ -22,10 +23,13 @@ msg_type = {
     'SENSOR_ACC':           0x580,
     'SENSOR_ACC2':          0x5A0,
     'SENSOR_GYRO':          0x5E0,
+
+    'SENSOR_VIRTUAL':       0x600,
+
+    'SENSOR_LEVEL':         0x620,
     'SENSOR_MAG':           0x640,
+    'SENSOR_RPM':           0x680,
     'SENSOR_ANALOG':        0x6A0,
-    'SENSOR_RPM':       0x680,
-    'SENSOR_LEVEL':     0x620,
 
     'GPS_TIMESTAMP':        0x6C0,
     'GPS_LATITUDE':         0x6E0,
@@ -38,15 +42,15 @@ msg_type = {
 
     'LEDS_ON':              0x7E0,
     'LEDS_OFF':             0x7C0,
-    'SENSOR_A501':      0x220,
-    'SENSOR_A502':      0x240,
-    'SENSOR_A503':      0x260,
-    'SENSOR_A504':      0x280,
-    'SENSOR_A505':      0x2A0,
-    'SENSOR_A506':      0x2E0,
-    'FAKE_RPM':         0x2C0,
-    'SENSOR_SPOOF':     0x0A0,
-    'CLEAR_SENSOR_SPOOF':     0x0E0,
+
+    'SENSOR_A501':          0x220,
+    'SENSOR_A502':          0x240,
+    'SENSOR_A503':          0x260,
+    'SENSOR_A504':          0x280,
+    'SENSOR_A505':          0x2A0,
+    'SENSOR_A506':          0x2E0,
+    'FAKE_RPM':             0x2C0,
+
 }
 
 # canlib's msg_type is defined in 12-bit msg_sid form, so we need to
@@ -218,6 +222,8 @@ sensor_id = {
 	'RPM501_MAX':			0x77,
 	'RPM502_MAX':			0x78,
 	'OPS_CAN_STATE_CMD':			0x79,
+    'TRANSITION_SRC_ID':			0x7a,
+	'MSG_DEBUG_GENERAL':			0x7b,
 }
 
 fill_direction = {

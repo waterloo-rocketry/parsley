@@ -96,6 +96,12 @@ ANALOG_CHANNELS = {
 
 }
 
+VIRTUAL_SENSORS = {
+    'TRANSITION_SRC_ID': [Numeric('source_sensor_id',16, scale=1, offset=0)],
+    'I2C_ERROR':         [Numeric('error_register',16, scale=1, offset=0)],
+    'MSG_DEBUG_GENERAL': [Numeric('debug_data', 16, scale=1, offset=0)],
+}
+
 # we parse BOARD_ID seperately from the CAN message (since we want to continue parsing even if BOARD_ID throws)
 # but BOARD_ID is still here so that Omnibus has all the fields it needs when creating messages to send
 MESSAGES = {
@@ -122,6 +128,11 @@ MESSAGES = {
     'SENSOR_ANALOG':        [BOARD_ID, TIMESTAMP_3, Switch('sensor_id', 8, mt.sensor_id, ANALOG_CHANNELS)],
     'SENSOR_RPM':           [BOARD_ID, TIMESTAMP_3, Switch('sensor_id', 8, mt.sensor_id, RPM_CHANNELS)],
     'SENSOR_LEVEL':         [BOARD_ID, TIMESTAMP_3, SENSOR_ID, Numeric('level_status', 8, signed=False)],
+
+    # 'SENSOR_VIRTUAL':       [BOARD_ID, TIMESTAMP_3, SENSOR_ID, Numeric('data', 16, signed=False)],
+    'SENSOR_VIRTUAL':       [BOARD_ID, TIMESTAMP_3, Switch('sensor_id', 8, mt.sensor_id, VIRTUAL_SENSORS)],
+    # 'SENSOR_ANALOG':        [BOARD_ID, TIMESTAMP_3, Switch('sensor_id', 8, mt.sensor_id, ANALOG_CHANNELS)],
+
     'SENSOR_A501':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
     'SENSOR_A502':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
     'SENSOR_A503':          [BOARD_ID, TIMESTAMP_2, Numeric('x', 16, unit='m/s²', signed=True), Numeric('y', 16, unit='m/s²', signed=True), Numeric('z', 16, unit='m/s²', signed=True)],
