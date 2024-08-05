@@ -117,11 +117,12 @@ board_status = {
     'E_LOGGING':                0x10,
     'E_GPS':                    0x11,
     'E_SENSOR':                 0x12,
+    'E_VIDEO':                  0x13,
 
-    'E_ILLEGAL_CAN_MSG':        0x13,
-    'E_SEGFAULT':               0x14,
-    'E_UNHANDLED_INTERRUPT':    0x15,
-    'E_CODING_FUCKUP':          0x16
+    'E_ILLEGAL_CAN_MSG':        0x14,
+    'E_SEGFAULT':               0x15,
+    'E_UNHANDLED_INTERRUPT':    0x16,
+    'E_CODING_FUCKUP':          0x17
 }
 
 logger_error = {
@@ -139,6 +140,13 @@ logger_error = {
     'E_SD_FAIL_WRITE_DATA_RESP':        0x0A,
     # syslog related failures
     'E_SYSLOG_ALL_BUFFERS_FULL':        0x0B
+}
+
+video_state = {
+    'VIDEO_OFF':      0x00,
+    'VIDEO_ON':       0x01,
+    'VIDEO_ERR_SD':   0x02,
+    'VIDEO_ERR_CAM':  0x03
 }
 
 sensor_id = {
@@ -167,7 +175,8 @@ sensor_id = {
     'SENSOR_PAYLOAD_TEMP':          0x16,
     'SENSOR_PAYLOAD_FLOW_RATE':     0x17,
     'SENSOR_9V_BATT_CURR_1':        0x18,
-    'SENSOR_9V_BATT_CURR_2':        0x19
+    'SENSOR_9V_BATT_CURR_2':        0x19,
+    'SENSOR_FPS':                   0x1A
 }
 
 fill_direction = {
