@@ -36,6 +36,7 @@ BOARD_STATUS = {
     'E_LOGGING':                [Enum('error', 8, mt.logger_error)],
     'E_GPS':                    [],
     'E_SENSOR':                 [Enum('sensor_id', 8, mt.sensor_id)],
+    'E_VIDEO':                  [Enum('state', 8, mt.video_state)],
 
     'E_ILLEGAL_CAN_MSG':        [],
     'E_SEGFAULT':               [],
