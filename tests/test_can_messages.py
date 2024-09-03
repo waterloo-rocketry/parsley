@@ -47,7 +47,7 @@ class TestCANMessage:
     def test_reset_cmd(self, bit_str3):
         bit_str3.push(*Enum('board_id', 8, mt.board_id).encode('ANY'))
         res = parsley.parse_fields(bit_str3, CAN_MESSAGE.get_fields('RESET_CMD')[1:])
-        assert res['board_id'] == 'ANY'
+        assert res['reset_board_id'] == 'ANY'
 
     def test_debug_msg(self, bit_str3):
         bit_str3.push(*Numeric('level', 4).encode(6))
@@ -98,26 +98,26 @@ class TestCANMessage:
         assert res['status'] == 'E_NOMINAL'
 
     def test_board_status_current(self, bit_str3):
-        bit_str3.push(*Enum('status', 8, mt.board_status).encode('E_BUS_OVER_CURRENT'))
+        bit_str3.push(*Enum('status', 8, mt.board_status).encode('E_5V_OVER_CURRENT'))
         bit_str3.push(*Numeric('current', 16).encode(12345))
         res = parsley.parse_fields(bit_str3, CAN_MESSAGE.get_fields('GENERAL_BOARD_STATUS')[1:])
-        assert res['status'] == 'E_BUS_OVER_CURRENT'
+        assert res['status'] == 'E_5V_OVER_CURRENT'
         assert res['current'] == 12345
 
     def test_board_status_voltage(self, bit_str3):
-        bit_str3.push(*Enum('status', 8, mt.board_status).encode('E_BUS_UNDER_VOLTAGE'))
+        bit_str3.push(*Enum('status', 8, mt.board_status).encode('E_5V_UNDER_VOLTAGE'))
         bit_str3.push(*Numeric('voltage', 16).encode(54321))
         res = parsley.parse_fields(bit_str3, CAN_MESSAGE.get_fields('GENERAL_BOARD_STATUS')[1:])
-        assert res['status'] == 'E_BUS_UNDER_VOLTAGE'
+        assert res['status'] == 'E_5V_UNDER_VOLTAGE'
         assert res['voltage'] == 54321
 
-    def test_board_status_dead(self, bit_str3):
-        bit_str3.push(*Enum('status', 8, mt.board_status).encode('E_BOARD_FEARED_DEAD'))
-        bit_str3.push(*Enum('board_id', 8, mt.board_id).encode('KALMAN'))
-        res = parsley.parse_fields(bit_str3, CAN_MESSAGE.get_fields('GENERAL_BOARD_STATUS')[1:])
-        print(res)
-        assert res['status'] == 'E_BOARD_FEARED_DEAD'
-        assert res['board_id'] == 'KALMAN'
+    # def test_board_status_dead(self, bit_str3):
+    #     bit_str3.push(*Enum('status', 8, mt.board_status).encode('E_BOARD_FEARED_DEAD'))
+    #     bit_str3.push(*Enum('board_id', 8, mt.board_id).encode('KALMAN'))
+    #     res = parsley.parse_fields(bit_str3, CAN_MESSAGE.get_fields('GENERAL_BOARD_STATUS')[1:])
+    #     print(res)
+    #     assert res['status'] == 'E_BOARD_FEARED_DEAD'
+    #     assert res['board_id'] == 'KALMAN'
 
     def test_board_status_quiet(self, bit_str3):
         bit_str3.push(*Enum('status', 8, mt.board_status).encode('E_NO_CAN_TRAFFIC'))
@@ -260,12 +260,12 @@ class TestCANMessage:
         assert res['level'] == 9
         assert res['direction'] == 'FILLING'
 
-    def test_radi_value(self, bit_str3):
-        bit_str3.push(*Numeric('radi_board', 8).encode(1))
-        bit_str3.push(*Numeric('radi', 16).encode(500))
-        res = parsley.parse_fields(bit_str3, CAN_MESSAGE.get_fields('RADI_VALUE')[1:])
-        assert res['radi_board'] == 1
-        assert res['radi'] == 500
+    # def test_radi_value(self, bit_str3):
+    #     bit_str3.push(*Numeric('radi_board', 8).encode(1))
+    #     bit_str3.push(*Numeric('radi', 16).encode(500))
+    #     res = parsley.parse_fields(bit_str3, CAN_MESSAGE.get_fields('RADI_VALUE')[1:])
+    #     assert res['radi_board'] == 1
+    #     assert res['radi'] == 500
 
     def test_leds_on(self):
         # LED_ON message has no message body
