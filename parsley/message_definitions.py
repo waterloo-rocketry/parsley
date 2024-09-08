@@ -6,7 +6,7 @@ import parsley.message_types as mt
 TIMESTAMP_2 = Numeric('time', 16, scale=1/1000, unit='s')
 TIMESTAMP_3 = Numeric('time', 24, scale=1/1000, unit='s')
 
-MESSAGE_TYPE = Enum('msg_type', 6, mt.adjusted_msg_type)
+MESSAGE_TYPE = Enum('msg_type', 24, mt.adjusted_msg_type)
 BOARD_ID = Enum('board_id', 5, mt.board_id)
 MESSAGE_SID = Enum('msg_sid', MESSAGE_TYPE.length + BOARD_ID.length, {}) # used purely as a length constant
 
