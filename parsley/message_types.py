@@ -3,76 +3,90 @@ REMINDER: Any changes to this file should be reflected in canlib.
 
 If canlib and this file differ, canlib is the source of truth.
 """
-msg_type = {
-    'GENERAL_CMD':          0x060,
-    'ACTUATOR_CMD':         0x0C0,
-    'ALT_ARM_CMD':          0x140,
-    'RESET_CMD':            0x160,
 
-    'DEBUG_MSG':            0x180,
-    'DEBUG_PRINTF':         0x1E0,
-    'DEBUG_RADIO_CMD':      0x200,
-    'ACT_ANALOG_CMD':       0x220,
-     
-    'ALT_ARM_STATUS':       0x440,
-    'ACTUATOR_STATUS':      0x460,
-    'GENERAL_BOARD_STATUS': 0x520,
-
-    'SENSOR_TEMP':          0x540,
-    'SENSOR_ALTITUDE':      0x560,
-    'SENSOR_ACC':           0x580,
-    'SENSOR_ACC2':          0x5A0,
-    'SENSOR_GYRO':          0x5E0,
-
-    'STATE_EST_CALIB':      0x620,
-    'SENSOR_MAG':           0x640,
-    'SENSOR_ANALOG':        0x6A0,
-    'GPS_TIMESTAMP':        0x6C0,
-    'GPS_LATITUDE':         0x6E0,
-    'GPS_LONGITUDE':        0x700,
-    'GPS_ALTITUDE':         0x720,
-    'GPS_INFO':             0x740,
-
-    'FILL_LVL':             0x780,
-    'STATE_EST_DATA':       0x7A0,
-
-    'LEDS_ON':              0x7E0,
-    'LEDS_OFF':             0x7C0
+msg_prio = {
+    'HIGHEST': 0x0,
+    'HIGH':    0x1,
+    'MEDIUM':  0x2,
+    'LOW':     0x3
 }
 
-# canlib's msg_type is defined in 12-bit msg_sid form, so we need to
-# right shift to get the adjusted (actual) 6-bit message type values
-adjusted_msg_type = {k: v >> 5 for k, v in msg_type.items()}
+msg_type = {
+    'GENERAL_CMD':          0x001,
+    'ACTUATOR_CMD':         0x002,
+    'ALT_ARM_CMD':          0x003,
+    'RESET_CMD':            0x004,
 
-board_id = {
-    'ANY':                  0x00,
-    # Ground Side
-    'DAQ':                  0x01,
-    'THERMOCOUPLE_1':       0x02,
-    'THERMOCOUPLE_2':       0x03,
-    'THERMOCOUPLE_3':       0x04,
-    'THERMOCOUPLE_4':       0x05,
-    # Injector/Fill Section
-    'PROPULSION_INJ':       0x06,
-    # Vent Section
-    'PROPULSION_VENT':      0x07,
-    'CAMERA_1':             0x08,
-    'CAMERA_2':             0x09,
-    # Airbrake Section
-    'CHARGING_AIRBRAKE':    0x0A,
-    # Payload Section
-    'CHARGING_PAYLOAD':     0x0B,
-    'VIBRATION':            0x0C,
-    # Recovery Electronics(RecElec) Sled
-    'CHARGING_CAN':         0x0D,
-    'LOGGER':               0x0E,
-    'PROCESSOR':            0x0F,
-    'GPS':                  0x10,
-    'ARMING':               0x11,
-    'TELEMETRY':            0x12,
-    'CAMERA_3':             0x13,
-    # Debug
-    'USB':                  0x14
+    'DEBUG_MSG':            0x005,
+    'DEBUG_PRINTF':         0x006,
+    'DEBUG_RADIO_CMD':      0x007,
+    'ACT_ANALOG_CMD':       0x008,
+     
+    'ALT_ARM_STATUS':       0x009,
+    'ACTUATOR_STATUS':      0x00A,
+    'GENERAL_BOARD_STATUS': 0x00B,
+
+    'SENSOR_TEMP':          0x00C,
+    'SENSOR_ALTITUDE':      0x00D,
+    'SENSOR_ACC':           0x00E,
+    'SENSOR_ACC2':          0x00F,
+    'SENSOR_GYRO':          0x010,
+
+    'STATE_EST_CALIB':      0x011,
+    'SENSOR_MAG':           0x012,
+    'SENSOR_ANALOG':        0x013,
+    'GPS_TIMESTAMP':        0x014,
+    'GPS_LATITUDE':         0x015,
+    'GPS_LONGITUDE':        0x016,
+    'GPS_ALTITUDE':         0x017,
+    'GPS_INFO':             0x018,
+
+    'FILL_LVL':             0x019,
+    'STATE_EST_DATA':       0x01A,
+
+    'LEDS_ON':              0x01B,
+    'LEDS_OFF':             0x01C
+}
+
+board_type_id = {
+    'ANY': 0x00,
+
+    'INJ_SENSOR':   0x01,
+    'CANARD_MOTOR': 0x02,
+    'CAMERA':       0x03,
+    'ROCKET_POWER': 0x04,
+    'LOGGER':       0x05,
+    'PROCESSOR':    0x06,
+    'TELEMETRY':    0x07,
+    'GPS':          0x08,
+    'SRAD_GNSS':    0x09,
+    'ALTIMETER':    0x0A,
+    'ARMING':       0x0B,
+
+    'PAY_SENSOR':   0x40,
+    'PAY_MOTOR':    0x41,
+
+    'RLCS_GLS':     0x80,
+    'RLCS_RELAY':   0x81,
+    'RLCS_HEATING': 0x82,
+    'DAQ':          0x83,
+    'CHARGING':     0x84,
+    'THERMOCOUPLE': 0x85,
+    'USB':          0x86
+}
+
+board_inst_id = {
+    'ANY':      0x00,
+    'GENERIC':  0x01,
+    'CAN':      0x02,
+    'PAYLOAD':  0x03,
+    'INJ_A':    0x04,
+    'INJ_B':    0x05,
+    'VENT_A':   0x06,
+    'VENT_B':   0x07,
+    'VENT_C':   0x08,
+    'VENT_D':   0x09,
+    'RECOVERY': 0x0A
 }
 
 gen_cmd = {
