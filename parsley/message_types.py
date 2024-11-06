@@ -78,7 +78,7 @@ board_type_id = {
 board_inst_id = {
     'ANY':      0x00,
     'GENERIC':  0x01,
-    'CAN':      0x02,
+    'ROCKET':   0x02,
     'PAYLOAD':  0x03,
     'INJ_A':    0x04,
     'INJ_B':    0x05,
@@ -86,7 +86,11 @@ board_inst_id = {
     'VENT_B':   0x07,
     'VENT_C':   0x08,
     'VENT_D':   0x09,
-    'RECOVERY': 0x0A
+    'RECOVERY': 0x0A,
+    '1':        0x0B,
+    '2':        0x0C,
+    '3':        0x0D,
+    '4':        0x0E
 }
 
 gen_cmd = {

@@ -52,7 +52,7 @@ MESSAGES = {
     'GENERAL_CMD':          [BOARD_TYPE_ID, TIMESTAMP_3, Enum('command', 8, mt.gen_cmd)],
     'ACTUATOR_CMD':         [BOARD_TYPE_ID, TIMESTAMP_3, Enum('actuator', 8, mt.actuator_id), Enum('req_state', 8, mt.actuator_states)],
     'ALT_ARM_CMD':          [BOARD_TYPE_ID, TIMESTAMP_3, Enum('state', 4, mt.arm_states), Numeric('altimeter', 4)],
-    'RESET_CMD':            [BOARD_TYPE_ID, TIMESTAMP_3, Enum('reset_board_id', 8, mt.board_type_id)],
+    'RESET_CMD':            [BOARD_TYPE_ID, TIMESTAMP_3, Enum('reset_board_type_id', 8, mt.board_type_id), Enum('reset_board_inst_id', 8, mt.board_inst_id)],
 
     'DEBUG_MSG':            [BOARD_TYPE_ID, TIMESTAMP_3, Numeric('level', 4), Numeric('line', 12), ASCII('data', 24)],
     'DEBUG_PRINTF':         [BOARD_TYPE_ID, ASCII('string', 64)],
