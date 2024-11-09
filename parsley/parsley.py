@@ -16,7 +16,7 @@ def parse_fields(bit_str: BitString, fields: List[Field]) -> dict:
     """
     res = {}
     for field in fields:
-        data = bit_str.pop(field.length)
+        data = bit_str.pop(field.length, field.variable_length)
         res[field.name] = field.decode(data)
         if isinstance(field, Switch):
             nested_fields = field.get_fields(res[field.name])

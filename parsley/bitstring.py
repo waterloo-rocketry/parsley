@@ -9,7 +9,7 @@ class BitString:
         # store the data as an int which is unbounded and lets us do bitwise manipulations
         self.data = int.from_bytes(data, byteorder='big')
 
-    def pop(self, field_length: int) -> bytes:
+    def pop(self, field_length: int, variable_length: bool = False) -> bytes:
         """
         Returns the next field_length most significant bits of data as a bytes object.
 
@@ -18,7 +18,10 @@ class BitString:
         where B represents a data bit.
         """
         if self.length < field_length:
-            field_length = self.length
+            if not variable_length:
+                raise IndexError
+            else:
+                field_length = self.length
         self.length -= field_length
         res = self.data >> (self.length) # extract the field_length most significant bits
         self.data = self.data & ((1 << self.length) - 1) # and then mask them out

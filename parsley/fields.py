@@ -13,6 +13,7 @@ class Field:
         self.name = name
         self.length = length # length in bits
         self.unit = unit # optional unit description
+        self.variable_length = False
 
     def decode(self, data: bytes) -> Any:
         """
@@ -41,6 +42,10 @@ class ASCII(Field):
     For example:
     b'\x48\x65\x79' <=> 'Hey'
     """
+    def __init__(self, name: str, length: int):
+        super().__init__(name, length)
+        self.variable_length = True
+
     def decode(self, data: bytes) -> str:
         return data.replace(b'\x00', b'').decode('ascii') # remove null bytes to return original data
 
