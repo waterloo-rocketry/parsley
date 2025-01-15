@@ -48,7 +48,7 @@ BOARD_STATUS = {
 # but BOARD_ID is still here so that Omnibus has all the fields it needs when creating messages to send
 MESSAGES = {
     'GENERAL_CMD':          [BOARD_ID, TIMESTAMP_3, Enum('command', 8, mt.gen_cmd)],
-    'ACTUATOR_CMD':         [BOARD_ID, TIMESTAMP_3, Enum('actuator', 8, mt.actuator_id), Enum('req_state', 8, mt.actuator_states)],
+    'ACTUATOR_CMD':         [BOARD_ID, TIMESTAMP_3, Enum('actuator', 8, mt.actuator_id), Numeric('req_state', 8)],
     'ALT_ARM_CMD':          [BOARD_ID, TIMESTAMP_3, Enum('state', 4, mt.arm_states), Numeric('altimeter', 4)],
     'RESET_CMD':            [BOARD_ID, TIMESTAMP_3, Enum('reset_board_id', 8, mt.board_id)],
 
