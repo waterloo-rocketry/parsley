@@ -18,10 +18,8 @@ class BitString:
         where B represents a data bit.
         """
         if self.length < field_length:
-            if not variable_length:
-                raise IndexError
-            else:
-                field_length = self.length
+            #raise IndexError
+            field_length = self.length
         self.length -= field_length
         res = self.data >> (self.length) # extract the field_length most significant bits
         self.data = self.data & ((1 << self.length) - 1) # and then mask them out
