@@ -135,7 +135,7 @@ def encode_data(parsed_data: dict) -> Tuple[int, List[int]]:
     bit_str = BitString()
     bit_str.push(*MESSAGE_PRIO.encode(msg_prio))
     bit_str.push(*MESSAGE_TYPE.encode(msg_type))
-    # FIXME
+    bit_str.push(bytes([0, 0]), 2)
     bit_str.push(*BOARD_TYPE_ID.encode(board_type_id))
     bit_str.push(*BOARD_INST_ID.encode(board_inst_id))
     msg_sid = int.from_bytes(bit_str.pop(bit_str.length), byteorder='big')
