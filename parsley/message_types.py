@@ -65,19 +65,21 @@ board_type_id = {
 board_inst_id = {
     'ANY':         0x00,
     'GENERIC':     0x01,
-    'INJ_A':       0x02,
-    'INJ_B':       0x03,
-    'VENT_A':      0x04,
-    'VENT_B':      0x05,
-    'VENT_C':      0x06,
-    'VENT_D':      0x07,
-    'RECOVERY':    0x08,
-    'ROCKET':      0x09,
-    'PAYLOAD':     0x0A,
-    '1':           0x0B,
-    '2':           0x0C,
-    '3':           0x0D,
-    '4':           0x0E,
+    'PRIMARY':     0x02,
+    'FAILSAFE':    0x03,
+    'INJ_A':       0x04,
+    'INJ_B':       0x05,
+    'VENT_A':      0x06,
+    'VENT_B':      0x07,
+    'VENT_C':      0x08,
+    'VENT_D':      0x09,
+    'RECOVERY':    0x0A,
+    'ROCKET':      0x0B,
+    'PAYLOAD':     0x0C,
+    '1':           0x0D,
+    '2':           0x0E,
+    '3':           0x0F,
+    '4':           0x10,
 }
 
 general_board_status = {
@@ -130,10 +132,10 @@ alt_arm_state = {
 }
 
 imu_id = {
-    'IMU_PROC_POLULU_ALTIMU10':      0x00,
-    'IMU_PROC_MOVELLA_MTI630':       0x01,
-    'IMU_PROC_ST':                   0x02,
-    'IMU_SRAD_ALT_POLULU_ALTIMU10':  0x03,
+    'IMU_PROC_ALTIMU10':             0x00,
+    'IMU_PROC_MTI630':               0x01,
+    'IMU_PROC_LSM6DSO32':            0x02,
+    'IMU_SRAD_ALT_ALTIMU10':         0x03,
 }
 
 analog_sensor_id = {
@@ -160,26 +162,23 @@ analog_sensor_id = {
     'SENSOR_FPS':                    0x14,
     'SENSOR_CANARD_ENCODER_1':       0x15,
     'SENSOR_CANARD_ENCODER_2':       0x16,
+    'SENSOR_PROC_FLIGHT_PHASE_STATUS':0x17,
+    'SENSOR_VELOCITY':               0x18,
 }
 
 state_est_id = {
-    'STATE_ID_ALT_Q0':               0x00,
-    'STATE_ID_ALT_Q1':               0x01,
-    'STATE_ID_ALT_Q2':               0x02,
-    'STATE_ID_RATE_WX':              0x03,
-    'STATE_ID_RATE_WY':              0x04,
-    'STATE_ID_RATE_WZ':              0x05,
-    'STATE_ID_VEL_VX':               0x06,
-    'STATE_ID_VEL_VY':               0x07,
-    'STATE_ID_VEL_VZ':               0x08,
-    'STATE_ID_ALT':                  0x09,
-    'STATE_ID_COEFF_CL':             0x0A,
-    'STATE_ID_ANGLE_YAW':            0x0B,
-    'STATE_ID_ANGLE_PITCH':          0x0C,
-    'STATE_ID_ANGLE_ROLL':           0x0D,
-    'STATE_ID_RATE_YAW':             0x0E,
-    'STATE_ID_RATE_PITCH':           0x0F,
-    'STATE_ID_RATE_ROLL':            0x10,
-    'STATE_ID_CANARD_ANGLE':         0x11,
+    'STATE_ID_ATT_Q0':               0x00,
+    'STATE_ID_ATT_Q1':               0x01,
+    'STATE_ID_ATT_Q2':               0x02,
+    'STATE_ID_ATT_Q3':               0x03,
+    'STATE_ID_RATE_WX':              0x04,
+    'STATE_ID_RATE_WY':              0x05,
+    'STATE_ID_RATE_WZ':              0x06,
+    'STATE_ID_VEL_VX':               0x07,
+    'STATE_ID_VEL_VY':               0x08,
+    'STATE_ID_VEL_VZ':               0x09,
+    'STATE_ID_ALT':                  0x0A,
+    'STATE_ID_COEFF_CL':             0x0B,
+    'STATE_ID_CANARD_ANGLE':         0x0C,
 }
 
