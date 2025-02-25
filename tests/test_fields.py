@@ -57,11 +57,11 @@ class TestASCII:
 class TestEnum:
     def test_enum(self):
         enum = Enum('enum', 8, mt.board_id)
-        (data, length) = enum.encode('ACTUATOR_INJ')
+        (data, length) = enum.encode('DAQ')
         assert data == b'\x01'
         assert length == 8
         data = enum.decode(b'\x13')
-        assert data == 'USB'
+        assert data == 'CAMERA_3'
 
     def test_enum_decode_encode(self):
         map = { 'a': 1, 'b': 10, 'c': 100 }
