@@ -3,7 +3,7 @@ from typing import List, Tuple, Union
 
 from parsley.bitstring import BitString
 from parsley.fields import Field, Switch
-from parsley.message_definitions import CAN_MESSAGE, MESSAGE_TYPE, BOARD_ID, MESSAGE_SID
+from parsley.message_definitions import CAN_MESSAGE, MESSAGE_PRIO, MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_SID
 
 import parsley.message_types as mt
 import parsley.parse_utils as pu
@@ -29,15 +29,21 @@ def parse(msg_sid: bytes, msg_data: bytes) -> dict:
     Upon reading poorly formatted data, the error is caught and returned in the dictionary.
     """
     bit_str_msg_sid = BitString(msg_sid, MESSAGE_SID.length)
+    encoded_msg_prio = bit_str_msg_sid.pop(MESSAGE_PRIO.length)
     encoded_msg_type = bit_str_msg_sid.pop(MESSAGE_TYPE.length)
-    encoded_board_id = bit_str_msg_sid.pop(BOARD_ID.length)
+    bit_str_msg_sid.pop(2) # reserved field
+    encoded_board_type_id = bit_str_msg_sid.pop(BOARD_TYPE_ID.length)
+    encoded_board_inst_id = bit_str_msg_sid.pop(BOARD_INST_ID.length)
 
-    res = parse_board_id(encoded_board_id)
+    res = parse_board_type_id(encoded_board_type_id)
+    res['board_inst_id'] = parse_board_inst_id(encoded_board_inst_id)
+
     try:
+        res['msg_prio'] = MESSAGE_PRIO.decode(encoded_msg_prio)
         res['msg_type'] = MESSAGE_TYPE.decode(encoded_msg_type)
         # we splice the first element since we've already manually parsed BOARD_ID
         # if BOARD_ID threw an error, we want to try and parse the rest of the CAN message
-        fields = CAN_MESSAGE.get_fields(res['msg_type'])[1:]
+        fields = CAN_MESSAGE.get_fields(res['msg_type'])[3:]
         res['data'] = parse_fields(BitString(msg_data), fields)
     except (ValueError, IndexError) as error:
         res.update({
@@ -50,13 +56,21 @@ def parse(msg_sid: bytes, msg_data: bytes) -> dict:
         })
     return res
 
-def parse_board_id(encoded_board_id: bytes) -> dict:
+def parse_board_type_id(encoded_board_type_id: bytes) -> dict:
     try:
-        board_id = BOARD_ID.decode(encoded_board_id)
+        board_type_id = BOARD_TYPE_ID.decode(encoded_board_type_id)
     except ValueError:
-        board_id = pu.hexify(encoded_board_id)
+        board_type_id = pu.hexify(encoded_board_type_id)
     finally:
-        return {'board_id': board_id}
+        return {'board_type_id': board_type_id}
+
+def parse_board_inst_id(encoded_board_inst_id: bytes) -> str:
+    try:
+        board_inst_id = BOARD_INST_ID.decode(encoded_board_inst_id)
+    except ValueError:
+        board_inst_id = pu.hexify(encoded_board_inst_id)
+    finally:
+        return board_inst_id
 
 def parse_bitstring(bit_str: BitString) -> Tuple[bytes, bytes]:
     msg_sid = int.from_bytes(bit_str.pop(MESSAGE_SID.length), byteorder='big')
@@ -113,29 +127,38 @@ def format_can_message(msg_sid: int, msg_data: List[int]) -> Tuple[bytes, bytes]
 
 # given a dictionary of CAN message data, return the CAN message bits
 def encode_data(parsed_data: dict) -> Tuple[int, List[int]]:
+    msg_prio = parsed_data['msg_prio']
     msg_type = parsed_data['msg_type']
-    board_id = parsed_data['board_id']
+    board_type_id = parsed_data['board_type_id']
+    board_inst_id = parsed_data['board_inst_id']
 
     bit_str = BitString()
+    bit_str.push(*MESSAGE_PRIO.encode(msg_prio))
     bit_str.push(*MESSAGE_TYPE.encode(msg_type))
-    bit_str.push(*BOARD_ID.encode(board_id))
+    bit_str.push(bytes([0, 0]), 2)
+    bit_str.push(*BOARD_TYPE_ID.encode(board_type_id))
+    bit_str.push(*BOARD_INST_ID.encode(board_inst_id))
     msg_sid = int.from_bytes(bit_str.pop(bit_str.length), byteorder='big')
 
     # skip the first field (board_id) since thats parsed separately
-    for field in CAN_MESSAGE.get_fields(msg_type)[1:]:
+    for field in CAN_MESSAGE.get_fields(msg_type)[3:]:
         bit_str.push(*field.encode(parsed_data[field.name]))
     msg_data = [byte for byte in bit_str.pop(bit_str.length)]
     return msg_sid, msg_data
 
+MSG_PRIO_LEN = max([len(msg_prio) for msg_prio in mt.msg_prio])
 MSG_TYPE_LEN = max([len(msg_type) for msg_type in mt.msg_type])
-BOARD_ID_LEN = max([len(board_id) for board_id in mt.board_id])
+BOARD_TYPE_ID_LEN = max([len(board_type_id) for board_type_id in mt.board_type_id])
+BOARD_INST_ID_LEN = max([len(board_inst_id) for board_inst_id in mt.board_inst_id])
 
 # formats a parsed CAN message (dictionary) into a singular line
 def format_line(parsed_data: dict) -> str:
+    msg_prio = parsed_data['msg_prio']
     msg_type = parsed_data['msg_type']
-    board_id = parsed_data['board_id']
+    board_type_id = parsed_data['board_type_id']
+    board_inst_id = parsed_data['board_inst_id']
     data = parsed_data['data']
-    res = f'[ {msg_type:<{MSG_TYPE_LEN}} {board_id:<{BOARD_ID_LEN}} ]'
+    res = f'[ {msg_prio:<{MSG_PRIO_LEN}} {msg_type:<{MSG_TYPE_LEN}} {board_type_id:<{BOARD_TYPE_ID_LEN}} {board_inst_id:<{BOARD_INST_ID_LEN}} ]'
     for k, v in data.items():
         formatted_value = f"{v:.3f}" if isinstance(v, float) else v
         res += f' {k}: {formatted_value}'
