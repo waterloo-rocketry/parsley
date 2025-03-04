@@ -117,8 +117,9 @@ actuator_id = {
     'ACTUATOR_TVC_KP':               0x13,
     'ACTUATOR_TVC_KI':               0x14,
     'ACTUATOR_TVC_KD':               0x15,
-    'ACTUATOR_TVC_POSITION_1':       0x16,
-    'ACTUATOR_TVC_POSITION_2':       0x17,
+    'ACTUATOR_TVC_SAT':              0x16,
+    'ACTUATOR_TVC_POSITION_1':       0x17,
+    'ACTUATOR_TVC_POSITION_2':       0x18,
 }
 
 actuator_state = {
