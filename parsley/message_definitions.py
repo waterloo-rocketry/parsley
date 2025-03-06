@@ -20,7 +20,7 @@ MESSAGES = {
     'CONFIG_SET':           [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Enum('board_type_id', 8, mt.board_type_id), Enum('board_inst_id', 8, mt.board_inst_id), Numeric('config_id', 16), Numeric('config_value', 16)],
     'CONFIG_STATUS':        [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Numeric('config_id', 16), Numeric('config_value', 16)],
     'ACTUATOR_CMD':         [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Enum('actuator', 8, mt.actuator_id), Enum('cmd_state', 8, mt.actuator_state)],
-    'ACTUATOR_ANALOG_CMD':  [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Enum('actuator', 8, mt.actuator_id), Numeric('cmd_state', 16)],
+    'ACTUATOR_ANALOG_CMD':  [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Enum('actuator', 8, mt.actuator_id), Numeric('cmd_state', 16, signed=True)],
     'ACTUATOR_STATUS':      [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Enum('actuator', 8, mt.actuator_id), Enum('curr_state', 8, mt.actuator_state), Enum('cmd_state', 8, mt.actuator_state)],
     'ALT_ARM_CMD':          [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Enum('alt_id', 8, mt.altimeter_id), Enum('alt_arm_state', 8, mt.alt_arm_state)],
     'ALT_ARM_STATUS':       [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Enum('alt_id', 8, mt.altimeter_id), Enum('alt_arm_state', 8, mt.alt_arm_state), Numeric('drogue_v', 16), Numeric('main_v', 16)],
