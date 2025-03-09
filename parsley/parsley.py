@@ -112,7 +112,7 @@ def parse_usb_debug(line: str) -> Union[Tuple[bytes, bytes], None]:
 def parse_logger(line: str) -> Union[Tuple[bytes, bytes], None]:
     line = line.strip(' \0\r\n')
     # see cansw_logger/can_syslog.c for format
-    msg_sid, msg_data = line[:3], line[3:]
+    msg_sid, msg_data = line[:8], line[8:]
     msg_sid = int(msg_sid, 16)
     # last 'byte' is the recv_timestamp
     msg_data = [int(msg_data[i:i+2], 16) for i in range(0, len(msg_data), 2)]
