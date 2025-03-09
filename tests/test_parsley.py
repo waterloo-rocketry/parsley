@@ -9,9 +9,9 @@ import test_utils as tu
 
 class TestParsley:
     def test_parse(self):
-        msg_sid = tu.create_msg_sid_from_strings('GENERAL_BOARD_STATUS', 'RLCS')
+        msg_sid = tu.create_msg_sid_from_strings('GENERAL_BOARD_STATUS', 'USB')
         """
-                     |----| => ___1 0100 = 0x14 = RLCS
+                     |----| => ___1 0100 = 0x14 = USB
         ____ _101 0011 0100
               |-----| => _101 0010 = 0x52 = GENERAL_BARD_STATUS
         """
@@ -22,11 +22,11 @@ class TestParsley:
         bit_str.push(*Enum('status', 8, mt.board_status).encode('E_SENSOR')) # 0x10
         bit_str.push(*Enum('sensor_id', 8, mt.sensor_id).encode('SENSOR_PRESSURE_PNEUMATICS')) # 0x07
         msg_data = bit_str.pop(40)
-        assert msg_data == b'\x00\x00\x05\x10\x07'
+        assert msg_data == b'\x00\x00\x05\x12\n'
 
         res = parsley.parse(msg_sid, msg_data)
         expected_res = {
-            'board_id': 'RLCS',
+            'board_id': 'USB',
             'msg_type': 'GENERAL_BOARD_STATUS',
             'data': {
                 'time': 0.005,
@@ -43,7 +43,7 @@ class TestParsley:
         ____ _001 1000 1011
               |-----| => _001 1000 = 0x18 = DEBUG_MSG
         """
-        assert msg_sid == b'\x01\x8B'
+        assert msg_sid == b'\x01\x90'
 
         bit_str = BitString()
         bit_str.push(*TIMESTAMP_3.encode(0.133)) # 0x85
@@ -90,7 +90,7 @@ class TestParsley:
         ____ _100 0101 0011
               |-----| => _100 0100 = 0x44 = ALT_ARM_STATUS
         """
-        assert msg_sid == b'\x04\x53'
+        assert msg_sid == b'\x04T'
 
         msg_data = b'\x98\x76\x54\x32\x1F'
         res = parsley.parse(msg_sid, msg_data)
