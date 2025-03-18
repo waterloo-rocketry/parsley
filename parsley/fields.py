@@ -208,12 +208,13 @@ class Bitfield(Field):
 
         for name, bit_value in self.map_name_offset.items():
             # print("value is: " + str(value))
-            if value == bit_value:
+            if value & (1 << bit_value):
                 status.append(name)
 
         if not status:
             status.append(self.default)
 
+        # print("name is: " + str(name))
         # print("status is: " + str(status))
         return f"{self.name}: {'|'.join(status)}"
 
@@ -235,4 +236,4 @@ bitfield = Bitfield("general_board_status", 8, "E_NOMINAL", 8, general_board_sta
 
 print("testing starts: ")
 print(bitfield.bitfield_error_display(0))
-print(bitfield.bitfield_error_display(0x6))
+print(bitfield.bitfield_error_display(0x3))
