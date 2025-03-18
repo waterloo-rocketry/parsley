@@ -195,3 +195,44 @@ class Switch(Enum):
 
     def get_keys(self):
         return self.map_key_val.keys()
+
+class Bitfield(Field):
+    def __init__(self, name: str, length, default: str, width: int, map_name_offset: dict, unit=""):
+        super().__init__(name, length, unit)
+        self.default = default
+        self.width = width
+        self.map_name_offset = map_name_offset
+
+    def bitfield_error_display(self, value: int):
+        status = []
+
+        for name, bit_value in self.map_name_offset.items():
+            # print("value is: " + str(value))
+            if value == bit_value:
+                status.append(name)
+
+        if not status:
+            status.append(self.default)
+
+        # print("status is: " + str(status))
+        return f"{self.name}: {'|'.join(status)}"
+
+
+general_board_status = {
+    'E_NOMINAL': 0x0,
+    'E_5V_OVER_CURRENT': 0x1,
+    'E_5V_OVER_VOLTAGE': 0x2,
+    'E_5V_UNDER_VOLTAGE': 0x3,
+    'E_12V_OVER_CURRENT': 0x4,
+    'E_12V_OVER_VOLTAGE': 0x5,
+    'E_12V_UNDER_VOLTAGE': 0x6,
+    'E_IO_ERROR': 0x7,
+    'E_FS_ERROR': 0x8,
+}
+
+# testing
+bitfield = Bitfield("general_board_status", 8, "E_NOMINAL", 8, general_board_status)
+
+print("testing starts: ")
+print(bitfield.bitfield_error_display(0))
+print(bitfield.bitfield_error_display(0x6))
