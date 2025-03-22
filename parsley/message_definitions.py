@@ -32,7 +32,7 @@ MESSAGES = {
     'SENSOR_MAG_X':         [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Enum('imu_id', 8, mt.imu_id), Numeric('mag', 16)],
     'SENSOR_MAG_Y':         [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Enum('imu_id', 8, mt.imu_id), Numeric('mag', 16)],
     'SENSOR_MAG_Z':         [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Enum('imu_id', 8, mt.imu_id), Numeric('mag', 16)],
-    'SENSOR_ANALOG':        [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Enum('sensor_id', 8, mt.analog_sensor_id), Numeric('value', 16)],
+    'SENSOR_ANALOG':        [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Enum('sensor_id', 8, mt.analog_sensor_id), Numeric('value', 16, signed=True)],
     'GPS_TIMESTAMP':        [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Numeric('hrs', 8), Numeric('mins', 8), Numeric('secs', 8), Numeric('dsecs', 8)],
     'GPS_LATITUDE':         [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Numeric('degs', 8), Numeric('mins', 8), Numeric('dmins', 16), ASCII('direction', 8)],
     'GPS_LONGITUDE':        [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Numeric('degs', 8), Numeric('mins', 8), Numeric('dmins', 16), ASCII('direction', 8)],
