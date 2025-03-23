@@ -23,7 +23,6 @@ jobs:
         run: pip install --user flake8
       - name: Run flake8
         run: flake8
-        working-directory: parsley
 
   run_basedpyright:
     name: Run Basedpyright
@@ -33,5 +32,4 @@ jobs:
       - name: Install basedpyright
         run: pip install --user basedpyright
       - name: Run basedpyright
-        run: basedpyright .
-        working-directory: parsley
+        run: basedpyright parsley
