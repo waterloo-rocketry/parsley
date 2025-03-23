@@ -1,0 +1,35 @@
+name: Run Lint
+
+# Runs on pushes to pull request
+on: pull_request
+
+jobs:
+  run_autopep8:
+    name: Run autopep8
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install autopep8
+        run: pip install --user autopep8
+      - name: Run autopep8
+        run: autopep8 -d -r parsley/ --exit-code
+
+  run_flake8:
+    name: Run flake8
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install flake8
+        run: pip install --user flake8
+      - name: Run flake8
+        run: flake8
+
+  run_basedpyright:
+    name: Run Basedpyright
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install basedpyright
+        run: pip install --user basedpyright
+      - name: Run basedpyright
+        run: basedpyright parsley
