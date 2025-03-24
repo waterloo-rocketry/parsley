@@ -120,6 +120,7 @@ actuator_id = {
     'ACTUATOR_TVC_SAT':              0x16,
     'ACTUATOR_TVC_POSITION_1':       0x17,
     'ACTUATOR_TVC_POSITION_2':       0x18,
+    'ACTUATOR_TVC_DEAD':             0x19,
 }
 
 actuator_state = {
