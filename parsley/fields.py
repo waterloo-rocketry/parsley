@@ -1,4 +1,5 @@
 from typing import Any, Tuple, Union
+from message_types import general_board_status
 import struct
 
 Number = Union[int, float]
@@ -195,45 +196,55 @@ class Switch(Enum):
 
     def get_keys(self):
         return self.map_key_val.keys()
-
+    
 class Bitfield(Field):
-    def __init__(self, name: str, length, default: str, width: int, map_name_offset: dict, unit=""):
+    def __init__(self, name: str, length: int, default: str, width: int, map_name_offset: dict, unit=""):
         super().__init__(name, length, unit)
         self.default = default
         self.width = width
         self.map_name_offset = map_name_offset
+        self.offset_name_map = {v: k for k, v in map_name_offset.items()}
 
-    def bitfield_error_display(self, value: int):
-        status = []
+    def decode(self, data: Any) -> str:
+        if isinstance(data, str):
+            data = bytes.fromhex(data)
 
-        for name, bit_value in self.map_name_offset.items():
-            # print("value is: " + str(value))
-            if value & (1 << bit_value):
-                status.append(name)
+        num_bytes = (self.length + 7) // 8
+        bitfield_data = data[-num_bytes:]
+        temp = int.from_bytes(bitfield_data, byteorder='big')
+
+        status = [j for j, bit in self.map_name_offset.items() if temp & (1 << bit)]
 
         if not status:
             status.append(self.default)
 
-        # print("name is: " + str(name))
-        # print("status is: " + str(status))
         return f"{self.name}: {'|'.join(status)}"
 
 
-general_board_status = {
-    'E_NOMINAL': 0x0,
-    'E_5V_OVER_CURRENT': 0x1,
-    'E_5V_OVER_VOLTAGE': 0x2,
-    'E_5V_UNDER_VOLTAGE': 0x3,
-    'E_12V_OVER_CURRENT': 0x4,
-    'E_12V_OVER_VOLTAGE': 0x5,
-    'E_12V_UNDER_VOLTAGE': 0x6,
-    'E_IO_ERROR': 0x7,
-    'E_FS_ERROR': 0x8,
-}
+    def encode(self, value: Any) -> Tuple[bytes, int]:
+        return value, self.length
 
-# testing
-bitfield = Bitfield("general_board_status", 8, "E_NOMINAL", 8, general_board_status)
 
-print("testing starts: ")
-print(bitfield.bitfield_error_display(0))
-print(bitfield.bitfield_error_display(0x3))
+
+bitfield = Bitfield(
+    name="general_board_status",
+    length=16,
+    default="E_NOMINAL",
+    width=16,
+    map_name_offset=general_board_status
+)
+
+log_test = [
+    "000486013039000000000000",
+    "000486013039000000010006",
+    "000486013039000000020006",
+    "000486013039000000030006",
+    "000486013039000000040006",
+    "000486013039000000050006",
+    "000486013039000000060006",
+]
+
+print("testing:")
+for i in log_test:
+    result = bitfield.decode(i)
+    print(f"Hex: {i} -> {result}")
