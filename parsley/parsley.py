@@ -78,8 +78,7 @@ def parse_bitstring(bit_str: BitString) -> Tuple[bytes, bytes]:
     return format_can_message(msg_sid, msg_data)
 
 def parse_live_telemetry(frame: bytes) -> Union[Tuple[bytes, bytes], None]:
-
-    if len(frame) < 6:   raise ValueError("Incorrect frame length")
+    if len(frame) < 7:   raise ValueError("Incorrect frame length")
     if frame[0] != 0x02: raise ValueError("Incorrect frame header")
 
     frame_len = frame[1]
