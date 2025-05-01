@@ -78,13 +78,12 @@ def parse_bitstring(bit_str: BitString) -> Tuple[bytes, bytes]:
     return format_can_message(msg_sid, msg_data)
 
 def parse_live_telemetry(frame: bytes) -> Union[Tuple[bytes, bytes], None]:
-
-    if len(frame) < 4:   raise ValueError("Incorrect frame length")
+    if len(frame) < 7:   raise ValueError("Incorrect frame length")
     if frame[0] != 0x02: raise ValueError("Incorrect frame header")
 
-    frame_len = frame[1] >> 4
-    msg_sid = ((frame[1] & 0x0F) << 8) | frame[2]
-    msg_data = frame[3:frame_len-1]
+    frame_len = frame[1]
+    msg_sid = ((frame[2] & 0x1F) << 24) | (frame[3] << 16) | (frame[4] << 8) | frame[5]
+    msg_data = frame[6:frame_len-1]
     exp_crc = frame[frame_len-1]
     msg_crc = crc8.crc8(frame[:frame_len-1]).digest()[0]
 
@@ -112,9 +111,8 @@ def parse_usb_debug(line: str) -> Union[Tuple[bytes, bytes], None]:
 def parse_logger(line: str) -> Union[Tuple[bytes, bytes], None]:
     line = line.strip(' \0\r\n')
     # see cansw_logger/can_syslog.c for format
-    msg_sid, msg_data = line[:8], line[8:]
+    msg_timestamp, msg_sid, msg_data = line[:8], line[8:16], line[16:]
     msg_sid = int(msg_sid, 16)
-    # last 'byte' is the recv_timestamp
     msg_data = [int(msg_data[i:i+2], 16) for i in range(0, len(msg_data), 2)]
     return format_can_message(msg_sid, msg_data)
 
