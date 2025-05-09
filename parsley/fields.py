@@ -1,4 +1,5 @@
 from typing import Any, Tuple, Union
+from message_types import general_board_status
 import struct
 
 Number = Union[int, float]
@@ -195,3 +196,30 @@ class Switch(Enum):
 
     def get_keys(self):
         return self.map_key_val.keys()
+    
+class Bitfield(Field):
+    def __init__(self, name: str, length: int, default: str, width: int, map_name_offset: dict, unit=""):
+        super().__init__(name, length, unit)
+        self.default = default
+        self.width = width
+        self.map_name_offset = map_name_offset
+        self.offset_name_map = {v: k for k, v in map_name_offset.items()}
+
+    def decode(self, data: Any) -> str:
+        if isinstance(data, str):
+            data = bytes.fromhex(data)
+
+        num_bytes = (self.length + 7) // 8
+        bitfield_data = data[-num_bytes:]
+        temp = int.from_bytes(bitfield_data, byteorder='big')
+
+        status = [j for j, bit in self.map_name_offset.items() if temp & (1 << bit)]
+
+        if not status:
+            status.append(self.default)
+
+        return f"{self.name}: {'|'.join(status)}"
+
+
+    def encode(self, value: Any) -> Tuple[bytes, int]:
+        return value, self.length
