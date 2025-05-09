@@ -1,6 +1,6 @@
 import pytest
 
-from fields import ASCII, Enum, Numeric, Switch, Floating
+from fields import ASCII, Enum, Numeric, Switch, Floating, Bitfield
 
 import message_types as mt
 import test_utils as tu
@@ -201,3 +201,37 @@ class TestSwitch:
         decoded_data = switch.decode(data)
         assert decoded_data == 'a'
         assert switch.get_fields(decoded_data) == [0, 1]
+
+
+class TestBitfieldLogs:
+    @pytest.fixture(autouse=True)
+    def bitfield(self):
+        return Bitfield(
+            name="general_board_status",
+            length=16,
+            default="E_NOMINAL",
+            width=16,
+            map_name_offset=mt.general_board_status
+        )
+
+    @pytest.mark.parametrize("hex_str,expected", [
+        ("000486013039000000000000", "general_board_status: E_NOMINAL"),
+        ("000486013039000000010006", "general_board_status: E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE"),
+        ("000486013039000000020006", "general_board_status: E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE"),
+        ("000486013039000000030006", "general_board_status: E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE"),
+        ("000486013039000000040006", "general_board_status: E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE"),
+        ("000486013039000000050006", "general_board_status: E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE"),
+        ("000486013039000000060006", "general_board_status: E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE"),
+    ])
+    def test_decode_various_logs(self, bitfield, hex_str, expected):
+        # test decoding from hex string
+        assert bitfield.decode(hex_str) == expected
+
+    @pytest.mark.parametrize("hex_str,expected", [
+        ("000486013039000000010006", "general_board_status: E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE"),
+        ("000486013039000000020006", "general_board_status: E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE"),
+    ])
+    def test_decode_from_bytes(self, bitfield, hex_str, expected):
+        # test decoding when given raw bytes
+        data = bytes.fromhex(hex_str)
+        assert bitfield.decode(data) == expected

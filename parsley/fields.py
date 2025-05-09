@@ -223,28 +223,3 @@ class Bitfield(Field):
 
     def encode(self, value: Any) -> Tuple[bytes, int]:
         return value, self.length
-
-
-
-bitfield = Bitfield(
-    name="general_board_status",
-    length=16,
-    default="E_NOMINAL",
-    width=16,
-    map_name_offset=general_board_status
-)
-
-log_test = [
-    "000486013039000000000000",
-    "000486013039000000010006",
-    "000486013039000000020006",
-    "000486013039000000030006",
-    "000486013039000000040006",
-    "000486013039000000050006",
-    "000486013039000000060006",
-]
-
-print("testing:")
-for i in log_test:
-    result = bitfield.decode(i)
-    print(f"Hex: {i} -> {result}")
