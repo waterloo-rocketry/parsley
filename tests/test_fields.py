@@ -211,7 +211,7 @@ class TestBitfieldLogs:
             length=16,
             default="E_NOMINAL",
             width=16,
-            map_name_offset=mt.general_board_status
+            map_name_offset=mt.general_board_status_offset
         )
 
     @pytest.mark.parametrize("hex_str,expected", [
