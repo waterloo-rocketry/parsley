@@ -181,3 +181,4 @@ general_board_status_offset = {
     'E_IO_ERROR':          0x06,
     'E_FS_ERROR':          0x07,
 }
+
