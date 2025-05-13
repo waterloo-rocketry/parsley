@@ -205,22 +205,22 @@ class Bitfield(Field):
     dictionary: {'E_NOMINAL': 0, 'E_5V_OVER_CURRENT': 1, 'E_5V_OVER_VOLTAGE': 2}
     b'\x01\x60' <=> 'E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE'
     """
-    def __init__(self, name: str, length: int, default: str, width: int, map_name_offset: dict, unit=""):
+    def __init__(self, name: str, length: int, default: str="DEFAULT_STRING", map_name_offset: dict=None, unit=""):
         super().__init__(name, length, unit)
         self.default = default
-        self.width = width
         self.map_name_offset = map_name_offset
-        self.offset_name_map = {v: k for k, v in map_name_offset.items()}
 
     def decode(self, data: bytes) -> str:
         if isinstance(data, str):
             data = bytes.fromhex(data)
+            
+        # For custom bitfields, just return the raw data
+        if self.map_name_offset is None:
+            return data.hex()
 
-        num_bytes = (self.length + 7) // 8
-        bitfield_data = data[-num_bytes:]
-        temp = int.from_bytes(bitfield_data, byteorder='big')
+        bitfield_value = int.from_bytes(data, byteorder='big')
 
-        status = [j for j, bit in self.map_name_offset.items() if temp & (1 << bit)]
+        status = [j for j, bit in self.map_name_offset.items() if bitfield_value & (1 << bit)]
 
         if not status:
             status.append(self.default)
@@ -229,4 +229,4 @@ class Bitfield(Field):
 
 
     def encode(self, value: Any) -> Tuple[bytes, int]:
-        return value, self.length
+        return (value, self.length)
