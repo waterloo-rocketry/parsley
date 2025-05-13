@@ -181,15 +181,3 @@ general_board_status_offset = {
     'E_IO_ERROR':          0x06,
     'E_FS_ERROR':          0x07,
 }
-
-general_board_status = {
-    'E_NOMINAL':                     0x00,
-    'E_5V_OVER_CURRENT':             0x01,
-    'E_5V_OVER_VOLTAGE':             0x02,
-    'E_5V_UNDER_VOLTAGE':            0x04,
-    'E_12V_OVER_CURRENT':            0x08,
-    'E_12V_OVER_VOLTAGE':            0x10,
-    'E_12V_UNDER_VOLTAGE':           0x20,
-    'E_IO_ERROR':                    0x40,
-    'E_FS_ERROR':                    0x80,
-}

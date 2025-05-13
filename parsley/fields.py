@@ -1,5 +1,4 @@
 from typing import Any, Tuple, Union
-from message_types import general_board_status
 import struct
 
 Number = Union[int, float]
