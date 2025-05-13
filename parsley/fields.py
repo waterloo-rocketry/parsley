@@ -195,8 +195,16 @@ class Switch(Enum):
 
     def get_keys(self):
         return self.map_key_val.keys()
-    
+
 class Bitfield(Field):
+    """
+    Transcodes binary data and bitfields using a user-defined dictionary.
+    
+    This is a bitfield, so the dictionary maps the bit position to the name of the field.
+    For example:
+    dictionary: {'E_NOMINAL': 0, 'E_5V_OVER_CURRENT': 1, 'E_5V_OVER_VOLTAGE': 2}
+    b'\x01\x60' <=> 'E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE'
+    """
     def __init__(self, name: str, length: int, default: str, width: int, map_name_offset: dict, unit=""):
         super().__init__(name, length, unit)
         self.default = default
@@ -204,7 +212,7 @@ class Bitfield(Field):
         self.map_name_offset = map_name_offset
         self.offset_name_map = {v: k for k, v in map_name_offset.items()}
 
-    def decode(self, data: Any) -> str:
+    def decode(self, data: bytes) -> str:
         if isinstance(data, str):
             data = bytes.fromhex(data)
 
@@ -217,7 +225,7 @@ class Bitfield(Field):
         if not status:
             status.append(self.default)
 
-        return f"{self.name}: {'|'.join(status)}"
+        return f"{'|'.join(status)}"
 
 
     def encode(self, value: Any) -> Tuple[bytes, int]:
