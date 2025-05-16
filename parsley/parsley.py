@@ -2,7 +2,7 @@ import crc8
 from typing import List, Tuple, Union
 
 from parsley.bitstring import BitString
-from parsley.fields import Field, Switch
+from parsley.fields import Field, Switch, Bitfield
 from parsley.message_definitions import CAN_MESSAGE, MESSAGE_PRIO, MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_SID
 
 import parsley.message_types as mt
@@ -21,6 +21,8 @@ def parse_fields(bit_str: BitString, fields: List[Field]) -> dict:
         if isinstance(field, Switch):
             nested_fields = field.get_fields(res[field.name])
             res.update(parse_fields(bit_str, nested_fields))
+        if isinstance(field, Bitfield):
+            res[field.name] = field.decode(data)
     return res
 
 def parse(msg_sid: bytes, msg_data: bytes) -> dict:
