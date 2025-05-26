@@ -59,25 +59,25 @@ def parse(msg_sid: bytes, msg_data: bytes) -> dict:
     return res
 
 def parse_board_type_id(encoded_board_type_id: bytes) -> dict:
+    board_type_id = None
     try:
         board_type_id = BOARD_TYPE_ID.decode(encoded_board_type_id)
     except ValueError:
         board_type_id = pu.hexify(encoded_board_type_id)
-    finally:
-        return {'board_type_id': board_type_id}
+    return {'board_type_id': board_type_id}
 
 def parse_board_inst_id(encoded_board_inst_id: bytes) -> str:
+    board_inst_id = None
     try:
         board_inst_id = BOARD_INST_ID.decode(encoded_board_inst_id)
     except ValueError:
         board_inst_id = pu.hexify(encoded_board_inst_id)
-    finally:
-        return board_inst_id
+    return board_inst_id
 
 def parse_bitstring(bit_str: BitString) -> Tuple[bytes, bytes]:
     msg_sid = int.from_bytes(bit_str.pop(MESSAGE_SID.length), byteorder='big')
     msg_data = [byte for byte in bit_str.pop(bit_str.length)]
-    return format_can_message(msg_sid, msg_data)
+    return format_can_message(msg_sid, list(msg_data))
 
 def parse_live_telemetry(frame: bytes) -> Union[Tuple[bytes, bytes], None]:
     if len(frame) < 7:   raise ValueError("Incorrect frame length")
@@ -92,7 +92,7 @@ def parse_live_telemetry(frame: bytes) -> Union[Tuple[bytes, bytes], None]:
     if msg_crc != exp_crc:
         raise ValueError(f'Bad checksum, expected {exp_crc:02X} but got {msg_crc:02X}')
 
-    return format_can_message(msg_sid, msg_data)
+    return format_can_message(msg_sid, list(msg_data))
 
 def parse_usb_debug(line: str) -> Union[Tuple[bytes, bytes], None]:
     line = line.strip(' \0\r\n')
