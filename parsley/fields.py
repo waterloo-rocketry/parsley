@@ -1,4 +1,4 @@
-from typing import Any, Tuple, Union
+from typing import Any, Literal, Tuple, Union, Optional
 import struct
 
 Number = Union[int, float]
@@ -95,11 +95,11 @@ class Enum(Field):
 
         return self.map_val_key[value]
 
-    def encode(self, key) -> Tuple[bytes, int]:
-        if key not in self.map_key_val:
-            raise ValueError(f'Key "{key}" not found in map "{self.name}"')
+    def encode(self, value) -> Tuple[bytes, int]:
+        if value not in self.map_key_val:
+            raise ValueError(f'Key "{value}" not found in map "{self.name}"')
 
-        encoded_data = self.map_key_val[key].to_bytes((self.length + 7) // 8, byteorder='big')
+        encoded_data = self.map_key_val[value].to_bytes((self.length + 7) // 8, byteorder='big')
         return (encoded_data, self.length)
 
     def get_keys(self):
@@ -113,11 +113,11 @@ class Numeric(Field):
     For example:
     b'\xFC' <=> -4 (two's complement)
     """
-    def __init__(self, name: str, length: int, scale=1, signed=False, big_endian=True, unit=""):
+    def __init__(self, name: str, length: int, scale: float=1, signed=False, big_endian=True, unit=""):
         super().__init__(name, length, unit)
         self.scale = scale
         self.signed = signed
-        self.endian = 'big' if big_endian else 'little'
+        self.endian: Literal['big', 'little'] = 'big' if big_endian else 'little'
 
     def decode(self, data: bytes) -> Number:
         value = int.from_bytes(data, byteorder=self.endian, signed = self.signed)
@@ -205,7 +205,7 @@ class Bitfield(Field):
     dictionary: {'E_NOMINAL': 0, 'E_5V_OVER_CURRENT': 1, 'E_5V_OVER_VOLTAGE': 2}
     b'\x01\x60' <=> 'E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE'
     """
-    def __init__(self, name: str, length: int, default: str="DEFAULT_STRING", map_name_offset: dict=None, unit=""):
+    def __init__(self, name: str, length: int, default: str="DEFAULT_STRING", map_name_offset: Optional[dict]=None, unit=""):
         super().__init__(name, length, unit)
         self.default = default
         self.map_name_offset = map_name_offset
