@@ -142,11 +142,11 @@ def parse_logger(buf: bytes, page_number: int) -> Union[Tuple[bytes, bytes], Non
     
     offset = 4 # start of the header
 
-    while (4096 - offset > 2 * HEADER_LEN): # at least one message
+    while (4096 - offset > HEADER_LEN): # at least one message
         sid, _, dlc = struct.unpack_from(HEADER_FMT, buf, offset)
 
-        if sid & 0xE000_0000: # SID[31:29] must be 0
-            raise ValueError("SID[31:29] must be zero")
+        if sid & 0xE000_0000:
+            break
 
         if not 0 <= dlc <= 8:
             raise ValueError(f"DLC out of range (0-8), got {dlc}")
@@ -155,7 +155,7 @@ def parse_logger(buf: bytes, page_number: int) -> Union[Tuple[bytes, bytes], Non
 
         offset += HEADER_LEN + dlc
 
-    return format_can_message(sid, data)
+        yield format_can_message(sid, data)
 
 # our three parsing functions create ints, but after the rewrite, they should return bytes
 def format_can_message(msg_sid: int, msg_data: List[int]) -> Tuple[bytes, bytes]:
