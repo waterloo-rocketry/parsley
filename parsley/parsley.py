@@ -151,9 +151,11 @@ def parse_logger(buf: bytes, page_number: int) -> Union[Tuple[bytes, bytes], Non
         if not 0 <= dlc <= 8:
             raise ValueError(f"DLC out of range (0-8), got {dlc}")
 
+        offset += HEADER_LEN
+
         data: List[int] = list(buf[offset: offset + dlc])
 
-        offset += HEADER_LEN + dlc
+        offset += dlc
 
         yield format_can_message(sid, data)
 
