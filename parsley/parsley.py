@@ -137,8 +137,8 @@ def parse_logger(buf: bytes, page_number: int) -> Union[Tuple[bytes, bytes], Non
     if not buf.startswith(LOG_MAGIC):
         raise ValueError("Missing 'LOG' signature")
 
-    if (buf[3] != page_number):
-        raise ValueError(f"Page number mismatch: expected {page_number}, got {buf[3]}")
+    if buf[3] != page_number % 256:
+        raise ValueError(f"Page number mismatch: expected {page_number % 256}, got {buf[3]}")
     
     offset = 4 # start of the header
 
