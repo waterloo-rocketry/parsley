@@ -1,5 +1,6 @@
 import crc8
 from typing import List, Tuple, Union
+import struct
 
 from parsley.bitstring import BitString
 from parsley.fields import Field, Switch, Bitfield
@@ -110,7 +111,7 @@ def parse_usb_debug(line: str) -> Union[Tuple[bytes, bytes], None]:
 
     return format_can_message(msg_sid, msg_data)
 
-def parse_logger(buf: bytes) -> Union[Tuple[bytes, bytes], None]:
+def parse_logger(buf: bytes, page_number: int) -> Union[Tuple[bytes, bytes], None]:
     """
     Parse one logger record.
 
@@ -125,47 +126,34 @@ def parse_logger(buf: bytes) -> Union[Tuple[bytes, bytes], None]:
     Raises ValueError on any structural problem.
     """
 
-    import struct
     LOG_MAGIC = b"LOG"          # ASCII “LOG” = 0x4c4f47
     HEADER_FMT = "<IIB"         # SID(uint32 LE), timestamp(uint32 LE), DLC(uint8)
     HEADER_LEN = struct.calcsize(HEADER_FMT)   # == 9
 
-    # ------------------------------------------------------------------ strip #
-    buf = buf.rstrip(b"\xff")                   # ignore trailing padding
-    if len(buf) < 4 + HEADER_LEN:               # "LOG" + page + header
-        raise ValueError("Logger message too short")
+    # Strip the buffer to 4096 bytes, as required by the logger.
+    if len(buf) != 4096:
+        raise ValueError("Logger message must be exactly 4096 bytes")
 
-    # ----------------------------------------------------------------- magic #
     if not buf.startswith(LOG_MAGIC):
         raise ValueError("Missing 'LOG' signature")
 
-    page_number = buf[3]
-    offset = 4                                   # we consumed 4 bytes so far
+    if (buf[3] != page_number):
+        raise ValueError(f"Page number mismatch: expected {page_number}, got {buf[3]}")
+    
+    offset = 4 # start of the header
 
-    # ------------------------------------------------------------- header --- #
-    if len(buf) - offset < HEADER_LEN:
-        raise ValueError("Buffer ends inside header")
+    while (4096 - offset > 2 * HEADER_LEN): # at least one message
+        sid, _, dlc = struct.unpack_from(HEADER_FMT, buf, offset)
 
-    sid, timestamp, dlc = struct.unpack_from(HEADER_FMT, buf, offset)
-    offset += HEADER_LEN
+        if sid & 0xE000_0000: # SID[31:29] must be 0
+            raise ValueError("SID[31:29] must be zero")
 
-    if sid & 0xE000_0000:                        # SID[31:29] must be 0
-        raise ValueError("SID[31:29] must be zero")
+        if not 0 <= dlc <= 8:
+            raise ValueError(f"DLC out of range (0-8), got {dlc}")
 
-    if not 0 <= dlc <= 8:
-        raise ValueError(f"DLC out of range (0-8), got {dlc}")
+        data: List[int] = list(buf[offset: offset + dlc])
 
-    # --------------------------------------------------------------- payload #
-    if len(buf) - offset < dlc:
-        raise ValueError("Payload shorter than DLC indicates")
-
-    data: List[int] = list(buf[offset: offset + dlc])
-
-    # --------------------------------------------------------------- logging #
-    print(
-        "page=%d sid=0x%08x timestamp=%d dlc=%d data=%s"
-        % (page_number, sid, timestamp, dlc, data)
-    )
+        offset += HEADER_LEN + dlc
 
     return format_can_message(sid, data)
 
