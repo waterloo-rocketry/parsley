@@ -153,7 +153,9 @@ analog_sensor_id = {
     'SENSOR_CANARD_ENCODER_1':         0x1B,
     'SENSOR_CANARD_ENCODER_2':         0x1C,
     'SENSOR_PROC_FLIGHT_PHASE_STATUS': 0x1D,
-    'SENSOR_VELOCITY':                 0x1E,
+    'SENSOR_PAYLOAD_LIM_1':            0x1E,
+    'SENSOR_PAYLOAD_LIM_2':            0x1F,
+    'SENSOR_PAYLOAD_INFRARED':         0x20,
 }
 
 state_est_id = {
