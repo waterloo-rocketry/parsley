@@ -55,32 +55,21 @@ board_type_id = {
     'PAY_MOTOR':            0x41,
     'RLCS_GLS':             0x80,
     'RLCS_RELAY':           0x81,
-    'RLCS_HEATING':         0x82,
-    'DAQ':                  0x83,
-    'CHARGING':             0x84,
-    'THERMOCOUPLE':         0x85,
-    'USB':                  0x86,
-    'FYDP25_TVCA':          0xC0,
+    'DAQ':                  0x82,
 }
 
 board_inst_id = {
     'ANY':         0x00,
-    'GENERIC':     0x01,
-    'PRIMARY':     0x02,
-    'FAILSAFE':    0x03,
-    'INJ_A':       0x04,
-    'INJ_B':       0x05,
-    'VENT_A':      0x06,
-    'VENT_B':      0x07,
-    'VENT_C':      0x08,
-    'VENT_D':      0x09,
+    'GROUND':      0x01,
+    'ROCKET':      0x02,
+    'PAYLOAD':     0x03,
+    'PRIMARY':     0x04,
+    'FAILSAFE':    0x05,
+    'CANARD_A':    0x06,
+    'CANARD_B':    0x07,
+    'SIDE_A':      0x08,
+    'SIDE_B':      0x09,
     'RECOVERY':    0x0A,
-    'ROCKET':      0x0B,
-    'PAYLOAD':     0x0C,
-    '1':           0x0D,
-    '2':           0x0E,
-    '3':           0x0F,
-    '4':           0x10,
 }
 
 actuator_id = {
@@ -89,17 +78,21 @@ actuator_id = {
     'ACTUATOR_CHARGE_ENABLE':          0x02,
     'ACTUATOR_5V_RAIL_ROCKET':         0x03,
     'ACTUATOR_5V_RAIL_PAYLOAD':        0x04,
-    'ACTUATOR_TELEMETRY':              0x05,
-    'ACTUATOR_CAMERA_INJ_A':           0x06,
-    'ACTUATOR_CAMERA_INJ_B':           0x07,
-    'ACTUATOR_CAMERA_VENT_A':          0x08,
-    'ACTUATOR_CAMERA_VENT_B':          0x09,
-    'ACTUATOR_CAMERA_VENT_C':          0x0A,
-    'ACTUATOR_CAMERA_VENT_D':          0x0B,
+    'ACTUATOR_12V_RAIL_ROCKET':        0x05,
+    'ACTUATOR_12V_RAIL_PAYLOAD':       0x06,
+    'ACTUATOR_TELEMETRY':              0x07,
+    'ACTUATOR_CAMERA_CANARD_A':        0x08,
+    'ACTUATOR_CAMERA_CANARD_B':        0x09,
+    'ACTUATOR_CAMERA_SIDE_A':          0x0A,
+    'ACTUATOR_CAMERA_SIDE_B':          0x0B,
     'ACTUATOR_CAMERA_RECOVERY':        0x0C,
-    'ACTUATOR_PROC_ESTIMATOR_INIT':    0x0D,
-    'ACTUATOR_CANARD_ENABLE':          0x0E,
-    'ACTUATOR_CANARD_ANGLE':           0x0F,
+    'ACTUATOR_CAMERA_PAYLOAD':         0x0D,
+    'ACTUATOR_PROC_ESTIMATOR_INIT':    0x0E,
+    'ACTUATOR_SRAD_ALT_ESTIMATOR_INIT':0x0F,
+    'ACTUATOR_SRAD_ALT_GPS_RESET':     0x10,
+    'ACTUATOR_CANARD_ENABLE':          0x11,
+    'ACTUATOR_CANARD_ANGLE':           0x12,
+    'ACTUATOR_PAYLOAD_MOTOR_ENABLE':   0x13,
 }
 
 actuator_state = {
@@ -110,9 +103,11 @@ actuator_state = {
 }
 
 altimeter_id = {
-    'ALTIMETER_RAVEN':                 0x00,
-    'ALTIMETER_STRATOLOGGER':          0x01,
-    'ALTIMETER_SRAD':                  0x02,
+    'ALTIMETER_ROCKET_RAVEN':          0x00,
+    'ALTIMETER_ROCKET_STRATOLOGGER':   0x01,
+    'ALTIMETER_ROCKET_SRAD':           0x02,
+    'ALTIMETER_PAYLOAD_RAVEN':         0x03,
+    'ALTIMETER_RAYLOAD_STRATOLOGGER':  0x04,
 }
 
 alt_arm_state = {
@@ -137,22 +132,30 @@ analog_sensor_id = {
     'SENSOR_BATT_VOLT':                0x06,
     'SENSOR_BATT_CURR':                0x07,
     'SENSOR_MOTOR_CURR':               0x08,
-    'SENSOR_PRESSURE_OX':              0x09,
-    'SENSOR_PRESSURE_FUEL':            0x0A,
-    'SENSOR_PRESSURE_CC':              0x0B,
-    'SENSOR_BARO_PRESSURE':            0x0C,
-    'SENSOR_BARO_TEMP':                0x0D,
-    'SENSOR_RA_BATT_VOLT_1':           0x0E,
-    'SENSOR_RA_BATT_VOLT_2':           0x0F,
-    'SENSOR_RA_BATT_CURR_1':           0x10,
-    'SENSOR_RA_BATT_CURR_2':           0x11,
-    'SENSOR_RA_MAG_VOLT_1':            0x12,
-    'SENSOR_RA_MAG_VOLT_2':            0x13,
-    'SENSOR_FPS':                      0x14,
-    'SENSOR_CANARD_ENCODER_1':         0x15,
-    'SENSOR_CANARD_ENCODER_2':         0x16,
-    'SENSOR_PROC_FLIGHT_PHASE_STATUS': 0x17,
-    'SENSOR_VELOCITY':                 0x18,
+    'SENSOR_RADIO_CURR':               0x09,
+    'SENSOR_GPS_CURR':                 0x0A,
+    'SENSOR_LOCAL_CURR':               0x0B,
+    'SENSOR_PRESSURE_OX':              0x0C,
+    'SENSOR_PRESSURE_FUEL':            0x0D,
+    'SENSOR_PRESSURE_CC0':             0x0E,
+    'SENSOR_PRESSURE_CC1':             0x0F,
+    'SENSOR_OX_INJ_HALL':              0x10,
+    'SENSOR_FUEL_INJ_HALL':            0x11,
+    'SENSOR_BARO_PRESSURE':            0x12,
+    'SENSOR_BARO_TEMP':                0x13,
+    'SENSOR_RA_BATT_VOLT_1':           0x14,
+    'SENSOR_RA_BATT_VOLT_2':           0x15,
+    'SENSOR_RA_BATT_CURR_1':           0x16,
+    'SENSOR_RA_BATT_CURR_2':           0x17,
+    'SENSOR_RA_MAG_VOLT_1':            0x18,
+    'SENSOR_RA_MAG_VOLT_2':            0x19,
+    'SENSOR_FPS':                      0x1A,
+    'SENSOR_CANARD_ENCODER_1':         0x1B,
+    'SENSOR_CANARD_ENCODER_2':         0x1C,
+    'SENSOR_PROC_FLIGHT_PHASE_STATUS': 0x1D,
+    'SENSOR_PAYLOAD_LIM_1':            0x1E,
+    'SENSOR_PAYLOAD_LIM_2':            0x1F,
+    'SENSOR_PAYLOAD_INFRARED':         0x20,
 }
 
 state_est_id = {
@@ -171,6 +174,12 @@ state_est_id = {
     'STATE_ID_CANARD_ANGLE':           0x0C,
 }
 
+apogee_state = {
+    'APOGEE_UNKNOWN':                  0x00,
+    'APOGEE_NOT_REACHED':              0x01,
+    'APOGEE_REACHED':                  0x02,
+}
+
 general_board_status_offset = {
     'E_5V_OVER_CURRENT':   0x00,
     'E_5V_OVER_VOLTAGE':   0x01,
@@ -178,7 +187,10 @@ general_board_status_offset = {
     'E_12V_OVER_CURRENT':  0x03,
     'E_12V_OVER_VOLTAGE':  0x04,
     'E_12V_UNDER_VOLTAGE': 0x05,
-    'E_IO_ERROR':          0x06,
-    'E_FS_ERROR':          0x07,
+    'E_BATT_OVER_CURRENT': 0x06,
+    'E_BATT_OVER_VOLTAGE': 0x07,
+    'E_BATT_UNDER_VOLTAGE':0x08,
+    'E_IO_ERROR':          0x09,
+    'E_FS_ERROR':          0x0A,
 }
 
