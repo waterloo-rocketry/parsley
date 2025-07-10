@@ -216,7 +216,7 @@ class Bitfield(Field):
             
         # For custom bitfields, just return the raw data
         if self.map_name_offset is None:
-            return data.hex()
+            return bin(int.from_bytes(data, byteorder='big', signed=False))
 
         bitfield_value = int.from_bytes(data, byteorder='big')
 
