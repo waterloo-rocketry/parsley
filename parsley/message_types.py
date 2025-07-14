@@ -190,8 +190,10 @@ general_board_status_offset = {
     'E_BATT_OVER_CURRENT': 0x06,
     'E_BATT_OVER_VOLTAGE': 0x07,
     'E_BATT_UNDER_VOLTAGE':0x08,
-    'E_IO_ERROR':          0x09,
-    'E_FS_ERROR':          0x0A,
+    'E_MOTOR_OVER_CURRENT':0x09,
+    'E_IO_ERROR':          0x0A,
+    'E_FS_ERROR':          0x0B,
+    'E_WATCHDOG_TIMEOUT':  0x0C,
 }
 
 board_specific_status_offset = {
