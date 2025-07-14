@@ -194,3 +194,9 @@ general_board_status_offset = {
     'E_FS_ERROR':          0x0A,
 }
 
+board_specific_status_offset = {
+    'E_12V_EFUSE_FAULT':   0x00,
+    'E_5V_EFUSE_FAULT':    0x01,
+    'E_PT_OUT_OF_RANGE':   0x02,
+}
+
