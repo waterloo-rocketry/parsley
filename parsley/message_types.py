@@ -67,9 +67,7 @@ board_inst_id = {
     'FAILSAFE':    0x05,
     'CANARD_A':    0x06,
     'CANARD_B':    0x07,
-    'SIDE_A':      0x08,
-    'SIDE_B':      0x09,
-    'RECOVERY':    0x0A,
+    'RECOVERY':    0x08,
 }
 
 actuator_id = {
@@ -84,16 +82,15 @@ actuator_id = {
     'ACTUATOR_TELEMETRY':              0x08,
     'ACTUATOR_CAMERA_CANARD_A':        0x09,
     'ACTUATOR_CAMERA_CANARD_B':        0x0A,
-    'ACTUATOR_CAMERA_SIDE_A':          0x0B,
-    'ACTUATOR_CAMERA_SIDE_B':          0x0C,
-    'ACTUATOR_CAMERA_RECOVERY':        0x0D,
-    'ACTUATOR_CAMERA_PAYLOAD':         0x0E,
-    'ACTUATOR_PROC_ESTIMATOR_INIT':    0x0F,
-    'ACTUATOR_SRAD_ALT_ESTIMATOR_INIT':0x10,
-    'ACTUATOR_SRAD_ALT_GPS_RESET':     0x11,
-    'ACTUATOR_CANARD_ENABLE':          0x12,
-    'ACTUATOR_CANARD_ANGLE':           0x13,
-    'ACTUATOR_PAYLOAD_MOTOR_ENABLE':   0x14,
+    'ACTUATOR_CAMERA_RECOVERY':        0x0B,
+    'ACTUATOR_CAMERA_PAYLOAD':         0x0C,
+    'ACTUATOR_PROC_ESTIMATOR_INIT':    0x0D,
+    'ACTUATOR_SRAD_ALT_ESTIMATOR_INIT':0x0E,
+    'ACTUATOR_SRAD_ALT_GPS_RESET':     0x0F,
+    'ACTUATOR_CANARD_ENABLE':          0x10,
+    'ACTUATOR_CANARD_ANGLE':           0x11,
+    'ACTUATOR_PAYLOAD_MOTOR_ENABLE':   0x12,
+    'ACTUATOR_PAYLOAD_LOGGING_ENABLE': 0x13,
 }
 
 actuator_state = {
@@ -156,7 +153,8 @@ analog_sensor_id = {
     'SENSOR_PROC_FLIGHT_PHASE_STATUS': 0x1D,
     'SENSOR_PAYLOAD_LIM_1':            0x1E,
     'SENSOR_PAYLOAD_LIM_2':            0x1F,
-    'SENSOR_PAYLOAD_INFRARED':         0x20,
+    'SENSOR_PAYLOAD_SERVO_DIRECTION':  0x20,
+    'SENSOR_PAYLOAD_INFRARED':         0x21,
 }
 
 state_est_id = {
