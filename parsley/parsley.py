@@ -1,5 +1,6 @@
 import crc8
 from typing import List, Tuple, Union
+import struct
 
 from parsley.bitstring import BitString
 from parsley.fields import Field, Switch, Bitfield
@@ -110,13 +111,53 @@ def parse_usb_debug(line: str) -> Union[Tuple[bytes, bytes], None]:
 
     return format_can_message(msg_sid, msg_data)
 
-def parse_logger(line: str) -> Union[Tuple[bytes, bytes], None]:
-    line = line.strip(' \0\r\n')
-    # see https://github.com/waterloo-rocketry/cansw_logger/blob/2075484bb64fabdfa4af48fad42a7fc376c2c347/Core/Src/can_syslog.c#L15 for format
-    msg_timestamp, msg_sid, msg_data = line[:8], line[8:16], line[16:]
-    msg_sid = int(msg_sid, 16)
-    msg_data = [int(msg_data[i:i+2], 16) for i in range(0, len(msg_data), 2)]
-    return format_can_message(msg_sid, msg_data)
+def parse_logger(buf: bytes, page_number: int) -> Union[Tuple[bytes, bytes], None]:
+    """
+    Parse one logger record.
+
+    Layout  (little-endian unless stated):
+        0  – 2  : ASCII 'L','O','G'
+        3       : page number (uint8)
+        4  – 12 : SID (uint32 LE) | timestamp (uint32 LE) | DLC (uint8)
+        13 – .. : up to 8 bytes CAN payload
+        -- ff-padding may follow, removed before parsing --
+
+    Returns whatever `format_can_message()` returns.
+    Raises ValueError on any structural problem.
+    """
+
+    LOG_MAGIC = b"LOG"          # ASCII “LOG” = 0x4c4f47
+    HEADER_FMT = "<IIB"         # SID(uint32 LE), timestamp(uint32 LE), DLC(uint8)
+    HEADER_LEN = struct.calcsize(HEADER_FMT)   # == 9
+
+    # Strip the buffer to 4096 bytes, as required by the logger.
+    if len(buf) != 4096:
+        raise ValueError("Logger message must be exactly 4096 bytes")
+
+    if not buf.startswith(LOG_MAGIC):
+        raise ValueError("Missing 'LOG' signature")
+
+    if buf[3] != page_number % 256:
+        raise ValueError(f"Page number mismatch: expected {page_number % 256}, got {buf[3]}")
+    
+    offset = 4 # start of the header
+
+    while (4096 - offset > HEADER_LEN): # at least one message
+        sid, _, dlc = struct.unpack_from(HEADER_FMT, buf, offset)
+
+        if sid & 0xE000_0000:
+            break
+
+        if not 0 <= dlc <= 8:
+            raise ValueError(f"DLC out of range (0-8), got {dlc}")
+
+        offset += HEADER_LEN
+
+        data: List[int] = list(buf[offset: offset + dlc])
+
+        offset += dlc
+
+        yield format_can_message(sid, data)
 
 # our three parsing functions create ints, but after the rewrite, they should return bytes
 def format_can_message(msg_sid: int, msg_data: List[int]) -> Tuple[bytes, bytes]:
