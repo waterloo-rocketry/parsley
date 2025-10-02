@@ -12,6 +12,13 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 
+# Coverage files
+.coverage
+.coverage.*
+htmlcov/
+.cov/
+coverage.xml
+
 *.egg-info/
 build/
 dist/
