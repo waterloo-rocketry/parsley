@@ -23,14 +23,3 @@ def create_msg_sid_from_strings(priority_str: str, msg_type_str: str, reserved_s
     bit_msg_sid.push(board_inst_bits, BOARD_INST_ID.length)
     msg_sid = bit_msg_sid.pop(MESSAGE_SID.length)
     return msg_sid
-
-# Old method left here for reference (still used in some tests and need to change to new method)
-''' 
-def create_msg_sid_from_strings(msg_type_str: str, board_id_str: str):
-    (msg_type_bits, _) = MESSAGE_TYPE.encode(msg_type_str)
-    (board_id_bits, _) = BOARD_ID.encode(board_id_str)
-    bit_msg_sid = BitString(msg_type_bits, MESSAGE_TYPE.length)
-    bit_msg_sid.push(board_id_bits, BOARD_ID.length)
-    msg_sid = bit_msg_sid.pop(MESSAGE_SID.length)
-    return msg_sid
-'''
