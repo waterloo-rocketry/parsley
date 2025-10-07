@@ -1,25 +1,29 @@
 import pytest
 
 from parsley.bitstring import BitString
-from parsley.message_definitions import MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_SID, MESSAGE_PRIO
+from parsley.message_definitions import MESSAGE_PRIO, MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_SID
+import utils as utilities
 
-FLOAT_TOLERANCE = 0.01
+def test_helpers_create_msg_sid_roundtrip():	
+	sid = utilities.create_msg_sid_from_strings('HIGH', 'GENERAL_BOARD_STATUS', '0', 'RLCS_RELAY', 'PRIMARY')
+	
+	expected_bytes_len = (MESSAGE_SID.length + 7) // 8
+ 
+	assert isinstance(sid, (bytes, bytearray))
+	assert len(sid) == expected_bytes_len
 
-def approx(value):
-    return pytest.approx(value, FLOAT_TOLERANCE)
+	bs = BitString(sid, MESSAGE_SID.length)
+	encoded_prio = bs.pop(MESSAGE_PRIO.length)
+	encoded_type = bs.pop(MESSAGE_TYPE.length)
+	bs.pop(2)
+	encoded_board_type = bs.pop(BOARD_TYPE_ID.length)
+	encoded_board_inst = bs.pop(BOARD_INST_ID.length)
 
+	assert MESSAGE_PRIO.decode(encoded_prio) == 'HIGH'
+	assert MESSAGE_TYPE.decode(encoded_type) == 'GENERAL_BOARD_STATUS'
+	assert BOARD_TYPE_ID.decode(encoded_board_type) == 'RLCS_RELAY'
+	assert BOARD_INST_ID.decode(encoded_board_inst) == 'PRIMARY'
 
-def create_msg_sid_from_strings(priority_str: str, msg_type_str: str, reserved_str: str, board_type_str: str, board_inst_str: str):
-    (msg_prio_bits, _) = MESSAGE_PRIO.encode(priority_str)
-    (msg_type_bits, _) = MESSAGE_TYPE.encode(msg_type_str)
-    (reserved_bits, _) = bytes([0, 0]), 2 # reserved bits are always 0
-    (board_type_bits, _) = BOARD_TYPE_ID.encode(board_type_str)
-    (board_inst_bits, _) = BOARD_INST_ID.encode(board_inst_str)
-    
-    bit_msg_sid = BitString(msg_prio_bits, MESSAGE_PRIO.length)
-    bit_msg_sid.push(msg_type_bits, MESSAGE_TYPE.length)
-    bit_msg_sid.push(reserved_bits, 2)
-    bit_msg_sid.push(board_type_bits, BOARD_TYPE_ID.length)
-    bit_msg_sid.push(board_inst_bits, BOARD_INST_ID.length)
-    msg_sid = bit_msg_sid.pop(MESSAGE_SID.length)
-    return msg_sid
+def test_approx():
+	a = utilities.approx(3.1415)
+	assert a == pytest.approx(3.1415, 0.01)
