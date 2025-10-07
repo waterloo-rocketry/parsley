@@ -15,5 +15,6 @@ __pycache__/
 *.egg-info/
 build/
 dist/
+.coverage
 
 *.DS_Store
