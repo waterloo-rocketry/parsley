@@ -1,6 +1,5 @@
 import pytest
-
-from bitstring import BitString
+from parsley.bitstring import BitString
 
 class TestBitString:
     def test_bitstring(self):
