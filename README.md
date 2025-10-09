@@ -60,7 +60,14 @@ print(format_line(result))
 ```
 
 ## Using Parsley
-You can include parsley as a submodule in your project with ```git submodule add https://github.com/waterloo-rocketry/parsley.git``` and to pull the submodule as a developer, you can use ```git submodule update --init --recursive```
+
+The easiest way to include parsley is through `uv` if your project uses it. Run `uv add git+https://github.com/waterloo-rocketry/parsley` to add to your project. 
+
+You can also include parsley as a submodule in your project with ```git submodule add https://github.com/waterloo-rocketry/parsley.git``` and to pull the submodule as a developer, you can use ```git submodule update --init --recursive```
 
 ## Requirements
-```Python 3.10``` or newer is required and the required packages can be installed using `pip install -r requirements.txt`
+**You must have the `uv` Python package manager and builder installed. Visit https://docs.astral.sh/uv/getting-started/installation/ to get started. If you don't know otherwise, choose the "Standalone Installer".**
+
+1. Run `uv sync`
+2. Source virtual environment in `.venv`
+3. To build, run `uv build`
