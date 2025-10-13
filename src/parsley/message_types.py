@@ -8,6 +8,7 @@ msg_prio = {
 }
 
 msg_type = {
+    'UNDEFINED':            0x000,
     'GENERAL_BOARD_STATUS': 0x001,
     'RESET_CMD':            0x002,
     'DEBUG_RAW':            0x003,
@@ -34,8 +35,11 @@ msg_type = {
     'GPS_ALTITUDE':         0x018,
     'GPS_INFO':             0x019,
     'STATE_EST_DATA':       0x01A,
-    'LEDS_ON':              0x01B,
-    'LEDS_OFF':             0x01C,
+    'STREAM_STATUS':        0x01B,
+    'STREAM_DATA':          0x01C,
+    'STREAM_RETRY':         0x01D,
+    'LEDS_ON':              0x01E,
+    'LEDS_OFF':             0x01F,
 }
 
 board_type_id = {
@@ -89,7 +93,7 @@ actuator_id = {
     'ACTUATOR_SRAD_ALT_GPS_RESET':     0x0F,
     'ACTUATOR_CANARD_ENABLE':          0x10,
     'ACTUATOR_CANARD_ANGLE':           0x11,
-    'ACTUATOR_PAYLOAD_MOTOR_ENABLE':   0x12,
+    'ACTUATOR_CAMERA_CAPTURE':         0x12,
     'ACTUATOR_PAYLOAD_LOGGING_ENABLE': 0x13,
 }
 
