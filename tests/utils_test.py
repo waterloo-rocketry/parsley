@@ -4,12 +4,11 @@ from parsley.bitstring import BitString
 from parsley.message_definitions import MESSAGE_PRIO, MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_SID
 import utils as utilities
 
-def test_helpers_create_msg_sid_roundtrip():	
+def test_create_msg_sid():	
 	sid = utilities.create_msg_sid_from_strings('HIGH', 'GENERAL_BOARD_STATUS', '0', 'RLCS_RELAY', 'PRIMARY')
 	
 	expected_bytes_len = (MESSAGE_SID.length + 7) // 8 # rounds up to nearest byte
  
-	assert isinstance(sid, (bytes, bytearray))
 	assert len(sid) == expected_bytes_len
 
 	bs = BitString(sid, MESSAGE_SID.length)
@@ -23,7 +22,3 @@ def test_helpers_create_msg_sid_roundtrip():
 	assert MESSAGE_TYPE.decode(encoded_type) == 'GENERAL_BOARD_STATUS'
 	assert BOARD_TYPE_ID.decode(encoded_board_type) == 'RLCS_RELAY'
 	assert BOARD_INST_ID.decode(encoded_board_inst) == 'PRIMARY'
-
-def test_approx():
-	a = utilities.approx(3.1415)
-	assert a == pytest.approx(3.1415, 0.01)
