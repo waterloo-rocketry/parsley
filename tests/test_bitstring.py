@@ -1,6 +1,5 @@
 import pytest
-
-from bitstring import BitString
+from parsley.bitstring import BitString
 
 class TestBitString:
     def test_bitstring(self):
@@ -57,6 +56,19 @@ class TestBitString:
 
     def test_bitstring_error(self):
         bit_str = BitString()
-        bit_str.push(b'\x12', 8)
+        bit_str.push(b'\x12', 8) # 0001 0010
         with pytest.raises(IndexError):
             bit_str.pop(16)
+
+    def test_pop_with_variable_length(self):
+        bit_str = BitString()
+        bit_str.push(b'\xFF', 8) # 1111 1111
+        res = bit_str.pop(16, variable_length=True) 
+        assert res == b'\xFF'
+
+    def test_push_front(self):
+        bit_str = BitString()
+        bit_str.push(b'\xAA', 8) # 1010 1010
+        bit_str.push_front(b'\x01', 4) # 0001
+        res = bit_str.pop(12)
+        assert res == b'\x01\xAA' # 0001 1010 1010

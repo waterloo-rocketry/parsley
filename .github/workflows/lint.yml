@@ -12,7 +12,7 @@ jobs:
       - name: Install autopep8
         run: pip install --user autopep8
       - name: Run autopep8
-        run: autopep8 -d -r parsley/ --exit-code
+        run: autopep8 -d -r src/parsley/ --exit-code
 
   run_flake8:
     name: Run flake8
@@ -32,4 +32,4 @@ jobs:
       - name: Install basedpyright
         run: pip install --user basedpyright
       - name: Run basedpyright
-        run: basedpyright parsley
+        run: basedpyright src/parsley
