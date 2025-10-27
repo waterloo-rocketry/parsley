@@ -11,14 +11,4 @@ def test_create_msg_sid():
  
 	assert len(sid) == expected_bytes_len
 
-	bs = BitString(sid, MESSAGE_SID.length)
-	encoded_prio = bs.pop(MESSAGE_PRIO.length)
-	encoded_type = bs.pop(MESSAGE_TYPE.length)
-	bs.pop(2)
-	encoded_board_type = bs.pop(BOARD_TYPE_ID.length)
-	encoded_board_inst = bs.pop(BOARD_INST_ID.length)
-
-	assert MESSAGE_PRIO.decode(encoded_prio) == 'HIGH'
-	assert MESSAGE_TYPE.decode(encoded_type) == 'GENERAL_BOARD_STATUS'
-	assert BOARD_TYPE_ID.decode(encoded_board_type) == 'RLCS_RELAY'
-	assert BOARD_INST_ID.decode(encoded_board_inst) == 'PRIMARY'
+	assert sid == b'\x08\x04\x81\x04'
