@@ -5,10 +5,10 @@ from parsley.message_definitions import MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_
 
 FLOAT_TOLERANCE = 0.01
 
-def approx(value):
+def approx(value) -> float:
     return pytest.approx(value, FLOAT_TOLERANCE)
 
-def create_msg_sid_from_strings(priority_str: str, msg_type_str: str, reserved_str: str, board_type_str: str, board_inst_str: str):
+def create_msg_sid_from_strings(priority_str: str, msg_type_str: str, reserved_str: str, board_type_str: str, board_inst_str: str) -> bytes:
     (msg_prio_bits, _) = MESSAGE_PRIO.encode(priority_str)
     (msg_type_bits, _) = MESSAGE_TYPE.encode(msg_type_str)
     (reserved_bits, _) = bytes([0, 0]), 2 # reserved bits are always 0
