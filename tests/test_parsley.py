@@ -3,7 +3,6 @@ import parsley
 from parsley.bitstring import BitString
 from parsley.fields import ASCII, Enum, Numeric
 from parsley.message_definitions import MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_SID, MESSAGE_PRIO, TIMESTAMP_2, CAN_MESSAGE
-from parsley.parsley import format_can_message
 
 import parsley.message_types as mt
 import utils as utilities
