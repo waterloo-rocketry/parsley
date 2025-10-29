@@ -118,7 +118,7 @@ class TestParsley:
         assert 'error' in res['data']
         
     def test_parse_bad_board_id(self):
-        # manually build message since BOARD_ID.encode() will throw an error for b'\x1F'
+        # manually build message since BOARD_ID.encode() will throw an error for b'\x1F' as it is invalid
         bit_msg_sid = BitString()
         bit_msg_sid.push(*MESSAGE_PRIO.encode('LOW'))
         bit_msg_sid.push(*MESSAGE_TYPE.encode('LEDS_ON'))
@@ -165,7 +165,7 @@ class TestParsley:
         assert msg_data == b'\x00\x9a\xbc'
         
     def test_parse_bitstring_empty(self):
-        bit_str = BitString()
+        bit_str = BitString() #just an empty bitstring
         try:
             msg_sid, msg_data = parsley.parse_bitstring(bit_str)
             assert False, "Expected IndexError"
@@ -174,7 +174,7 @@ class TestParsley:
         
     def test_parse_bitstring_small(self):
         bit_str = BitString()
-        bit_str.push(b'\xFF', 8)
+        bit_str.push(b'\xFF', 8) # only 8 bits, less than required 29 bits for SID
         try:
             msg_sid, msg_data = parsley.parse_bitstring(bit_str)
             assert False, "Expected IndexError" 
@@ -191,6 +191,7 @@ class TestParsley:
         # The SID should be the 29-bit value properly encoded
         assert isinstance(msg_sid, bytes)
         assert len(msg_sid) == 4  # 29 bits requires 4 bytes
+        assert msg_sid == b'\x12\x34\x56\x78'[:4]  # Only first 4 bytes matter for 29 bits
         
     def test_calculate_msg_bit_length(self):
         msg = CAN_MESSAGE.get_fields('GENERAL_BOARD_STATUS')
@@ -211,7 +212,7 @@ class TestParsley:
             }
         }
         line = parsley.format_line(parsed_data)
-        # format_line uses padding
+        # format_line uses padding so gotta put padding here too
         expected_line = '[ HIGH    GENERAL_BOARD_STATUS RLCS_RELAY   PRIMARY  ] time: 1.234 general_board_status: E_5V_OVER_VOLTAGE board_error_bitfield: E_5V_EFUSE_FAULT'
         assert line == expected_line
         
@@ -244,6 +245,8 @@ class TestParsley:
     
     def test_parse_usb_debug(self):
         line = "$1234ABCD:12,34,56,78\r\n\0"
+        #you get \x12\x34\xAB\xCD as SID and \x12\x34\x56\x78 as data (first part vs second part)
+        
         msg_sid, msg_data = parsley.parse_usb_debug(line)
         
         assert msg_sid == b'\x12\x34\xab\xcd' 
@@ -256,7 +259,7 @@ class TestParsley:
         assert msg_sid == b'\xab\xcd\x12\x34' 
         assert msg_data == b''
         
-    def test_parse_usb_debug_invalid_format(self):
+    def test_parse_usb_debug_invalid_format(self): # need a $ at start 
         line = "1234:AA,BB"
         try:
             parsley.parse_usb_debug(line)
@@ -311,7 +314,7 @@ class TestParsley:
         assert msg_sid == b'\x05\x55' 
         assert msg_data == b'\x06'
         
-    def test_parse_logger_wrong_size(self):
+    def test_parse_logger_wrong_size(self): # buffer not 4096 bytes
         buf = b"LOG" + b"\x00" * 100
         try:
             list(parsley.parse_logger(buf, 0))
@@ -319,7 +322,7 @@ class TestParsley:
         except ValueError as e:
             assert "exactly 4096 bytes" in str(e)
             
-    def test_parse_logger_wrong_signature(self):
+    def test_parse_logger_wrong_signature(self): # wrong LOG_MAGIC bytes
         buf = b"BAD" + b"\x00" * 4093
         try:
             list(parsley.parse_logger(buf, 0))
@@ -340,7 +343,7 @@ class TestParsley:
         
         buf = bytearray(4096)
         buf[0:3] = b"LOG"
-        buf[3] = 0
+        buf[3] = 0 
  
         struct.pack_into("<IIB", buf, 4, 0xE0000000, 0, 0)
         
@@ -349,7 +352,7 @@ class TestParsley:
 
     
     def test_parse_live_telemetry_basic(self):
-        import crc8
+        import crc8 #cyclic redundancy check
 
         frame = bytearray()
         frame.append(0x02) #header must be 0x02
