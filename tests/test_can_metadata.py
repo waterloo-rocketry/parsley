@@ -1,12 +1,12 @@
 import pytest
 import parsley
 
-from bitstring import BitString
-from fields import Enum, Numeric
-from message_definitions import TIMESTAMP_2, TIMESTAMP_3, CAN_MESSAGE
+from parsley.bitstring import BitString
+from parsley.fields import Enum, Numeric
+from parsley.message_definitions import TIMESTAMP_2, CAN_MESSAGE
 
-import message_types as mt
-import test_utils as tu
+import parsley.message_types as mt
+import utils as tu
 
 class TestCANMetadata:
     # our TIMESTAMP_2 can store ~65.5 seconds
@@ -20,35 +20,17 @@ class TestCANMetadata:
             TIMESTAMP_2.encode(65.536)
         with pytest.raises(ValueError):
             TIMESTAMP_2.encode(66)
-
-    # our TIMESTAMP_3 can store ~4.66 hours
-    def test_timestamp3(self):
-        TIMESTAMP_3.encode(0)
-        TIMESTAMP_3.encode(16777)
-        TIMESTAMP_3.encode(16777.215)
-        with pytest.raises(ValueError):
-            TIMESTAMP_3.encode(-1)
-        with pytest.raises(ValueError):
-            TIMESTAMP_3.encode(16777.216)
-        with pytest.raises(ValueError):
-            TIMESTAMP_3.encode(16778)
-
+        TIMESTAMP_2.encode(30.2312)
+            
     def test_timestamp2_message(self):
         msg_data = BitString()
         msg_data.push(*TIMESTAMP_2.encode(1.234))
-        msg_data.push(*Numeric('x', 16, scale=8/2**16, signed=True).encode(-2))
-        msg_data.push(*Numeric('y', 16, scale=8/2**16, signed=True).encode(-3))
-        msg_data.push(*Numeric('z', 16, scale=8/2**16, signed=True).encode(-4))
-        res = parsley.parse_fields(msg_data, CAN_MESSAGE.get_fields('SENSOR_ACC')[1:])
-        assert res['time'] == tu.approx(1.234)
-        assert res['x'] == tu.approx(-2)
-        assert res['y'] == tu.approx(-3)
-        assert res['z'] == tu.approx(-4)
+        msg_data.push(*Enum('imu_id', 8, mt.imu_id).encode('IMU_PROC_LSM6DSO32'))
+        msg_data.push(*Numeric('linear_accel', 16).encode(1234))
+        msg_data.push(*Numeric('angular_velocity', 16).encode(5678))
 
-    def test_timestamp3_message(self):
-        msg_data = BitString()
-        msg_data.push(*TIMESTAMP_3.encode(12.345))
-        msg_data.push(*Enum('command', 8, mt.gen_cmd).encode('BUS_DOWN_WARNING'))
-        res = parsley.parse_fields(msg_data, CAN_MESSAGE.get_fields('GENERAL_CMD')[1:])
-        assert res['time'] == tu.approx(12.345)
-        assert res['command'] == 'BUS_DOWN_WARNING'
+        res = parsley.parse_fields(msg_data, CAN_MESSAGE.get_fields('SENSOR_IMU_Y')[3:]) # skip first 3 fields (MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID)
+        assert res['time'] == tu.approx(1.234)
+        assert res['imu_id'] == 'IMU_PROC_LSM6DSO32'
+        assert res['linear_accel'] == 1234
+        assert res['angular_velocity'] == 5678
