@@ -585,12 +585,10 @@ class TestCANMessage:
         # The parsley fields list is empty after TIMESTAMP_2.
         # It's an empty message payload.
         res = parsley.parse_fields(bit_str2, [TIMESTAMP_2]) # Only TIMESTAMP_2 in the payload
-        print(res["time"])
-        assert res['time'] 
+        assert res['time'] == approx(3, abs=1e-3)
 
     def test2_leds_off(self, bit_str2):
         # LEDS_OFF only has MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID in its definition.
         res = parsley.parse_fields(bit_str2, [TIMESTAMP_2])
-        print(res["time"])
-        assert res['time']
+        assert res['time'] == approx(3, abs=1e-3)
 
