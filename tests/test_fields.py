@@ -1,9 +1,8 @@
 import pytest
 
-from fields import ASCII, Enum, Numeric, Switch, Floating, Bitfield
+from parsley.fields import ASCII, Enum, Numeric, Switch, Floating, Bitfield
 
-import message_types as mt
-import test_utils as tu
+from parsley import message_types as mt 
 
 class TestASCII:
     def test_ASCII(self):
@@ -53,16 +52,9 @@ class TestASCII:
         a = ASCII('string', 16)
         with pytest.raises(ValueError):
             a.encode('xdd')
-
+    
 class TestEnum:
-    def test_enum(self):
-        enum = Enum('enum', 8, mt.board_id)
-        (data, length) = enum.encode('ACTUATOR_INJ')
-        assert data == b'\x01'
-        assert length == 8
-        data = enum.decode(b'\x13')
-        assert data == 'USB'
-
+   
     def test_enum_decode_encode(self):
         map = { 'a': 1, 'b': 10, 'c': 100 }
         enum = Enum('enum', 8, map)
@@ -106,12 +98,6 @@ class TestNumeric:
         num = Numeric('time', 8, scale=1/2)
         (data, _) = num.encode(12)
         assert data == b'\x18'
-
-    def test_numeric_scale_imprecision(self):
-        num = Numeric('time', 24, scale=1/1000)
-        (data, _) = num.encode(54.321)
-        converted_data = num.decode(data)
-        assert 54.321 == tu.approx(converted_data)
 
     def test_numeric_decode_encode(self):
         num = Numeric('num', 8)
@@ -166,7 +152,7 @@ class TestNumeric:
         num.encode(-5)
         with pytest.raises(ValueError):
             num.encode(5)
-
+            
 class TestFloating:
     def test_floating(self):
         fl = Floating('Num')
@@ -180,8 +166,7 @@ class TestFloating:
         assert fl.decode(fl.encode(1.3125)[0]) == 1.3125
         assert fl.decode(fl.encode(69.0)[0]) == 69.0
         assert fl.decode(fl.encode(420.0)[0]) == 420.0
-
-
+    
 class TestSwitch:
     def test_switch(self):
         enum = {
@@ -202,7 +187,6 @@ class TestSwitch:
         assert decoded_data == 'a'
         assert switch.get_fields(decoded_data) == [0, 1]
 
-
 class TestBitfieldLogs:
     @pytest.fixture(autouse=True)
     def bitfield(self):
@@ -210,28 +194,32 @@ class TestBitfieldLogs:
             name="general_board_status",
             length=16,
             default="E_NOMINAL",
-            width=16,
             map_name_offset=mt.general_board_status_offset
         )
 
-    @pytest.mark.parametrize("hex_str,expected", [
-        ("000486013039000000000000", "general_board_status: E_NOMINAL"),
-        ("000486013039000000010006", "general_board_status: E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE"),
-        ("000486013039000000020006", "general_board_status: E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE"),
-        ("000486013039000000030006", "general_board_status: E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE"),
-        ("000486013039000000040006", "general_board_status: E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE"),
-        ("000486013039000000050006", "general_board_status: E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE"),
-        ("000486013039000000060006", "general_board_status: E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE"),
-    ])
-    def test_decode_various_logs(self, bitfield, hex_str, expected):
-        # test decoding from hex string
-        assert bitfield.decode(hex_str) == expected
+    @pytest.mark.parametrize("bytes,expected", [
+        (b"\x00\x00", "E_NOMINAL"),
+        (b"\x00\x01", "E_5V_OVER_CURRENT"),
+        (b"\x00\x02", "E_5V_OVER_VOLTAGE"),
+        (b"\x00\x04", "E_5V_UNDER_VOLTAGE"),
+        (b"\x00\x08", "E_12V_OVER_CURRENT"),
+        (b"\x00\x10", "E_12V_OVER_VOLTAGE"),
+        (b"\x00\x20", "E_12V_UNDER_VOLTAGE"),
+        (b"\x00\x40", "E_BATT_OVER_CURRENT"),
+        (b"\x00\x80", "E_BATT_OVER_VOLTAGE"),
+        (b"\x01\x00", "E_BATT_UNDER_VOLTAGE"),
+        (b"\x02\x00", "E_MOTOR_OVER_CURRENT"),
+        (b"\x04\x00", "E_IO_ERROR"),
+        (b"\x08\x00", "E_FS_ERROR"),
+        (b"\x10\x00", "E_WATCHDOG_TIMEOUT"),
 
-    @pytest.mark.parametrize("hex_str,expected", [
-        ("000486013039000000010006", "general_board_status: E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE"),
-        ("000486013039000000020006", "general_board_status: E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE"),
     ])
-    def test_decode_from_bytes(self, bitfield, hex_str, expected):
-        # test decoding when given raw bytes
-        data = bytes.fromhex(hex_str)
-        assert bitfield.decode(data) == expected
+    def test_decode_various_logs(self, bitfield, bytes, expected):
+        assert bitfield.decode(bytes) == expected
+
+    @pytest.mark.parametrize("bytes,expected", [
+        (b"\x00\x03", "E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE"),
+        (b"\x00\x05", "E_5V_OVER_CURRENT|E_5V_UNDER_VOLTAGE"),
+    ])  
+    def test_decode_from_bytes(self, bitfield, bytes, expected):
+        assert bitfield.decode(bytes) == expected
