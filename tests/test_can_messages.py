@@ -7,7 +7,6 @@ from parsley.fields import ASCII, Enum, Numeric, Floating, Bitfield
 from parsley.message_definitions import TIMESTAMP_2, MESSAGES
 
 import parsley.message_types as mt
-import test_utils as tu
 
 class TestCANMessage:
     """
