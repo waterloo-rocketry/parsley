@@ -121,8 +121,8 @@ class TestParsley:
         res = parsley.parse(msg_sid, msg_data)
         assert 'error' in res['data']
         
-    def test_parse_bad_board_id(self):
-        # manually build message since BOARD_ID.encode() will throw an error for b'\x1F' as it is invalid
+    def test_parse_bad_board_type_id(self):
+        # manually build message since using BOARD_TYPE_ID from message_definitions will throw an error for b'\x1F' as it is invalid
         bit_msg_sid = BitString()
         bit_msg_sid.push(*MESSAGE_PRIO.encode('LOW'))
         bit_msg_sid.push(*MESSAGE_TYPE.encode('LEDS_ON'))
@@ -297,14 +297,16 @@ class TestParsley:
             (0x555, 0x666, [0x06])
         ]
         
+        CAN_MSG_HEADER_SIZE = 9  # 4 bytes SID + 4 bytes timestamp + 1 byte DLC
         for sid, timestamp, data in messages:
             data_length_code = len(data) # number of data bytes
             struct.pack_into("<IIB", buf, offset, sid, timestamp, data_length_code)
-            offset += 9
+            offset += CAN_MSG_HEADER_SIZE
             buf[offset:offset+data_length_code] = data
             offset += data_length_code
 
-        struct.pack_into("<IIB", buf, offset, 0xE0000000, 0, 0)
+        # Fill unused bytes after last message with 0xff
+        buf[offset:] = b"\xff" * (len(buf) - offset)
         
         results = list(parsley.parse_logger(bytes(buf), 0x64))
         
@@ -324,9 +326,9 @@ class TestParsley:
         
     def test_parse_logger_wrong_size(self):
         buf = b"LOG" + b"\x00" * (PARSE_LOGGER_PAGE_SIZE - 3)  # only 4095 bytes
-        
-        assert len(buf) < 4096
-        
+
+        assert len(buf) < PARSE_LOGGER_PAGE_SIZE
+
         try:
             list(parsley.parse_logger(buf, 0))
             assert False, "Expected ValueError"
@@ -352,13 +354,12 @@ class TestParsley:
     def test_parse_logger_empty(self):
         buf = bytearray(PARSE_LOGGER_PAGE_SIZE)
         buf[0:3] = b"LOG"
-        buf[3] = 0 
- 
-        struct.pack_into("<IIB", buf, 4, 0xE0000000, 0, 0)
+        buf[3] = 0
         
+        buf[4:] = b"\xff" * (len(buf) - 4) # Fill unused bytes with 0xff
+
         results = list(parsley.parse_logger(bytes(buf), 0))
         assert len(results) == 0
-
     
     def test_parse_live_telemetry_basic(self):
         frame = bytearray()
