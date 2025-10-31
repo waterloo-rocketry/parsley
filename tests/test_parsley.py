@@ -6,6 +6,10 @@ from parsley.message_definitions import MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_
 
 import parsley.message_types as mt
 import utils as utilities
+import crc8 #cyclic redundancy check
+import struct
+
+PARSE_LOGGER_PAGE_SIZE = 4096 
 
 class TestParsley:
     def test_parse(self):
@@ -276,13 +280,17 @@ class TestParsley:
             assert "Incorrect line format" in str(e)
         
     def test_parse_logger(self):
-        import struct
+        buf = bytearray(PARSE_LOGGER_PAGE_SIZE)
         
-        buf = bytearray(4096)
-        buf[0:3] = b"LOG"
-        buf[3] = 100
+        log_header = b"LOG" # correct LOG_MAGIC bytes
+        sequence_number = 0x64 #page number of data | 100 in decimal
+
+        buf[0:3] = log_header
+        buf[3] = sequence_number
+
+        header_length = len(log_header) + 1  # 4 bytes: 3 for "LOG" + 1 for sequence number
+        offset = header_length
         
-        offset = 4
         messages = [
             (0x111, 0x222, [0x01, 0x02]),
             (0x333, 0x444, [0x03, 0x04, 0x05]),
@@ -290,15 +298,15 @@ class TestParsley:
         ]
         
         for sid, timestamp, data in messages:
-            DLC = len(data)
-            struct.pack_into("<IIB", buf, offset, sid, timestamp, DLC)
+            data_length_code = len(data) # number of data bytes
+            struct.pack_into("<IIB", buf, offset, sid, timestamp, data_length_code)
             offset += 9
-            buf[offset:offset+DLC] = data
-            offset += DLC
+            buf[offset:offset+data_length_code] = data
+            offset += data_length_code
 
         struct.pack_into("<IIB", buf, offset, 0xE0000000, 0, 0)
         
-        results = list(parsley.parse_logger(bytes(buf), 100))
+        results = list(parsley.parse_logger(bytes(buf), 0x64))
         
         assert len(results) == 3
 
@@ -314,8 +322,11 @@ class TestParsley:
         assert msg_sid == b'\x05\x55' 
         assert msg_data == b'\x06'
         
-    def test_parse_logger_wrong_size(self): # buffer not 4096 bytes
-        buf = b"LOG" + b"\x00" * 100
+    def test_parse_logger_wrong_size(self):
+        buf = b"LOG" + b"\x00" * (PARSE_LOGGER_PAGE_SIZE - 3)  # only 4095 bytes
+        
+        assert len(buf) < 4096
+        
         try:
             list(parsley.parse_logger(buf, 0))
             assert False, "Expected ValueError"
@@ -339,9 +350,7 @@ class TestParsley:
             assert "Page number mismatch" in str(e)
 
     def test_parse_logger_empty(self):
-        import struct
-        
-        buf = bytearray(4096)
+        buf = bytearray(PARSE_LOGGER_PAGE_SIZE)
         buf[0:3] = b"LOG"
         buf[3] = 0 
  
@@ -352,8 +361,6 @@ class TestParsley:
 
     
     def test_parse_live_telemetry_basic(self):
-        import crc8 #cyclic redundancy check
-
         frame = bytearray()
         frame.append(0x02) #header must be 0x02
         frame.append(10) #frame length
@@ -394,7 +401,6 @@ class TestParsley:
             assert "Incorrect frame header" in str(e)
             
     def test_parse_live_telemetry_bad_crc(self):
-        import crc8
         
         frame = bytearray([0x02, 0x08, 0x12, 0x34, 0x56, 0x78, 0xAA, 0xFF])  # wrong CRC
         
