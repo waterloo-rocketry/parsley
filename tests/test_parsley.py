@@ -325,7 +325,7 @@ class TestParsley:
         assert msg_data == b'\x06'
         
     def test_parse_logger_wrong_size(self):
-        buf = b"LOG" + b"\x00" * (PARSE_LOGGER_PAGE_SIZE - 3)  # only 4095 bytes
+        buf = b"LOG" + b"\x00" * (PARSE_LOGGER_PAGE_SIZE - 4)  # only 4095 bytes (3 for 'LOG', 1 for sequence)
 
         assert len(buf) < PARSE_LOGGER_PAGE_SIZE
 
