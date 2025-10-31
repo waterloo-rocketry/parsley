@@ -35,7 +35,7 @@ class TestCANMetadata:
         assert res['linear_accel'] == 1234
         assert res['angular_velocity'] == 5678
         
-    def test_timestamp2_second(self):
+    def test_timestamp2_message_again(self):
         msg_data = BitString()
         msg_data.push(*TIMESTAMP_2.encode(1.234))
         msg_data.push(*Enum('actuator', 8, mt.actuator_id).encode('ACTUATOR_5V_RAIL_PAYLOAD'))
