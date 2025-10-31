@@ -37,12 +37,12 @@ class TestCANMetadata:
         
     def test_timestamp2_message_again(self):
         msg_data = BitString()
-        msg_data.push(*TIMESTAMP_2.encode(1.234))
+        msg_data.push(*TIMESTAMP_2.encode(32.69))
         msg_data.push(*Enum('actuator', 8, mt.actuator_id).encode('ACTUATOR_5V_RAIL_PAYLOAD'))
         msg_data.push(*Enum('cmd_state', 8, mt.actuator_state).encode('ACT_STATE_ON'))
 
         res = parsley.parse_fields(msg_data, CAN_MESSAGE.get_fields('ACTUATOR_CMD')[3:]) # skip first 3 fields (MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID)
-        assert res['time'] == tu.approx(1.234)
+        assert res['time'] == tu.approx(32.69)
         assert res['actuator'] == 'ACTUATOR_5V_RAIL_PAYLOAD'
         assert res['cmd_state'] == 'ACT_STATE_ON'
        
