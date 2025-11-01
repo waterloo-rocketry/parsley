@@ -1,4 +1,5 @@
 import parsley
+import pytest
 
 from parsley.bitstring import BitString
 from parsley.fields import ASCII, Enum, Numeric
@@ -18,7 +19,7 @@ class TestParsley:
         """
         HIGH = 0x1, GENERAL_BOARD_STATUS = 0x001, RLCS_RELAY = 0x81, PRIMARY = 0x04
         """
-        assert msg_sid == b'\x08\x04\x81\x04' 
+        assert msg_sid == b'\x08\x04\x81\x04'
 
         bit_str = BitString()
         bit_str.push(*TIMESTAMP_2.encode(1.234))
@@ -79,7 +80,7 @@ class TestParsley:
         """
         MEDIUM = 0x2, SENSOR_ANALOG = 0x014, PAY_SENSOR = 0x40, ANY = 0x00
         """
-        assert msg_sid == b'\x10P@\x00' 
+        assert msg_sid == b'\x10\x50\x40\x00'
 
         bit_str = BitString()
         bit_str.push(*TIMESTAMP_2.encode(12.345)) 
@@ -165,37 +166,39 @@ class TestParsley:
         
         # First 29 bits of 0x123456789ABC = 0x02468ACF
         # Remaining 19 bits = 0x9ABC
-        assert msg_sid == b'\x02F\x8a\xcf'
+        assert msg_sid == b'\x02\x46\x8a\xcf'
         assert msg_data == b'\x00\x9a\xbc'
         
     def test_parse_bitstring_empty(self):
         bit_str = BitString() #just an empty bitstring
-        try:
-            msg_sid, msg_data = parsley.parse_bitstring(bit_str)
-            assert False, "Expected IndexError"
-        except IndexError:
-            pass
+        with pytest.raises(IndexError) as e:
+            parsley.parse_bitstring(bit_str)
+        # message content is not asserted as an index error is expected
         
     def test_parse_bitstring_small(self):
         bit_str = BitString()
         bit_str.push(b'\xFF', 8) # only 8 bits, less than required 29 bits for SID
-        try:
-            msg_sid, msg_data = parsley.parse_bitstring(bit_str)
-            assert False, "Expected IndexError" 
-        except IndexError:
-            pass
+        with pytest.raises(IndexError) as e:
+            parsley.parse_bitstring(bit_str)
+        # message content is not asserted as an index error is expected
         
     def test_parse_bitstring_minimal(self):
         bit_str = BitString()
         bit_str.push(b'\x12\x34\x56\x78', 29)  # Exactly 29 bits for SID
-        msg_sid, msg_data = parsley.parse_bitstring(bit_str)
+        copy = BitString() #need a copy so that parse_bitstring can consume the copy
+        copy.push(b'\x12\x34\x56\x78', 29)
         
+        msg_sid, msg_data = parsley.parse_bitstring(copy) 
+
+        print(msg_sid)
+        print(msg_data)
+
         # Should get all 29 bits as SID, no remaining data
         assert len(msg_data) == 0
         # The SID should be the 29-bit value properly encoded
         assert isinstance(msg_sid, bytes)
         assert len(msg_sid) == 4  # 29 bits requires 4 bytes
-        assert msg_sid == b'\x12\x34\x56\x78'[:4]  # Only first 4 bytes matter for 29 bits
+        assert BitString(msg_sid, 29).data == bit_str.data
         
     def test_calculate_msg_bit_length(self):
         msg = CAN_MESSAGE.get_fields('GENERAL_BOARD_STATUS')
@@ -265,19 +268,15 @@ class TestParsley:
         
     def test_parse_usb_debug_invalid_format(self): # need a $ at start 
         line = "1234:AA,BB"
-        try:
+        with pytest.raises(ValueError) as e:
             parsley.parse_usb_debug(line)
-            assert False, "Expected ValueError"
-        except ValueError as e:
-            assert "Incorrect line format" in str(e)
+        assert "Incorrect line format" in str(e.value)
             
     def test_parse_usb_debug_empty_line(self):
         line = ""
-        try:
+        with pytest.raises(ValueError) as e:
             parsley.parse_usb_debug(line)
-            assert False, "Expected ValueError"
-        except ValueError as e:
-            assert "Incorrect line format" in str(e)
+        assert "Incorrect line format" in str(e.value)
         
     def test_parse_logger(self):
         buf = bytearray(PARSE_LOGGER_PAGE_SIZE)
@@ -329,27 +328,21 @@ class TestParsley:
 
         assert len(buf) < PARSE_LOGGER_PAGE_SIZE
 
-        try:
+        with pytest.raises(ValueError) as e:
             list(parsley.parse_logger(buf, 0))
-            assert False, "Expected ValueError"
-        except ValueError as e:
-            assert "exactly 4096 bytes" in str(e)
+        assert "exactly 4096 bytes" in str(e.value)
             
     def test_parse_logger_wrong_signature(self): # wrong LOG_MAGIC bytes
         buf = b"BAD" + b"\x00" * 4093
-        try:
+        with pytest.raises(ValueError) as e:
             list(parsley.parse_logger(buf, 0))
-            assert False, "Expected ValueError"
-        except ValueError as e:
-            assert "Missing 'LOG' signature" in str(e)
+        assert "Missing 'LOG' signature" in str(e.value)
             
     def test_parse_logger_wrong_page_number(self):
         buf = b"LOG\x05" + b"\x00" * 4092  # Page 5 in buffer
-        try:
+        with pytest.raises(ValueError) as e:
             list(parsley.parse_logger(buf, 10))  # Expect page 10
-            assert False, "Expected ValueError"
-        except ValueError as e:
-            assert "Page number mismatch" in str(e)
+        assert "Page number mismatch" in str(e.value)
 
     def test_parse_logger_empty(self):
         buf = bytearray(PARSE_LOGGER_PAGE_SIZE)
@@ -387,26 +380,20 @@ class TestParsley:
         
     def test_parse_live_telemetry_too_short(self):
         frame = b'\x02\x06\x12\x34'  #4 bytes, need at least 7
-        try:
+        with pytest.raises(ValueError) as e:
             parsley.parse_live_telemetry(frame)
-            assert False, "Expected ValueError"
-        except ValueError as e:
-            assert "Incorrect frame length" in str(e)
+        assert "Incorrect frame length" in str(e.value)
             
     def test_parse_live_telemetry_wrong_header(self):
         frame = b'\x03\x08\x12\x34\x56\x78\xAA\x00'  #header = 0x03 instead of 0x02
-        try:
-            parsley.parse_live_telemetry(frame) 
-            assert False, "Expected ValueError"
-        except ValueError as e:
-            assert "Incorrect frame header" in str(e)
+        with pytest.raises(ValueError) as e:
+            parsley.parse_live_telemetry(frame)
+        assert "Incorrect frame header" in str(e.value)
             
     def test_parse_live_telemetry_bad_crc(self):
         
         frame = bytearray([0x02, 0x08, 0x12, 0x34, 0x56, 0x78, 0xAA, 0xFF])  # wrong CRC
         
-        try:
+        with pytest.raises(ValueError) as e:
             parsley.parse_live_telemetry(bytes(frame))
-            assert False, "Expected ValueError"  
-        except ValueError as e:
-            assert "Bad checksum" in str(e)
+        assert "Bad checksum" in str(e.value)
