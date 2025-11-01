@@ -6,9 +6,33 @@ from parsley.message_definitions import MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_
 FLOAT_TOLERANCE = 0.01
 
 def approx(value):
+    """
+    Create a pytest.approx comparator configured with the module float tolerance.
+    
+    Parameters:
+        value: The reference numeric value to compare against.
+    
+    Returns:
+        A `pytest.approx` object that compares values to `value` within `FLOAT_TOLERANCE`.
+    """
     return pytest.approx(value, FLOAT_TOLERANCE)
 
 def create_msg_sid_from_strings(priority_str: str, msg_type_str: str, reserved_str: str, board_type_str: str, board_inst_str: str):
+    """
+    Constructs a message SID by encoding and packing the provided component fields into a bit-level identifier.
+    
+    Each input string is encoded to its field bit representation and concatenated in order: priority, message type, reserved (two zero bytes), board type, and board instance.
+    
+    Parameters:
+        priority_str (str): Priority field value as a string.
+        msg_type_str (str): Message type field value as a string.
+        reserved_str (str): Reserved field value (ignored; reserved bits are set to zero).
+        board_type_str (str): Board type identifier as a string.
+        board_inst_str (str): Board instance identifier as a string.
+    
+    Returns:
+        bytes: The assembled message SID as a byte sequence representing MESSAGE_SID.length bits.
+    """
     (msg_prio_bits, _) = MESSAGE_PRIO.encode(priority_str)
     (msg_type_bits, _) = MESSAGE_TYPE.encode(msg_type_str)
     (reserved_bits, _) = bytes([0, 0]), 2 # reserved bits are always 0

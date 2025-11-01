@@ -111,6 +111,11 @@ class TestParsley:
         assert 'error' in res['data']
         
     def test_parse_empty(self):
+        """
+        Verify that parsing an empty message SID and empty data yields an error entry in the parsed result.
+        
+        Asserts that parsley.parse called with an empty SID and empty payload produces a result whose 'data' mapping contains an 'error' key.
+        """
         msg_sid = b''
         msg_data = b''
         res = parsley.parse(msg_sid, msg_data)
