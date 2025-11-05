@@ -16,7 +16,6 @@ class ParsleyError():
     msg_data: str
     error: str
 
-
 class ParsleyObject(BaseModel, Generic[T]):
     """
     Dataclass to store parsed CAN message data.
@@ -44,8 +43,10 @@ class ParsleyObject(BaseModel, Generic[T]):
                 isSame = False
                 
             return isSame
+        
         if isinstance(other, ParsleyObject):
             isSame = True
+            
             if self.board_type_id != other.board_type_id:
                 isSame = False
             if self.board_inst_id != other.board_inst_id:
@@ -56,6 +57,7 @@ class ParsleyObject(BaseModel, Generic[T]):
                 isSame = False
             if self.data != other.data:
                 isSame = False
+                
             return isSame
 
     def __getitem__(self, key: str): #allows you to access elements similarly to a dict
