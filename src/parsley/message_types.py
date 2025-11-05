@@ -202,4 +202,3 @@ board_specific_status_offset = {
     'E_5V_EFUSE_FAULT':    0x01,
     'E_PT_OUT_OF_RANGE':   0x02,
 }
-

@@ -12,3 +12,4 @@ from .parsley import (
     encode_data,
     calculate_msg_bit_len
 )
+from .parsley_message import ParsleyObject

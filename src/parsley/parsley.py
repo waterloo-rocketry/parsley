@@ -1,15 +1,17 @@
 import crc8
-from typing import List, Tuple, Union
+from typing import Generic, List, Tuple, Union, Iterator, TypeVar
 import struct
-
+from pydantic import BaseModel
 from parsley.bitstring import BitString
 from parsley.fields import Field, Switch, Bitfield
 from parsley.message_definitions import CAN_MESSAGE, MESSAGE_PRIO, MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_SID
-
 import parsley.message_types as mt
 import parsley.parse_utils as pu
+from parsley.parsley_message import ParsleyObject, ParsleyError
 
-def parse_fields(bit_str: BitString, fields: List[Field]) -> dict:
+T = TypeVar("T")
+
+def parse_fields(bit_str: BitString, fields: List[Field]) -> dict[str, T]:
     """
     Parses binary data stored in a BitString and decodes the data
     based on each field's decode() implementation. Returns a dictionary
@@ -24,9 +26,10 @@ def parse_fields(bit_str: BitString, fields: List[Field]) -> dict:
             res.update(parse_fields(bit_str, nested_fields))
         if isinstance(field, Bitfield):
             res[field.name] = field.decode(data)
+    
     return res
 
-def parse(msg_sid: bytes, msg_data: bytes) -> dict:
+def parse(msg_sid: bytes, msg_data: bytes) -> ParsleyObject:
     """
     Extracts the message_type and board_id from msg_sid to construct a CAN message along with message_data.
     Upon reading poorly formatted data, the error is caught and returned in the dictionary.
@@ -38,26 +41,66 @@ def parse(msg_sid: bytes, msg_data: bytes) -> dict:
     encoded_board_type_id = bit_str_msg_sid.pop(BOARD_TYPE_ID.length)
     encoded_board_inst_id = bit_str_msg_sid.pop(BOARD_INST_ID.length)
 
-    res = parse_board_type_id(encoded_board_type_id)
-    res['board_inst_id'] = parse_board_inst_id(encoded_board_inst_id)
+    board_type_res = parse_board_type_id(encoded_board_type_id)
+    board_type_id = board_type_res.get('board_type_id')
+    board_inst_id = parse_board_inst_id(encoded_board_inst_id)
+
+    msg_prio = ''
+    msg_type = ''
+    data: T = {}
 
     try:
-        res['msg_prio'] = MESSAGE_PRIO.decode(encoded_msg_prio)
-        res['msg_type'] = MESSAGE_TYPE.decode(encoded_msg_type)
+        msg_prio = MESSAGE_PRIO.decode(encoded_msg_prio)
+        msg_type = MESSAGE_TYPE.decode(encoded_msg_type)
         # we splice the first element since we've already manually parsed BOARD_ID
         # if BOARD_ID threw an error, we want to try and parse the rest of the CAN message
-        fields = CAN_MESSAGE.get_fields(res['msg_type'])[3:]
-        res['data'] = parse_fields(BitString(msg_data), fields)
+        fields = CAN_MESSAGE.get_fields(msg_type)[3:]
+        data = parse_fields(BitString(msg_data), fields)
     except (ValueError, IndexError) as error:
-        res.update({
-            # convert the 6-bit msg_type into its canlib 12-bit form
-            'msg_type': pu.hexify(encoded_msg_type, is_msg_type=True),
-            'data': {
-                'msg_data': pu.hexify(msg_data),
-                'error': str(error)
-            }
-        })
-    return res
+        # convert the 6-bit msg_type into its canlib 12-bit form and include an error object
+        return ParsleyError(
+            msg_data=pu.hexify(msg_data),
+            error=str(error)
+        )
+
+    return ParsleyObject(
+        msg_prio=msg_prio,
+        msg_type=msg_type,
+        board_type_id=board_type_id,
+        board_inst_id=board_inst_id,
+        data=data,
+    )
+
+def parse_message(msg_sid: bytes, msg_data: bytes) -> ParsleyObject:
+    """High-level parser that returns a ParsleyObject whose fields are Enum members
+
+    Where decoding succeeds, string names are converted to Enum members from
+    `parsley.message_types`. Unknown values remain as hexified strings.
+    """
+    # use the lower-level parse which returns strings/hex fallbacks
+    parsed = parse(msg_sid, msg_data)
+
+    # attempt to convert to Enum members where possible
+    def to_enum(enum_cls, name: str):
+        try:
+            return enum_cls[name]
+        except Exception:
+            return name
+
+    import parsley.message_types as mt
+
+    msg_prio_conv = to_enum(mt.MsgPrio, parsed.msg_prio) if isinstance(parsed.msg_prio, str) else parsed.msg_prio
+    msg_type_conv = to_enum(mt.MsgType, parsed.msg_type) if isinstance(parsed.msg_type, str) else parsed.msg_type
+    board_type_conv = to_enum(mt.BoardTypeID, parsed.board_type_id) if isinstance(parsed.board_type_id, str) else parsed.board_type_id
+    board_inst_conv = to_enum(mt.BoardInstID, parsed.board_inst_id) if isinstance(parsed.board_inst_id, str) else parsed.board_inst_id
+
+    return ParsleyObject(
+        msg_prio=msg_prio_conv,
+        msg_type=msg_type_conv,
+        board_type_id=board_type_conv,
+        board_inst_id=board_inst_conv,
+        data=parsed.data,
+    )
 
 def parse_board_type_id(encoded_board_type_id: bytes) -> dict:
     board_type_id = None
@@ -111,7 +154,7 @@ def parse_usb_debug(line: str) -> Union[Tuple[bytes, bytes], None]:
 
     return format_can_message(msg_sid, msg_data)
 
-def parse_logger(buf: bytes, page_number: int) -> Union[Tuple[bytes, bytes], None]:
+def parse_logger(buf: bytes, page_number: int) -> Iterator[Tuple[bytes, bytes]]:
     """
     Parse one logger record.
 
