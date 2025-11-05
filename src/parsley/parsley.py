@@ -1,5 +1,5 @@
 import crc8
-from typing import Generic, List, Tuple, Union, Iterator, TypeVar
+from typing import List, Tuple, Union, Iterator, TypeVar
 import struct
 from pydantic import BaseModel
 from parsley.bitstring import BitString
