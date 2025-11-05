@@ -71,37 +71,6 @@ def parse(msg_sid: bytes, msg_data: bytes) -> ParsleyObject:
         data=data,
     )
 
-def parse_message(msg_sid: bytes, msg_data: bytes) -> ParsleyObject:
-    """High-level parser that returns a ParsleyObject whose fields are Enum members
-
-    Where decoding succeeds, string names are converted to Enum members from
-    `parsley.message_types`. Unknown values remain as hexified strings.
-    """
-    # use the lower-level parse which returns strings/hex fallbacks
-    parsed = parse(msg_sid, msg_data)
-
-    # attempt to convert to Enum members where possible
-    def to_enum(enum_cls, name: str):
-        try:
-            return enum_cls[name]
-        except Exception:
-            return name
-
-    import parsley.message_types as mt
-
-    msg_prio_conv = to_enum(mt.MsgPrio, parsed.msg_prio) if isinstance(parsed.msg_prio, str) else parsed.msg_prio
-    msg_type_conv = to_enum(mt.MsgType, parsed.msg_type) if isinstance(parsed.msg_type, str) else parsed.msg_type
-    board_type_conv = to_enum(mt.BoardTypeID, parsed.board_type_id) if isinstance(parsed.board_type_id, str) else parsed.board_type_id
-    board_inst_conv = to_enum(mt.BoardInstID, parsed.board_inst_id) if isinstance(parsed.board_inst_id, str) else parsed.board_inst_id
-
-    return ParsleyObject(
-        msg_prio=msg_prio_conv,
-        msg_type=msg_type_conv,
-        board_type_id=board_type_conv,
-        board_inst_id=board_inst_conv,
-        data=parsed.data,
-    )
-
 def parse_board_type_id(encoded_board_type_id: bytes) -> dict:
     board_type_id = None
     try:
