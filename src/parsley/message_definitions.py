@@ -39,6 +39,9 @@ MESSAGES = {
     'GPS_ALTITUDE':         [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Numeric('altitude', 16), Numeric('daltitude', 8), ASCII('unit', 8)],
     'GPS_INFO':             [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Numeric('num_sats', 8), Numeric('quality', 8)],
     'STATE_EST_DATA':       [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Enum('state_id', 8, mt.state_est_id), Floating('data', big_endian=True)],
+    'STREAM_STATUS':        [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Numeric('total_size', 24), Numeric('tx_size', 24)],
+    'STREAM_DATA':          [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Numeric('seq_id', 8), ASCII('data', 40)],
+    'STREAM_RETRY':         [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Numeric('seq_id', 8)],
     'LEDS_ON':              [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID],
     'LEDS_OFF':             [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID]
 }
