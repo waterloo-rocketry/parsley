@@ -24,7 +24,6 @@ MESSAGES = {
     'ACTUATOR_STATUS':      [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Enum('actuator', 8, mt.actuator_id), Enum('curr_state', 8, mt.actuator_state), Enum('cmd_state', 8, mt.actuator_state)],
     'ALT_ARM_CMD':          [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Enum('alt_id', 8, mt.altimeter_id), Enum('alt_arm_state', 8, mt.alt_arm_state)],
     'ALT_ARM_STATUS':       [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Enum('alt_id', 8, mt.altimeter_id), Enum('alt_arm_state', 8, mt.alt_arm_state), Numeric('drogue_v', 16), Numeric('main_v', 16)],
-    'SENSOR_TEMP':          [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Numeric('temp_sensor_id', 8), Numeric('temperature', 32, scale=1/2**10, unit='°C', signed=True)],
     'SENSOR_ALTITUDE':      [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Numeric('altitude', 32, signed=True), Enum('apogee_state', 8, mt.apogee_state)],
     'SENSOR_IMU_X':         [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Enum('imu_id', 8, mt.imu_id), Numeric('linear_accel', 16), Numeric('angular_velocity', 16)],
     'SENSOR_IMU_Y':         [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Enum('imu_id', 8, mt.imu_id), Numeric('linear_accel', 16), Numeric('angular_velocity', 16)],
@@ -40,6 +39,9 @@ MESSAGES = {
     'GPS_ALTITUDE':         [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Numeric('altitude', 16), Numeric('daltitude', 8), ASCII('unit', 8)],
     'GPS_INFO':             [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Numeric('num_sats', 8), Numeric('quality', 8)],
     'STATE_EST_DATA':       [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Enum('state_id', 8, mt.state_est_id), Floating('data', big_endian=True)],
+    'STREAM_STATUS':        [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Numeric('total_size', 24), Numeric('tx_size', 24)],
+    'STREAM_DATA':          [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Numeric('seq_id', 8), ASCII('data', 40)],
+    'STREAM_RETRY':         [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, TIMESTAMP_2, Numeric('seq_id', 8)],
     'LEDS_ON':              [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID],
     'LEDS_OFF':             [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID]
 }
