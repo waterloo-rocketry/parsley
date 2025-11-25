@@ -24,7 +24,7 @@ class ParsleyDataPayload:
 TIMESTAMP_2 = Numeric('time', 16, scale=1/1000, unit='s')
 
 @dataclass(frozen = True)
-class GeneralBoardStatus (ParsleyDataPayload):
+class GENERAL_BOARD_STATUS (ParsleyDataPayload):
     time: float
     general_board_status: str
     board_error_bitfield: str
@@ -212,7 +212,7 @@ class ACTUATOR_STATUS (ParsleyDataPayload):
         }
 
 @dataclass(frozen=True)
-class AltArmCmdPayload(ParsleyDataPayload):
+class ALT_ARM_CMD(ParsleyDataPayload):
 
     time: float
     alt_id: str
@@ -236,7 +236,7 @@ class AltArmCmdPayload(ParsleyDataPayload):
         }
 
 @dataclass(frozen=True)
-class AltArmStatusPayload(ParsleyDataPayload):
+class ALT_ARM_STATUS(ParsleyDataPayload):
     time: float
     alt_id: str
     alt_arm_state: str
@@ -265,30 +265,7 @@ class AltArmStatusPayload(ParsleyDataPayload):
         }
 
 @dataclass(frozen=True)
-class SensorTempPayload(ParsleyDataPayload):
-    time: float
-    temp_sensor_id: int
-    temperature: float
-
-    @classmethod
-    def from_bitstring(cls, bit_str: BitString):
-        time = TIMESTAMP_2.decode(bit_str)
-        temp_sensor_id = Numeric("temp_sensor_id", 8).decode(bit_str)
-        temperature = Numeric("temperature", 32, scale=1 / 2**10, unit="°C", signed=True).decode(bit_str)
-        return cls(time, temp_sensor_id, temperature)
-
-    def get_identifier(self) -> str | None:
-        return self.temp_sensor_id
-    def get_time(self) -> float:
-        return self.time
-    def get_data_dict(self) -> dict:
-        return {
-            "temp_sensor_id": self.temp_sensor_id,
-            "temperature": self.temperature
-        }
-
-@dataclass(frozen=True)
-class SensorAltitudePayload(ParsleyDataPayload):
+class SENSOR_ALTITUDE(ParsleyDataPayload):
     time: float
     altitude: int
     apogee_state: str
@@ -311,7 +288,7 @@ class SensorAltitudePayload(ParsleyDataPayload):
         }
 
 @dataclass(frozen=True)
-class SensorImuPayload(ParsleyDataPayload):
+class SENSOR_IMU(ParsleyDataPayload):
     time: float
     imu_id: str
     linear_accel: int
@@ -337,7 +314,7 @@ class SensorImuPayload(ParsleyDataPayload):
         }
 
 @dataclass(frozen=True)
-class SensorMagPayload(ParsleyDataPayload):
+class SENSOR_MAG(ParsleyDataPayload):
     time: float
     imu_id: str
     mag: int
@@ -360,7 +337,7 @@ class SensorMagPayload(ParsleyDataPayload):
         }
     
 @dataclass(frozen=True)
-class SensorBaroPayload(ParsleyDataPayload):
+class SENSOR_BARO(ParsleyDataPayload):
     time: float
     imu_id: str
     pressure: int
@@ -386,7 +363,7 @@ class SensorBaroPayload(ParsleyDataPayload):
         }
 
 @dataclass(frozen=True)
-class SensorAnalogPayload(ParsleyDataPayload):
+class SENSOR_ANALOG(ParsleyDataPayload):
     time: float
     sensor_id: str
     value: int
@@ -409,7 +386,7 @@ class SensorAnalogPayload(ParsleyDataPayload):
         }
 
 @dataclass(frozen=True)
-class GpsTimestampPayload(ParsleyDataPayload):
+class GPS_TIMESTAMP(ParsleyDataPayload):
     time: float
     hrs: int
     mins: int
@@ -438,7 +415,7 @@ class GpsTimestampPayload(ParsleyDataPayload):
         }
 
 @dataclass(frozen=True)
-class GpsLatitudePayload(ParsleyDataPayload):
+class GPS_LATITUDE(ParsleyDataPayload):
     time: float
     degs: int
     mins: int
@@ -467,7 +444,7 @@ class GpsLatitudePayload(ParsleyDataPayload):
         }
 
 @dataclass(frozen=True)
-class GpsLongitudePayload(ParsleyDataPayload):
+class GPS_LONGITUDE(ParsleyDataPayload):
     time: float
     degs: int
     mins: int
@@ -496,7 +473,7 @@ class GpsLongitudePayload(ParsleyDataPayload):
         }
 
 @dataclass(frozen=True)
-class GpsAltitudePayload(ParsleyDataPayload):
+class GPS_ALTITUDE(ParsleyDataPayload):
     time: float
     altitude: int
     daltitude: int
@@ -522,7 +499,7 @@ class GpsAltitudePayload(ParsleyDataPayload):
         }
 
 @dataclass(frozen=True)
-class GpsInfoPayload(ParsleyDataPayload):
+class GPS_INFO(ParsleyDataPayload):
     time: float
     num_sats: int
     quality: int
@@ -546,7 +523,7 @@ class GpsInfoPayload(ParsleyDataPayload):
 
 
 @dataclass(frozen=True)
-class StateEstDataPayload(ParsleyDataPayload):
+class STATE_EST_DATA(ParsleyDataPayload):
     time: float
     state_id: str
     data: float
@@ -568,10 +545,82 @@ class StateEstDataPayload(ParsleyDataPayload):
             "data": self.data
         }
     
+@dataclass(frozen=True)
+class STREAM_STATUS(ParsleyDataPayload):
+    time: float
+    total_size: int
+    tx_size: int
+
+    @classmethod
+    def from_bitstring(cls, bit_str: BitString):
+        time = TIMESTAMP_2.decode(bit_str)
+        total_size = Numeric("total_size", 24).decode(bit_str)
+        tx_size = Numeric("tx_size", 24).decode(bit_str)
+        return cls(time, total_size, tx_size)
+
+    def get_identifier(self) -> str | None:
+        return None
+
+    def get_time(self) -> float:
+        return self.time
+
+    def get_data_dict(self) -> dict:
+        return {
+            "total_size": self.total_size,
+            "tx_size": self.tx_size
+        }
+
+@dataclass(frozen=True)
+class STREAM_DATA(ParsleyDataPayload):
+    time: float
+    seq_id: int
+    data: str
+
+    @classmethod
+    def from_bitstring(cls, bit_str: BitString):
+        time = TIMESTAMP_2.decode(bit_str)
+        seq_id = Numeric("seq_id", 8).decode(bit_str)
+        data = ASCII("data", 40).decode(bit_str)
+        return cls(time, seq_id, data)
+
+    def get_identifier(self) -> str | None:
+        return None
+
+    def get_time(self) -> float:
+        return self.time
+
+    def get_data_dict(self) -> dict:
+        return {
+            "seq_id": self.seq_id,
+            "data": self.data
+        }
+
+@dataclass(frozen=True)
+class STREAM_RETRY(ParsleyDataPayload):
+    time: float
+    seq_id: int
+
+    @classmethod
+    def from_bitstring(cls, bit_str: BitString):
+        time = TIMESTAMP_2.decode(bit_str)
+        seq_id = Numeric("seq_id", 8).decode(bit_str)
+        return cls(time, seq_id)
+
+    def get_identifier(self) -> str | None:
+        return None
+
+    def get_time(self) -> float:
+        return self.time
+
+    def get_data_dict(self) -> dict:
+        return {
+            "seq_id": self.seq_id
+        }
+
 # Factory function to build each type
 def parse_payload(msg_type, bit_str):
     mapping = {
-        "GENERAL_BOARD_STATUS": GeneralBoardStatus,
+        "GENERAL_BOARD_STATUS": GENERAL_BOARD_STATUS,
         "RESET_CMD": RESET_CMD,
         "DEBUG_RAW": DEBUG_RAW,
         "CONFIG_SET": CONFIG_SET,
@@ -579,24 +628,26 @@ def parse_payload(msg_type, bit_str):
         "ACTUATOR_CMD": ACTUATOR_CMD,
         "ACTUATOR_ANALOG_CMD": ACTUATOR_ANALOG_CMD,
         "ACTUATOR_STATUS": ACTUATOR_STATUS,
-        "ALT_ARM_CMD": AltArmCmdPayload,
-        "ALT_ARM_STATUS": AltArmStatusPayload,
-        "SENSOR_TEMP": SensorTempPayload,
-        "SENSOR_ALTITUDE": SensorAltitudePayload,
-        "SENSOR_IMU_X": SensorImuPayload,
-        "SENSOR_IMU_Y": SensorImuPayload,
-        "SENSOR_IMU_Z": SensorImuPayload,
-        "SENSOR_MAG_X": SensorMagPayload,
-        "SENSOR_MAG_Y": SensorMagPayload,
-        "SENSOR_MAG_Z": SensorMagPayload,
-        "SENSOR_BARO": SensorBaroPayload,
-        "SENSOR_ANALOG": SensorAnalogPayload,
-        "GPS_TIMESTAMP": GpsTimestampPayload,
-        "GPS_LATITUDE": GpsLatitudePayload,
-        "GPS_LONGITUDE": GpsLongitudePayload,
-        "GPS_ALTITUDE": GpsAltitudePayload,
-        "GPS_INFO": GpsInfoPayload,
-        "STATE_EST_DATA": StateEstDataPayload,
+        "ALT_ARM_CMD": ALT_ARM_CMD,
+        "ALT_ARM_STATUS": ALT_ARM_STATUS,
+        "SENSOR_ALTITUDE": SENSOR_ALTITUDE,
+        "SENSOR_IMU_X": SENSOR_IMU,
+        "SENSOR_IMU_Y": SENSOR_IMU,
+        "SENSOR_IMU_Z": SENSOR_IMU,
+        "SENSOR_MAG_X": SENSOR_MAG,
+        "SENSOR_MAG_Y": SENSOR_MAG,
+        "SENSOR_MAG_Z": SENSOR_MAG,
+        "SENSOR_BARO": SENSOR_BARO,
+        "SENSOR_ANALOG": SENSOR_ANALOG,
+        "GPS_TIMESTAMP": GPS_TIMESTAMP,
+        "GPS_LATITUDE": GPS_LATITUDE,
+        "GPS_LONGITUDE": GPS_LONGITUDE,
+        "GPS_ALTITUDE": GPS_ALTITUDE,
+        "GPS_INFO": GPS_INFO,
+        "STATE_EST_DATA": STATE_EST_DATA,
+        "STREAM_STATUS": STREAM_STATUS,
+        "STREAM_DATA": STREAM_DATA,
+        "STREAM_RETRY": STREAM_RETRY,
     }
 
     payload_cls = mapping.get(msg_type) # gets the corresponding class
