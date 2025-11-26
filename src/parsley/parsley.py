@@ -8,6 +8,7 @@ from parsley.message_definitions import CAN_MESSAGE, MESSAGE_PRIO, MESSAGE_TYPE,
 import parsley.message_types as mt
 import parsley.parse_utils as pu
 from parsley.parsley_message import ParsleyObject, ParsleyError
+from deprecated import deprecated
 
 T = TypeVar("T")
 
@@ -29,7 +30,9 @@ def parse_fields(bit_str: BitString, fields: List[Field]) -> dict[str, T]:
     
     return res
 
-def parse(msg_sid: bytes, msg_data: bytes) -> ParsleyObject:
+
+@deprecated(version='2026.1', reason="This function is outdated, use the class implementatio instead")
+def parse(msg_sid: bytes, msg_data: bytes) -> dict:
     """
     Extracts the message_type and board_id from msg_sid to construct a CAN message along with message_data.
     Upon reading poorly formatted data, the error is caught and returned in the dictionary.
@@ -41,35 +44,26 @@ def parse(msg_sid: bytes, msg_data: bytes) -> ParsleyObject:
     encoded_board_type_id = bit_str_msg_sid.pop(BOARD_TYPE_ID.length)
     encoded_board_inst_id = bit_str_msg_sid.pop(BOARD_INST_ID.length)
 
-    board_type_id = parse_board_type_id(encoded_board_type_id)
-    board_inst_id = parse_board_inst_id(encoded_board_inst_id)
-
-    msg_prio = ''
-    msg_type = ''
-    data: T = {}
+    res = parse_board_type_id(encoded_board_type_id)
+    res['board_inst_id'] = parse_board_inst_id(encoded_board_inst_id)
 
     try:
-        msg_prio = MESSAGE_PRIO.decode(encoded_msg_prio)
-        msg_type = MESSAGE_TYPE.decode(encoded_msg_type)
+        res['msg_prio'] = MESSAGE_PRIO.decode(encoded_msg_prio)
+        res['msg_type'] = MESSAGE_TYPE.decode(encoded_msg_type)
         # we splice the first element since we've already manually parsed BOARD_ID
         # if BOARD_ID threw an error, we want to try and parse the rest of the CAN message
-        fields = CAN_MESSAGE.get_fields(msg_type)[3:]
-        data = parse_fields(BitString(msg_data), fields)
+        fields = CAN_MESSAGE.get_fields(res['msg_type'])[3:]
+        res['data'] = parse_fields(BitString(msg_data), fields)
     except (ValueError, IndexError) as error:
-        # convert the 6-bit msg_type into its canlib 12-bit form and include an error object
-        return ParsleyError(
-            msg_type=pu.hexify(encoded_msg_type, is_msg_type=True),
-            msg_data=pu.hexify(msg_data),
-            error=str(error)
-        )
-
-    return ParsleyObject(
-        msg_prio=msg_prio,
-        msg_type=msg_type,
-        board_type_id=board_type_id,
-        board_inst_id=board_inst_id,
-        data=data,
-    )
+        res.update({
+            # convert the 6-bit msg_type into its canlib 12-bit form
+            'msg_type': pu.hexify(encoded_msg_type, is_msg_type=True),
+            'data': {
+                'msg_data': pu.hexify(msg_data),
+                'error': str(error)
+            }
+        })
+    return res
 
 def parse_board_type_id(encoded_board_type_id: bytes) -> dict:
     board_type_id = None
