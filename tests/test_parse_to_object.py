@@ -35,7 +35,7 @@ class TestParseToObject:
 
         msg_data = bit_str.pop(bit_str.length)
 
-        result = _ParsleyParseInternal.parse(msg_sid, msg_data)
+        result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
         res = self._to_dict(result)
 
         expected_res = {
@@ -60,7 +60,7 @@ class TestParseToObject:
         bit_str.push(*ASCII('string', 48).encode('zZz'))
         msg_data = bit_str.pop(bit_str.length)
 
-        result = _ParsleyParseInternal.parse(msg_sid, msg_data)
+        result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
         res = self._to_dict(result)
 
         expected_res = {
@@ -85,7 +85,7 @@ class TestParseToObject:
         bit_str.push(*Numeric('value', 16).encode(3300)) 
         msg_data = bit_str.pop(bit_str.length)
 
-        result = _ParsleyParseInternal.parse(msg_sid, msg_data)
+        result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
         res = self._to_dict(result)
 
         expected_res = {
@@ -105,7 +105,7 @@ class TestParseToObject:
     def test_parse_bad_msg_type(self):
         msg_sid = b'\x00\x00'
         msg_data = b'\xAB\xCD\xEF\x00'
-        result = _ParsleyParseInternal.parse(msg_sid, msg_data)
+        result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
         assert isinstance(result, ParsleyError)
         # Error messages may come from internal maps and not contain the
         # literal word 'error'. Accept any non-empty error string.
@@ -114,14 +114,14 @@ class TestParseToObject:
     def test_parse_empty(self):
         msg_sid = b''
         msg_data = b''
-        result = _ParsleyParseInternal.parse(msg_sid, msg_data)
+        result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
         assert isinstance(result, ParsleyError)
         assert result.error
 
     def test_parse_messed_up_SID(self):
         msg_sid = b'\xFF\xFF\xFF\xFF'  # Invalid SID
         msg_data = b'\x00\x00\x00\x00'  # Dummy data
-        result = _ParsleyParseInternal.parse(msg_sid, msg_data)
+        result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
         assert isinstance(result, ParsleyError)
         assert result.error
 
@@ -134,7 +134,7 @@ class TestParseToObject:
         bit_msg_sid.push(b'\x00', BOARD_INST_ID.length)  # dummy board instance
         msg_sid = bit_msg_sid.pop(MESSAGE_SID.length)
 
-        result = _ParsleyParseInternal.parse(msg_sid, b'')
+        result = _ParsleyParseInternal.parse_to_object(msg_sid, b'')
         # New object API may return either a ParsleyError or a ParsleyObject
         # with a hex `board_type_id` for invalid types. Accept both.
         if isinstance(result, ParsleyError):
@@ -147,7 +147,7 @@ class TestParseToObject:
 
         msg_data = b'\x00\x00\x01\x10\x04'  # missing main_v
 
-        result = _ParsleyParseInternal.parse(msg_sid, msg_data)
+        result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
         assert isinstance(result, ParsleyError)
         assert result.error
 
@@ -161,7 +161,7 @@ class TestParseToObject:
         msg_sid = bit_msg_sid.pop(MESSAGE_SID.length)
 
         # Accept either an error result or an object with a hex board_inst_id
-        result = _ParsleyParseInternal.parse(msg_sid, b'')
+        result = _ParsleyParseInternal.parse_to_object(msg_sid, b'')
         if isinstance(result, ParsleyError):
             assert result.msg_data is not None
         else:

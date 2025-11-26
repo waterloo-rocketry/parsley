@@ -13,6 +13,8 @@ MsgType = str #will be checked during runtime
 @dataclass
 class ParsleyError():
     """Custom exception class for Parsley errors."""
+    board_type_id: str
+    board_inst_id: str
     msg_type: str
     msg_data: str
     error: str
