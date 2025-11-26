@@ -10,7 +10,6 @@ BoardInstID = str
 MsgPrio = str #will be checked during runtime
 MsgType = str #will be checked during runtime
 
-#I CAN ALSO CREATE AN ENUM BUT I THINK THAT THIS METHOD BETTER FOR ACTUAL IMPLMENET RUNTIME
 @dataclass
 class ParsleyError():
     """Custom exception class for Parsley errors."""
@@ -40,89 +39,6 @@ class ParsleyObject(BaseModel, Generic[T]):
         if value not in mt.msg_type:
             raise ValueError(f"Invalid msg_type type '{value}'")
         return value
-
-    #confirm deletion with Chris as it only works with other Parsley Objects, cause you can always just run model dump.
-    '''   
-    def __eq__(self, other: object) -> bool: #allows comparison to dicts
-        if isinstance(other, dict):
-            isSame = True
-            
-            if self.board_type_id != other.get('board_type_id'):
-                isSame = False
-            if self.board_inst_id != other.get('board_inst_id'):
-                isSame = False
-            if self.msg_prio != other.get('msg_prio'):
-                isSame = False
-            if self.msg_type != other.get('msg_type'):
-                isSame = False
-            if self.data != other.get('data'):
-                isSame = False
-                
-            return isSame
-        
-        if isinstance(other, ParsleyObject):
-            isSame = True
-            
-            if self.board_type_id != other.board_type_id:
-                isSame = False
-            if self.board_inst_id != other.board_inst_id:
-                isSame = False
-            if self.msg_prio != other.msg_prio:
-                isSame = False
-            if self.msg_type != other.msg_type:
-                isSame = False
-            if self.data != other.data:
-                isSame = False
-                
-            return isSame
-    '''
     
     def __getitem__(self, key: str):        
-        return self.model_dump()[key]  
-    
-if __name__ == "__main__":
-    testing = ParsleyObject(
-        msg_prio="HIGHEST",
-        msg_type="GENERAL_BOARD_STATUS",
-        board_type_id="ID 1",
-        board_inst_id="Board ID 2",
-        data="Yo yo honey singh",
-    )
-    
-    testing2 = ParsleyObject(
-        msg_prio="HIGHEST",
-        msg_type="GENERAL_BOARD_STATUS",
-        board_type_id="ID 1",
-        board_inst_id="Board ID 2",
-        data="Yo yo honey singh",
-    )
-    
-    testing3 = ParsleyObject(
-        msg_prio="LOW",
-        msg_type="GENERAL_BOARD_STATUS",
-        board_type_id="ID 1",
-        board_inst_id="Board ID 2",
-        data="Yo yo honey singh",
-    )
-    
-    if (testing == testing2):
-        print("GAY")
-    else:
-        print("NAh I'd win")
-        
-    if (testing == testing3):
-        print("Peepeepoopoo")
-    else:
-        print("NAh I'd win")
-        
-    if (testing["data"] == testing2["data"]):
-        print("GAY")
-    else:
-        print("NAh I'd win")
-        
-    if (testing3["data"] == testing2["data"]):
-        print("GAY")
-    else:
-        print("NAh I'd win")
-        
-    print("peppepepeppepepep")
+        return self.model_dump()[key]
