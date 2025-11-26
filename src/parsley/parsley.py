@@ -30,7 +30,6 @@ def parse_fields(bit_str: BitString, fields: List[Field]) -> dict[str, T]:
     
     return res
 
-
 @deprecated(version='2026.1', reason="This function is outdated, use the class implementatio instead")
 def parse(msg_sid: bytes, msg_data: bytes) -> dict:
     """
