@@ -134,7 +134,7 @@ class CONFIG_STATUS (ParsleyDataPayload):
         return self.time
     def get_data_dict(self) -> dict:
         return {
-            "confi_id": self.config_id,
+            "config_id": self.config_id,
             "config_value": self.config_value,
         }
 
@@ -171,7 +171,7 @@ class ACTUATOR_ANALOG_CMD (ParsleyDataPayload):
     @classmethod
     def from_bitstring(cls, bit_str: BitString):
         time = TIMESTAMP_2.decode(bit_str)
-        actuator = Enum('actuator', 8, mt.actuator_id).decode(bit_str),
+        actuator = Enum('actuator', 8, mt.actuator_id).decode(bit_str)
         cmd_state = Numeric('cmd_state', 16).decode(bit_str)
         return cls(time, actuator, cmd_state)
     def get_identifier(self) -> str | None:
