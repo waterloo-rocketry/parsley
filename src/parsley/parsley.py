@@ -71,7 +71,7 @@ def parse_board_type_id(encoded_board_type_id: bytes) -> dict:
         board_type_id = BOARD_TYPE_ID.decode(encoded_board_type_id)
     except ValueError:
         board_type_id = pu.hexify(encoded_board_type_id)
-    return board_type_id
+    return {'board_type_id': board_type_id}
 
 def parse_board_inst_id(encoded_board_inst_id: bytes) -> str:
     board_inst_id = None

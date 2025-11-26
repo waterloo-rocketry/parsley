@@ -235,7 +235,7 @@ class LoggerParser(ParsleyParser):
     HEADER_FMT = '<IIB'
     HEADER_LEN = struct.calcsize(HEADER_FMT)
 
-    def parse(self, buf: bytes, page_number: int) -> Iterator[Union[ParsleyObject, ParsleyError]]:
+    def parse(self, buf: bytes, page_number: int) -> Union[ParsleyObject, ParsleyError]:
         if len(buf) != 4096:
             raise ValueError('Logger message must be exactly 4096 bytes')
         

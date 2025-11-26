@@ -9,7 +9,6 @@ import parsley.message_types as mt
 import utils as utilities
 import crc8 #cyclic redundancy check
 import struct
-from parsley.parsley_message import ParsleyError
 
 PARSE_LOGGER_PAGE_SIZE = 4096 
 
@@ -45,7 +44,7 @@ class TestParsley:
             }
         }
 
-        assert res.model_dump() == expected_res
+        assert res == expected_res
         
     def test_parse_partial_byte_fields(self):
         msg_sid = utilities.create_msg_sid_from_strings('LOW', 'DEBUG_RAW', '0', 'GPS', 'PAYLOAD')
@@ -73,7 +72,7 @@ class TestParsley:
             }
         }
 
-        assert res.model_dump() == expected_res
+        assert res == expected_res
         
     def test_parse_sensor_analog(self):
         msg_sid = utilities.create_msg_sid_from_strings('MEDIUM', 'SENSOR_ANALOG', '0', 'PAY_SENSOR', 'ANY')
@@ -103,25 +102,25 @@ class TestParsley:
             }
         }
 
-        assert res.model_dump() == expected_res
+        assert res == expected_res
         
     def test_parse_bad_msg_type(self):
         msg_sid = b'\x00\x00'
         msg_data = b'\xAB\xCD\xEF\x00'
         res = parsley.parse(msg_sid, msg_data)
-        assert isinstance(res, ParsleyError)
+        assert 'error' in res['data']
         
     def test_parse_empty(self):
         msg_sid = b''
         msg_data = b''
         res = parsley.parse(msg_sid, msg_data)
-        assert isinstance(res, ParsleyError) 
+        assert 'error' in res['data']   
         
     def test_parse_messed_up_SID(self):
         msg_sid = b'\xFF\xFF\xFF\xFF'  # Invalid SID
         msg_data = b'\x00\x00\x00\x00'  # Dummy data
         res = parsley.parse(msg_sid, msg_data)
-        assert isinstance(res, ParsleyError) 
+        assert 'error' in res['data']
         
     def test_parse_bad_board_type_id(self):
         # manually build message since using BOARD_TYPE_ID from message_definitions will throw an error for b'\x1F' as it is invalid
@@ -136,7 +135,7 @@ class TestParsley:
 
         res = parsley.parse(msg_sid, b'')
         assert '0x' in res['board_type_id']
-
+    
     def test_parse_bad_msg_data(self):
         msg_sid = utilities.create_msg_sid_from_strings('MEDIUM', 'ALT_ARM_STATUS', '0', 'ALTIMETER', 'PRIMARY')
 
@@ -144,7 +143,7 @@ class TestParsley:
         msg_data = b'\x00\x00\x01\x10\x04'  # missing main_v
 
         res = parsley.parse(msg_sid, msg_data)
-        assert isinstance(res, ParsleyError)
+        assert 'error' in res['data']
         
     def test_bad_board_instance(self):
         # manually build message since BOARD_INST_ID.encode() will throw an error for b'\x1F'
