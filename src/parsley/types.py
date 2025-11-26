@@ -9,7 +9,7 @@ class ParsleyDataPayload:
     def __init__(self):
         raise NotImplementedError
     @classmethod
-    def from_bitstring(cls, bit_str: BitString) -> str | None:
+    def from_bitstring(cls, bit_str: BitString):
         raise NotImplementedError
     
     def get_identifier(self) -> str | None:
