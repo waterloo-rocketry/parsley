@@ -41,8 +41,7 @@ def parse(msg_sid: bytes, msg_data: bytes) -> ParsleyObject:
     encoded_board_type_id = bit_str_msg_sid.pop(BOARD_TYPE_ID.length)
     encoded_board_inst_id = bit_str_msg_sid.pop(BOARD_INST_ID.length)
 
-    board_type_res = parse_board_type_id(encoded_board_type_id)
-    board_type_id = board_type_res.get('board_type_id')
+    board_type_id = parse_board_type_id(encoded_board_type_id)
     board_inst_id = parse_board_inst_id(encoded_board_inst_id)
 
     msg_prio = ''
@@ -59,6 +58,7 @@ def parse(msg_sid: bytes, msg_data: bytes) -> ParsleyObject:
     except (ValueError, IndexError) as error:
         # convert the 6-bit msg_type into its canlib 12-bit form and include an error object
         return ParsleyError(
+            msg_type=pu.hexify(encoded_msg_type, is_msg_type=True),
             msg_data=pu.hexify(msg_data),
             error=str(error)
         )
@@ -77,7 +77,7 @@ def parse_board_type_id(encoded_board_type_id: bytes) -> dict:
         board_type_id = BOARD_TYPE_ID.decode(encoded_board_type_id)
     except ValueError:
         board_type_id = pu.hexify(encoded_board_type_id)
-    return {'board_type_id': board_type_id}
+    return board_type_id
 
 def parse_board_inst_id(encoded_board_inst_id: bytes) -> str:
     board_inst_id = None
@@ -123,7 +123,7 @@ def parse_usb_debug(line: str) -> Union[Tuple[bytes, bytes], None]:
 
     return format_can_message(msg_sid, msg_data)
 
-def parse_logger(buf: bytes, page_number: int) -> Iterator[Tuple[bytes, bytes]]:
+def parse_logger(buf: bytes, page_number: int) -> Union[Tuple[bytes, bytes], None]:
     """
     Parse one logger record.
 

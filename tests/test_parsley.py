@@ -45,7 +45,7 @@ class TestParsley:
             }
         }
 
-        assert res == expected_res
+        assert res.model_dump() == expected_res
         
     def test_parse_partial_byte_fields(self):
         msg_sid = utilities.create_msg_sid_from_strings('LOW', 'DEBUG_RAW', '0', 'GPS', 'PAYLOAD')
@@ -73,7 +73,7 @@ class TestParsley:
             }
         }
 
-        assert res == expected_res
+        assert res.model_dump() == expected_res
         
     def test_parse_sensor_analog(self):
         msg_sid = utilities.create_msg_sid_from_strings('MEDIUM', 'SENSOR_ANALOG', '0', 'PAY_SENSOR', 'ANY')
@@ -103,7 +103,7 @@ class TestParsley:
             }
         }
 
-        assert res == expected_res
+        assert res.model_dump() == expected_res
         
     def test_parse_bad_msg_type(self):
         msg_sid = b'\x00\x00'

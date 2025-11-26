@@ -1,21 +1,23 @@
 from dataclasses import dataclass
 from typing import Literal, Generic, TypeVar
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
+import parsley.message_types as mt
 
 T = TypeVar("T")
 
 BoardTypeID = str
 BoardInstID = str
-MsgPrio = Literal["HIGHEST", "HIGH", "MEDIUM", "LOW"]
-MsgType = Literal["GENERAL_BOARD_STATUS", "RESET_CMD", "DEBUG_RAW", "CONFIG_SET", "CONFIG_STATUS", "ACTUATOR_CMD", "ACTUATOR_ANALOG_CMD", "ACTUATOR_STATUS", "ALT_ARM_CMD", "ALT_ARM_STATUS", "SENSOR_TEMP", "SENSOR_ALTITUDE", "SENSOR_IMU_X", "SENSOR_IMU_Y", "SENSOR_IMU_Z", "SENSOR_MAG_X", "SENSOR_MAG_Y", "SENSOR_MAG_Z", "SENSOR_BARO", "SENSOR_ANALOG", "GPS_TIMESTAMP", "GPS_LATITUDE", "GPS_LONGITUDE", "GPS_ALTITUDE", "GPS_INFO", "STATE_EST_DATA", "LEDS_ON", "LEDS_OFF"]
+MsgPrio = str #will be checked during runtime
+MsgType = str #will be checked during runtime
 
+#I CAN ALSO CREATE AN ENUM BUT I THINK THAT THIS METHOD BETTER FOR ACTUAL IMPLMENET RUNTIME
 @dataclass
 class ParsleyError():
     """Custom exception class for Parsley errors."""
-    
+    msg_type: str
     msg_data: str
     error: str
-
+    
 class ParsleyObject(BaseModel, Generic[T]):
     """
     Dataclass to store parsed CAN message data.
@@ -27,6 +29,20 @@ class ParsleyObject(BaseModel, Generic[T]):
     msg_type: MsgType
     data: T # ParsleyDataType
 
+    @field_validator("msg_prio")
+    def validate_msg_prio(cls, value):
+        if value not in mt.msg_prio:
+            raise ValueError(f"Invalid msg_prio type '{value}'")
+        return value
+    
+    @field_validator("msg_type")
+    def validate_msg_type(cls, value):
+        if value not in mt.msg_type:
+            raise ValueError(f"Invalid msg_type type '{value}'")
+        return value
+
+    #confirm deletion with Chris as it only works with other Parsley Objects, cause you can always just run model dump.
+    '''   
     def __eq__(self, other: object) -> bool: #allows comparison to dicts
         if isinstance(other, dict):
             isSame = True
@@ -59,14 +75,54 @@ class ParsleyObject(BaseModel, Generic[T]):
                 isSame = False
                 
             return isSame
-
-    def __getitem__(self, key: str): #allows you to access elements similarly to a dict
-        d = {
-            'msg_type': self.msg_type,
-            'board_type_id': self.board_type_id,
-            'board_inst_id': self.board_inst_id,
-            'msg_prio': self.msg_prio,
-            'data': self.data
-        }
+    '''
+    
+    def __getitem__(self, key: str):        
+        return self.model_dump()[key]  
+    
+if __name__ == "__main__":
+    testing = ParsleyObject(
+        msg_prio="HIGHEST",
+        msg_type="GENERAL_BOARD_STATUS",
+        board_type_id="ID 1",
+        board_inst_id="Board ID 2",
+        data="Yo yo honey singh",
+    )
+    
+    testing2 = ParsleyObject(
+        msg_prio="HIGHEST",
+        msg_type="GENERAL_BOARD_STATUS",
+        board_type_id="ID 1",
+        board_inst_id="Board ID 2",
+        data="Yo yo honey singh",
+    )
+    
+    testing3 = ParsleyObject(
+        msg_prio="LOW",
+        msg_type="GENERAL_BOARD_STATUS",
+        board_type_id="ID 1",
+        board_inst_id="Board ID 2",
+        data="Yo yo honey singh",
+    )
+    
+    if (testing == testing2):
+        print("GAY")
+    else:
+        print("NAh I'd win")
         
-        return d[key]  
+    if (testing == testing3):
+        print("Peepeepoopoo")
+    else:
+        print("NAh I'd win")
+        
+    if (testing["data"] == testing2["data"]):
+        print("GAY")
+    else:
+        print("NAh I'd win")
+        
+    if (testing3["data"] == testing2["data"]):
+        print("GAY")
+    else:
+        print("NAh I'd win")
+        
+    print("peppepepeppepepep")
