@@ -13,15 +13,14 @@ import struct
 PARSE_LOGGER_PAGE_SIZE = 4096 
 
 from parsley.parse_to_object import _ParsleyParseInternal, ParsleyParser, USBDebugParser, LiveTelemetryParser, LoggerParser, BitstringParser
-from parsley.parsley_message import ParsleyError
-
+from parsley.parsley_message import ParsleyError, ParsleyObject
 
 class TestParseToObject:
     def _to_dict(self, result):
         if isinstance(result, ParsleyError):
             return {'data': {'error': result.error, 'msg_data': result.msg_data}, 'msg_type': result.msg_type}
-        # ParsleyObject -> dict
-        return result.model_dump()
+        
+        return result.model_dump() # ParsleyObject -> dict
 
     def test_parse(self):
         msg_sid = utilities.create_msg_sid_from_strings('HIGH', 'GENERAL_BOARD_STATUS', '0', 'RLCS_RELAY', 'PRIMARY')
@@ -106,41 +105,39 @@ class TestParseToObject:
         msg_sid = b'\x00\x00'
         msg_data = b'\xAB\xCD\xEF\x00'
         result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
-        assert isinstance(result, ParsleyError)
-        # Error messages may come from internal maps and not contain the
-        # literal word 'error'. Accept any non-empty error string.
-        assert result.error
+        assert 'error' in result["error"]
 
     def test_parse_empty(self):
         msg_sid = b''
         msg_data = b''
         result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
         assert isinstance(result, ParsleyError)
-        assert result.error
+        assert 'error' in result.error
 
     def test_parse_messed_up_SID(self):
         msg_sid = b'\xFF\xFF\xFF\xFF'  # Invalid SID
         msg_data = b'\x00\x00\x00\x00'  # Dummy data
         result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
         assert isinstance(result, ParsleyError)
-        assert result.error
+        assert 'error' in result.error
 
     def test_parse_bad_board_type_id(self):
+        # manually build message since using BOARD_TYPE_ID from message_definitions will throw an error for b'\x1F' as it is invalid
         bit_msg_sid = BitString()
         bit_msg_sid.push(*MESSAGE_PRIO.encode('LOW'))
         bit_msg_sid.push(*MESSAGE_TYPE.encode('LEDS_ON'))
         bit_msg_sid.push(b'\x00', 2)
+        
         bit_msg_sid.push(b'\x1F', BOARD_TYPE_ID.length)  # invalid board_type
         bit_msg_sid.push(b'\x00', BOARD_INST_ID.length)  # dummy board instance
         msg_sid = bit_msg_sid.pop(MESSAGE_SID.length)
 
         result = _ParsleyParseInternal.parse_to_object(msg_sid, b'')
-        # New object API may return either a ParsleyError or a ParsleyObject
-        # with a hex `board_type_id` for invalid types. Accept both.
-        if isinstance(result, ParsleyError):
-            assert result.msg_type.startswith('0x') or result.error
-        else:
-            assert str(result.board_type_id).startswith('0x')
+        assert isinstance(result, ParsleyObject)
+        assert str(result.board_type_id) == "0x1F"
+        assert str(result.board_inst_id) == "ANY"
+        assert result.msg_prio == "LOW"
+        assert result.msg_type == "LEDS_ON"
 
     def test_parse_bad_msg_data(self):
         msg_sid = utilities.create_msg_sid_from_strings('MEDIUM', 'ALT_ARM_STATUS', '0', 'ALTIMETER', 'PRIMARY')
@@ -149,7 +146,7 @@ class TestParseToObject:
 
         result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
         assert isinstance(result, ParsleyError)
-        assert result.error
+        assert 'error' in result.error
 
     def test_bad_board_instance(self):
         bit_msg_sid = BitString()
@@ -160,35 +157,36 @@ class TestParseToObject:
         bit_msg_sid.push(b'\x1F', BOARD_INST_ID.length)  # invalid board instance
         msg_sid = bit_msg_sid.pop(MESSAGE_SID.length)
 
-        # Accept either an error result or an object with a hex board_inst_id
         result = _ParsleyParseInternal.parse_to_object(msg_sid, b'')
-        if isinstance(result, ParsleyError):
-            assert result.msg_data is not None
-        else:
-            assert str(result.board_inst_id).startswith('0x')
+        assert isinstance(result, ParsleyObject)
+        assert str(result.board_type_id) == "GPS"
+        assert str(result.board_inst_id) == "0x1F"
+        assert str(result.msg_prio) == "LOW"
+        assert str(result.msg_type) == "LEDS_ON"
 
     def test_parse_bitstring(self):
         bit_str = BitString()
         bit_str.push(b'\x12\x34\x56\x78', 32)  # 32 bits of data
         bit_str.push(b'\x9A\xBC', 16)          # 16 bits of data
-        msg_sid, msg_data = parsley.parse_bitstring(bit_str)
-        
+        result = BitstringParser().parse(bit_str)
+        res = self._to_dict(result)
         # First 29 bits of 0x123456789ABC = 0x02468ACF
-        # Remaining 19 bits = 0x9ABC
-        assert msg_sid == b'\x02\x46\x8a\xcf'
-        assert msg_data == b'\x00\x9a\xbc'
+        # Remaining 19 bits = 0x9ABC -> message data should be 0x009abc when hexified
+        assert res['msg_type'].startswith('0x')
+        # convert to int for comparison to avoid issues with leading zeros in hex strings
+        assert int(res['data']['msg_data'], 16) == int(b'\x00\x9a\xbc'.hex(), 16)
         
     def test_parse_bitstring_empty(self):
         bit_str = BitString() #just an empty bitstring
         with pytest.raises(IndexError) as e:
-            parsley.parse_bitstring(bit_str)
+            BitstringParser().parse(bit_str)
         # message content is not asserted as an index error is expected
         
     def test_parse_bitstring_small(self):
         bit_str = BitString()
         bit_str.push(b'\xFF', 8) # only 8 bits, less than required 29 bits for SID
         with pytest.raises(IndexError) as e:
-            parsley.parse_bitstring(bit_str)
+            BitstringParser().parse(bit_str)
         # message content is not asserted as an index error is expected
         
     def test_parse_bitstring_minimal(self):
@@ -197,17 +195,13 @@ class TestParseToObject:
         copy = BitString() #need a copy so that parse_bitstring can consume the copy
         copy.push(b'\x12\x34\x56\x78', 29)
         
-        msg_sid, msg_data = parsley.parse_bitstring(copy) 
+        result = BitstringParser().parse(copy)
+        res = self._to_dict(result)
 
-        print(msg_sid)
-        print(msg_data)
-
-        # Should get all 29 bits as SID, no remaining data
-        assert len(msg_data) == 0
-        # The SID should be the 29-bit value properly encoded
-        assert isinstance(msg_sid, bytes)
-        assert len(msg_sid) == 4  # 29 bits requires 4 bytes
-        assert BitString(msg_sid, 29).data == bit_str.data
+        # object with empty data.
+        assert isinstance(res['data'], dict)
+        assert res['data']['msg_data'] in ('0x0')
+        
         
     def test_calculate_msg_bit_length(self):
         msg = CAN_MESSAGE.get_fields('GENERAL_BOARD_STATUS')
@@ -262,29 +256,29 @@ class TestParseToObject:
     def test_parse_usb_debug(self):
         line = "$1234ABCD:12,34,56,78\r\n\0"
         #you get \x12\x34\xAB\xCD as SID and \x12\x34\x56\x78 as data (first part vs second part)
-        
-        msg_sid, msg_data = parsley.parse_usb_debug(line)
-        
-        assert msg_sid == b'\x12\x34\xab\xcd' 
-        assert msg_data == b'\x12\x34\x56\x78' 
+        result = USBDebugParser().parse(line)
+        res = self._to_dict(result)
+        # msg_data should be hexified in the parsed result
+        assert int(res['data']['msg_data'], 16) == int(b'\x12\x34\x56\x78'.hex(), 16)
         
     def test_parse_usb_data_empty(self):
         line = "$ABCD1234"
-        msg_sid, msg_data = parsley.parse_usb_debug(line)
-        
-        assert msg_sid == b'\xab\xcd\x12\x34' 
-        assert msg_data == b''
+        result = USBDebugParser().parse(line)
+        res = self._to_dict(result)
+       
+        assert isinstance(res['data'], dict)
+        assert(res['data'].get('msg_data') == '0x0')
         
     def test_parse_usb_debug_invalid_format(self): # need a $ at start 
         line = "1234:AA,BB"
         with pytest.raises(ValueError) as e:
-            parsley.parse_usb_debug(line)
+            USBDebugParser().parse(line)
         assert "Incorrect line format" in str(e.value)
             
     def test_parse_usb_debug_empty_line(self):
         line = ""
         with pytest.raises(ValueError) as e:
-            parsley.parse_usb_debug(line)
+            USBDebugParser().parse(line)
         assert "Incorrect line format" in str(e.value)
         
     def test_parse_logger(self):
@@ -316,21 +310,22 @@ class TestParseToObject:
         # Fill unused bytes after last message with 0xff
         buf[offset:] = b"\xff" * (len(buf) - offset)
         
-        results = list(parsley.parse_logger(bytes(buf), 0x64))
-        
+        results = list(LoggerParser().parse(bytes(buf), 0x64))
         assert len(results) == 3
 
-        msg_sid, msg_data = results[0]
-        assert msg_sid == b'\x01\x11'  # Only uses bytes needed for 0x111
-        assert msg_data == b'\x01\x02'
+        r0 = self._to_dict(results[0])
+        r1 = self._to_dict(results[1])
+        r2 = self._to_dict(results[2])
+
+        assert r0['msg_type'].startswith('0x')
+        assert int(r0['data']['msg_data'], 16) == int(b'\x01\x02'.hex(), 16)
         
-        msg_sid, msg_data = results[1]
-        assert msg_sid == b'\x03\x33'
-        assert msg_data == b'\x03\x04\x05'  
+        assert r1['msg_type'].startswith('0x')
+        assert int(r1['data']['msg_data'], 16) == int(b'\x03\x04\x05'.hex(), 16)
         
-        msg_sid, msg_data = results[2]
-        assert msg_sid == b'\x05\x55' 
-        assert msg_data == b'\x06'
+        assert r2['msg_type'].startswith('0x')
+        assert int(r2['data']['msg_data'], 16) == int(b'\x06'.hex(), 16)
+        
         
     def test_parse_logger_wrong_size(self):
         buf = b"LOG" + b"\x00" * (PARSE_LOGGER_PAGE_SIZE - 4)  # only 4095 bytes (3 for 'LOG', 1 for sequence)
@@ -338,19 +333,19 @@ class TestParseToObject:
         assert len(buf) < PARSE_LOGGER_PAGE_SIZE
 
         with pytest.raises(ValueError) as e:
-            list(parsley.parse_logger(buf, 0))
+            list(LoggerParser().parse(buf, 0))
         assert "exactly 4096 bytes" in str(e.value)
             
     def test_parse_logger_wrong_signature(self): # wrong LOG_MAGIC bytes
         buf = b"BAD" + b"\x00" * 4093
         with pytest.raises(ValueError) as e:
-            list(parsley.parse_logger(buf, 0))
+            list(LoggerParser().parse(buf, 0))
         assert "Missing 'LOG' signature" in str(e.value)
             
     def test_parse_logger_wrong_page_number(self):
         buf = b"LOG\x05" + b"\x00" * 4092  # Page 5 in buffer
         with pytest.raises(ValueError) as e:
-            list(parsley.parse_logger(buf, 10))  # Expect page 10
+            list(LoggerParser().parse(buf, 10))  # Expect page 10
         assert "Page number mismatch" in str(e.value)
 
     def test_parse_logger_empty(self):
@@ -360,7 +355,7 @@ class TestParseToObject:
         
         buf[4:] = b"\xff" * (len(buf) - 4) # Fill unused bytes with 0xff
 
-        results = list(parsley.parse_logger(bytes(buf), 0))
+        results = list(LoggerParser().parse(bytes(buf), 0))
         assert len(results) == 0
     
     def test_parse_live_telemetry_basic(self):
@@ -381,22 +376,22 @@ class TestParseToObject:
         crc = crc8.crc8(frame).digest()[0]
         frame.append(crc) #actually adds the crc byte
 
-        msg_sid, msg_data = parsley.parse_live_telemetry(bytes(frame))
-        
-        expected_sid = 0x12345678 & 0x1FFFFFFF #29-bit mask
-        assert msg_sid == expected_sid.to_bytes((expected_sid.bit_length() + 7) // 8, 'big')
-        assert msg_data == b'\xaa\xbb\xcc'
+        result = LiveTelemetryParser().parse(bytes(frame))
+        res = self._to_dict(result)
+        expected_val = int.from_bytes(b'\xaa\xbb\xcc', 'big')
+        assert res['msg_type'].startswith('0x')
+        assert int(res['data']['msg_data'], 16) == expected_val
         
     def test_parse_live_telemetry_too_short(self):
         frame = b'\x02\x06\x12\x34'  #4 bytes, need at least 7
         with pytest.raises(ValueError) as e:
-            parsley.parse_live_telemetry(frame)
+            LiveTelemetryParser().parse(frame)
         assert "Incorrect frame length" in str(e.value)
             
     def test_parse_live_telemetry_wrong_header(self):
         frame = b'\x03\x08\x12\x34\x56\x78\xAA\x00'  #header = 0x03 instead of 0x02
         with pytest.raises(ValueError) as e:
-            parsley.parse_live_telemetry(frame)
+            LiveTelemetryParser().parse(frame)
         assert "Incorrect frame header" in str(e.value)
             
     def test_parse_live_telemetry_bad_crc(self):
@@ -404,5 +399,5 @@ class TestParseToObject:
         frame = bytearray([0x02, 0x08, 0x12, 0x34, 0x56, 0x78, 0xAA, 0xFF])  # wrong CRC
         
         with pytest.raises(ValueError) as e:
-            parsley.parse_live_telemetry(bytes(frame))
+            LiveTelemetryParser().parse(bytes(frame))
         assert "Bad checksum" in str(e.value)

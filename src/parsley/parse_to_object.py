@@ -115,6 +115,11 @@ class _ParsleyParseInternal:
         Extracts the message_type and board_id from msg_sid to construct a Parsley Object along with message_data.
         Upon reading poorly formatted data, the error is caught and returned in a ParsleyError obejct.
         """
+        # Allow callers to pass integer SID
+        if isinstance(msg_sid, int):
+            sid_bytes, data_bytes = _ParsleyParseInternal._format_can_message(msg_sid,list(msg_data))
+            msg_sid = sid_bytes
+            msg_data = data_bytes
         
         # begin parsing
         bit_str_msg_sid = BitString(msg_sid, MESSAGE_SID.length)
@@ -145,7 +150,7 @@ class _ParsleyParseInternal:
                 board_inst_id=board_inst_id,
                 msg_type=pu.hexify(encoded_msg_type, is_msg_type=True),
                 msg_data =pu.hexify(msg_data),
-                error=str(error)
+                error=f"error: {error}"
             )
             
         return ParsleyObject(

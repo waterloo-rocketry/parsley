@@ -190,9 +190,6 @@ class TestParsley:
         
         msg_sid, msg_data = parsley.parse_bitstring(copy) 
 
-        print(msg_sid)
-        print(msg_data)
-
         # Should get all 29 bits as SID, no remaining data
         assert len(msg_data) == 0
         # The SID should be the 29-bit value properly encoded
