@@ -102,13 +102,30 @@ class TestCANMessage:
         assert res["drogue_v"] == 1280
         assert res["main_v"] == 2560
 
-    def test_sensor_temp(self, bit_str2):
-        # ID 1 (0x01), Temperature -128.0°C. Raw value for -128.0 * 1024 = -131072 = 0xFFFE0000 (signed 32-bit)
-        bit_str2.push(b"\x01\xFF\xFE\x00\x00", 40)
-        res = parsley.parse_fields(bit_str2, MESSAGES["SENSOR_TEMP"][3:])
+    def test_stream_status(self, bit_str2):
+        # total_size 0x000A1B (2587), tx_size 0x000005 (5)
+        bit_str2.push(b"\x00\x0A\x1B\x00\x00\x05", 48)
+        res = parsley.parse_fields(bit_str2, MESSAGES["STREAM_STATUS"][3:])
 
-        assert res["temp_sensor_id"] == 1
-        assert res["temperature"] == -128.0
+        assert res["total_size"] == 2587
+        assert res["tx_size"] == 5
+    
+    def test_stream_data(self, bit_str2):
+        # seq_id 0x12 (18), data "cools"
+        # push seq_id first (8 bits) then the 40-bit ASCII field (5 bytes)
+        bit_str2.push(b"\x12", 8)
+        bit_str2.push(b"cools", 40)
+        res = parsley.parse_fields(bit_str2, MESSAGES["STREAM_DATA"][3:])
+
+        assert res["seq_id"] == 18
+        assert res["data"] == "cools"
+        
+    def test_stream_retry(self, bit_str2):
+        # seq_id 0x34 (52)
+        bit_str2.push(b"\x34", 8)
+        res = parsley.parse_fields(bit_str2, MESSAGES["STREAM_RETRY"][3:])
+
+        assert res["seq_id"] == 52
 
     def test_sensor_altitude(self, bit_str2):
         # Altitude 3000m (0x00000BB8), APOGEE_NOT_REACHED (0x01)

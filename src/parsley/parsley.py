@@ -48,7 +48,7 @@ def parse(msg_sid: bytes, msg_data: bytes) -> dict:
         # if BOARD_ID threw an error, we want to try and parse the rest of the CAN message
         fields = CAN_MESSAGE.get_fields(res['msg_type'])[3:]
         res['data'] = parse_fields(BitString(msg_data), fields)
-    except (ValueError, IndexError) as error:
+    except (ValueError, IndexError, KeyError) as error:
         res.update({
             # convert the 6-bit msg_type into its canlib 12-bit form
             'msg_type': pu.hexify(encoded_msg_type, is_msg_type=True),

@@ -78,9 +78,9 @@ class TestParsley:
         msg_sid = utilities.create_msg_sid_from_strings('MEDIUM', 'SENSOR_ANALOG', '0', 'PAY_SENSOR', 'ANY')
         
         """
-        MEDIUM = 0x2, SENSOR_ANALOG = 0x014, PAY_SENSOR = 0x40, ANY = 0x00
+        MEDIUM = 0x2, SENSOR_ANALOG = 0x013, PAY_SENSOR = 0x40, ANY = 0x00
         """
-        assert msg_sid == b'\x10\x50\x40\x00'
+        assert msg_sid == b'\x10\x4c\x40\x00'
 
         bit_str = BitString()
         bit_str.push(*TIMESTAMP_2.encode(12.345)) 
