@@ -206,7 +206,7 @@ class TestParseToObject:
 
         # object with empty data.
         assert isinstance(res['data'], dict)
-        assert res['data']['msg_data'] in ('0x0')
+        assert res['data']['msg_data'] == '0x0'
         
         
     def test_calculate_msg_bit_length(self):

@@ -1,13 +1,11 @@
 import crc8
-from typing import List, Tuple, Union, Iterator, TypeVar
+from typing import List, Tuple, Union, TypeVar
 import struct
-from pydantic import BaseModel
 from parsley.bitstring import BitString
 from parsley.fields import Field, Switch, Bitfield
 from parsley.message_definitions import CAN_MESSAGE, MESSAGE_PRIO, MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_SID
 import parsley.message_types as mt
 import parsley.parse_utils as pu
-from parsley.parsley_message import ParsleyObject, ParsleyError
 from deprecated import deprecated
 
 T = TypeVar("T")
