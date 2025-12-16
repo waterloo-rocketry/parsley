@@ -22,7 +22,7 @@ BOARD_INST_ID_LEN = max([len(board_inst_id) for board_inst_id in mt.board_inst_i
 
 class _ParsleyParseInternal:
     def __init__(self):
-        raise NotImplementedError("This class is static only")
+        raise NotImplementedError("This class is static only do not instantiate it")
 
     @staticmethod
     def format_line(parsed_data: dict) -> str:
@@ -92,7 +92,7 @@ class _ParsleyParseInternal:
         return formatted_msg_sid, formatted_msg_data
 
     @staticmethod
-    def _parse_board_type_id(encoded_board_type_id: bytes) -> dict:
+    def _parse_board_type_id(encoded_board_type_id: bytes) -> str:
         board_type_id = None
         try:
             board_type_id = BOARD_TYPE_ID.decode(encoded_board_type_id)
@@ -113,7 +113,7 @@ class _ParsleyParseInternal:
     def parse_to_object(msg_sid: bytes, msg_data: bytes) -> Union[ParsleyObject, ParsleyError]:
         """
         Extracts the message_type and board_id from msg_sid to construct a Parsley Object along with message_data.
-        Upon reading poorly formatted data, the error is caught and returned in a ParsleyError obejct.
+        Upon reading poorly formatted data, the error is caught and returned in a ParsleyError object.
         """
         # Allow callers to pass integer SID
         if isinstance(msg_sid, int):
@@ -171,7 +171,7 @@ class ParsleyParser(ABC):
 class USBDebugParser(ParsleyParser):
     """ Parse ASCII USB-debug lines """
 
-    def parse(self, line: str) -> Union[ParsleyObject, ParsleyError]:
+    def parse(self, line: str) -> ParsleyObject | ParsleyError:
         line = line.strip(' \0\r\n')
         if len(line) == 0 or line[0] != '$':
             raise ValueError('Incorrect line format')

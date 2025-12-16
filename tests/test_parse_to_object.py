@@ -22,6 +22,11 @@ class TestParseToObject:
         
         return result.model_dump() # ParsleyObject -> dict
 
+    def test_internal_class_cannot_be_instantiated(self):
+        with pytest.raises(NotImplementedError) as e:
+            _ParsleyParseInternal()
+        assert "static only" in str(e.value)
+
     def test_parse(self):
         msg_sid = utilities.create_msg_sid_from_strings('HIGH', 'GENERAL_BOARD_STATUS', '0', 'RLCS_RELAY', 'PRIMARY')
 
@@ -105,7 +110,8 @@ class TestParseToObject:
         msg_sid = b'\x00\x00'
         msg_data = b'\xAB\xCD\xEF\x00'
         result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
-        assert 'error' in result["error"]
+        assert isinstance(result, ParsleyError)
+        assert 'error' in result.error
 
     def test_parse_empty(self):
         msg_sid = b''
