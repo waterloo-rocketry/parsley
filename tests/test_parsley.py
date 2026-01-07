@@ -9,7 +9,6 @@ import parsley.message_types as mt
 import utils as utilities
 import crc8 #cyclic redundancy check
 import struct
-from parsley.parsley_message import ParsleyError
 
 PARSE_LOGGER_PAGE_SIZE = 4096 
 

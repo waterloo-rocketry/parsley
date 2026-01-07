@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import Literal, Generic, TypeVar
+from typing import Generic, TypeVar
 from pydantic import BaseModel, field_validator
 import parsley.message_types as mt
 
@@ -11,7 +11,7 @@ MsgPrio = str | None #will be checked during runtime
 MsgType = str | None #will be checked during runtime
 
 @dataclass
-class ParsleyError(Generic[T]):
+class ParsleyError():
     """Custom error container for Parsley errors."""
     board_type_id: BoardTypeID
     board_inst_id: BoardInstID
