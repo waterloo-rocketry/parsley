@@ -83,7 +83,7 @@ class _ParsleyParseInternal:
         return res
 
     @staticmethod
-    def format_can_message(msg_sid: int, msg_data: list[int]) -> tuple[bytes, bytes] | None:
+    def format_can_message(msg_sid: int, msg_data: list[int]) -> tuple[bytes, bytes]:
         msg_sid_length = (msg_sid.bit_length() + 7) // 8
         formatted_msg_sid = msg_sid.to_bytes(msg_sid_length, byteorder='big')
         formatted_msg_data = bytes(msg_data)
@@ -212,10 +212,10 @@ class LoggerParser(ParsleyParser):
     Parse one logger record.
 
     Layout  (little-endian unless stated):
-        0  – 2  : ASCII 'L','O','G'
+        0  - 2  : ASCII 'L','O','G'
         3       : page number (uint8)
-        4  – 12 : SID (uint32 LE) | timestamp (uint32 LE) | DLC (uint8)
-        13 – .. : up to 8 bytes CAN payload
+        4  - 12 : SID (uint32 LE) | timestamp (uint32 LE) | DLC (uint8)
+        13 - .. : up to 8 bytes CAN payload
         -- ff-padding may follow, removed before parsing --
 
     Returns whatever `format_can_message()` returns.
