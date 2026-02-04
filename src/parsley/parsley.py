@@ -19,7 +19,7 @@ def parse_fields(bit_str: BitString, fields: list[Field]) -> dict[str, Any]:
     """
     return _ParsleyParseInternal.parse_fields(bit_str, fields)
 
-@deprecated(version='2026.2', reason="This function is outdated, use the class implementation instead")
+@deprecated(version='2026.2', reason="Deprecated; use _ParsleyParseInternal.parse_to_object in parsley.parse_to_object (or whichever object the data is supposed to become)")
 def parse(msg_sid: bytes, msg_data: bytes) -> dict:
     """
     Extracts the message_type and board_id from msg_sid to construct a CAN message along with message_data.
@@ -39,7 +39,7 @@ def parse(msg_sid: bytes, msg_data: bytes) -> dict:
             }
         }
     else:
-        return result.model_dump()
+        return result.model_dump(mode='json')
 
 @deprecated(version='2026.2', reason="Deprecated; use BitstringParser.parse in the new BitstringParser object")
 def parse_bitstring(bit_str: BitString) -> tuple[bytes, bytes]:
