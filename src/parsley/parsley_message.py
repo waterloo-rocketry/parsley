@@ -9,6 +9,7 @@ BoardTypeID = str
 BoardInstID = str
 MsgPrio = str | None #will be checked during runtime
 MsgType = str | None #will be checked during runtime
+MsgMetadata = str | None #will be checked during runtime
 
 @dataclass
 class ParsleyError():
@@ -31,6 +32,7 @@ class ParsleyObject(BaseModel, Generic[T]):
     board_inst_id: BoardInstID
     msg_prio: MsgPrio
     msg_type: MsgType
+    msg_metadata: MsgMetadata
     data: T # ParsleyDataType
 
     @field_validator("msg_prio")

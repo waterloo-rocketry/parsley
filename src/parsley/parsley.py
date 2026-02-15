@@ -3,7 +3,7 @@ from typing import Any
 import struct
 from parsley.bitstring import BitString
 from parsley.fields import Field, Switch, Bitfield
-from parsley.message_definitions import CAN_MESSAGE, MESSAGE_PRIO, MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_SID
+from parsley.message_definitions import CAN_MESSAGE, MESSAGE_METADATA, MESSAGE_PRIO, MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_SID
 import parsley.message_types as mt
 import parsley.parse_utils as pu
 from deprecated import deprecated
@@ -36,9 +36,9 @@ def parse(msg_sid: bytes, msg_data: bytes) -> dict:
     bit_str_msg_sid = BitString(msg_sid, MESSAGE_SID.length)
     encoded_msg_prio = bit_str_msg_sid.pop(MESSAGE_PRIO.length)
     encoded_msg_type = bit_str_msg_sid.pop(MESSAGE_TYPE.length)
-    bit_str_msg_sid.pop(2) # reserved field
     encoded_board_type_id = bit_str_msg_sid.pop(BOARD_TYPE_ID.length)
     encoded_board_inst_id = bit_str_msg_sid.pop(BOARD_INST_ID.length)
+    encoded_msg_metadata = bit_str_msg_sid.pop(MESSAGE_METADATA.length)
 
     res = parse_board_type_id(encoded_board_type_id)
     res['board_inst_id'] = parse_board_inst_id(encoded_board_inst_id)
@@ -46,6 +46,7 @@ def parse(msg_sid: bytes, msg_data: bytes) -> dict:
     try:
         res['msg_prio'] = MESSAGE_PRIO.decode(encoded_msg_prio)
         res['msg_type'] = MESSAGE_TYPE.decode(encoded_msg_type)
+        res['msg_metadata'] = MESSAGE_METADATA.decode(encoded_msg_metadata)
         # we splice the first element since we've already manually parsed BOARD_ID
         # if BOARD_ID threw an error, we want to try and parse the rest of the CAN message
         fields = CAN_MESSAGE.get_fields(res['msg_type'])[3:]
@@ -182,13 +183,14 @@ def encode_data(parsed_data: dict) -> tuple[int, list[int]]:
     msg_type = parsed_data['msg_type']
     board_type_id = parsed_data['board_type_id']
     board_inst_id = parsed_data['board_inst_id']
+    msg_metadata = parsed_data['msg_metadata']
 
     bit_str = BitString()
     bit_str.push(*MESSAGE_PRIO.encode(msg_prio))
     bit_str.push(*MESSAGE_TYPE.encode(msg_type))
-    bit_str.push(bytes([0, 0]), 2)
     bit_str.push(*BOARD_TYPE_ID.encode(board_type_id))
     bit_str.push(*BOARD_INST_ID.encode(board_inst_id))
+    bit_str.push(*MESSAGE_METADATA.encode(msg_metadata))
     msg_sid = int.from_bytes(bit_str.pop(bit_str.length), byteorder='big')
 
     # skip the first field (board_id) since thats parsed separately
@@ -201,6 +203,7 @@ MSG_PRIO_LEN = max([len(msg_prio) for msg_prio in mt.msg_prio])
 MSG_TYPE_LEN = max([len(msg_type) for msg_type in mt.msg_type])
 BOARD_TYPE_ID_LEN = max([len(board_type_id) for board_type_id in mt.board_type_id])
 BOARD_INST_ID_LEN = max([len(board_inst_id) for board_inst_id in mt.board_inst_id])
+MSG_METADATA_LEN = 8
 
 # formats a parsed CAN message (dictionary) into a singular line
 @deprecated(version='2026.2', reason="Deprecated; use _ParsleyParseInternal.format_line in parsley.parse_to_object (or whichever object the data is supposed to become)")
@@ -209,6 +212,7 @@ def format_line(parsed_data: dict) -> str:
     msg_type = parsed_data['msg_type']
     board_type_id = parsed_data['board_type_id']
     board_inst_id = parsed_data['board_inst_id']
+    msg_metadata = parsed_data['msg_metadata']
     data = parsed_data['data']
     res = f'[ {msg_prio:<{MSG_PRIO_LEN}} {msg_type:<{MSG_TYPE_LEN}} {board_type_id:<{BOARD_TYPE_ID_LEN}} {board_inst_id:<{BOARD_INST_ID_LEN}} ]'
     for k, v in data.items():
