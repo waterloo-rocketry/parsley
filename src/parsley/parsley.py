@@ -49,7 +49,7 @@ def parse(msg_sid: bytes, msg_data: bytes) -> dict:
         res['msg_metadata'] = MESSAGE_METADATA.decode(encoded_msg_metadata)
         # we splice the first element since we've already manually parsed BOARD_ID
         # if BOARD_ID threw an error, we want to try and parse the rest of the CAN message
-        fields = CAN_MESSAGE.get_fields(res['msg_type'])[3:]
+        fields = CAN_MESSAGE.get_fields(res['msg_type'])[4:]
         res['data'] = parse_fields(BitString(msg_data), fields)
     except (ValueError, IndexError, KeyError) as error:
         res.update({
@@ -194,7 +194,7 @@ def encode_data(parsed_data: dict) -> tuple[int, list[int]]:
     msg_sid = int.from_bytes(bit_str.pop(bit_str.length), byteorder='big')
 
     # skip the first field (board_id) since thats parsed separately
-    for field in CAN_MESSAGE.get_fields(msg_type)[3:]:
+    for field in CAN_MESSAGE.get_fields(msg_type)[4:]:
         bit_str.push(*field.encode(parsed_data[field.name]))
     msg_data = [byte for byte in bit_str.pop(bit_str.length)]
     return msg_sid, msg_data

@@ -59,7 +59,7 @@ class _ParsleyParseInternal:
         msg_sid = int.from_bytes(bit_str.pop(bit_str.length), byteorder='big')
 
         # skip the first field (board_id) since thats parsed separately
-        for field in CAN_MESSAGE.get_fields(msg_type)[3:]:
+        for field in CAN_MESSAGE.get_fields(msg_type)[4:]:
             bit_str.push(*field.encode(parsed_data[field.name]))
         msg_data = [byte for byte in bit_str.pop(bit_str.length)]
         return msg_sid, msg_data
@@ -140,7 +140,7 @@ class _ParsleyParseInternal:
             msg_type = MESSAGE_TYPE.decode(encoded_msg_type)
             # we splice the first element since we've already manually parsed BOARD_ID
             # if BOARD_ID threw an error, we want to try and parse the rest of the CAN message
-            fields = CAN_MESSAGE.get_fields(msg_type)[3:]
+            fields = CAN_MESSAGE.get_fields(msg_type)[4:]
             data = _ParsleyParseInternal.parse_fields(BitString(msg_data), fields)
         except (ValueError, IndexError, KeyError) as error:
             # convert the 6-bit msg_type into its canlib 12-bit form and include an error object

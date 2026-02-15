@@ -29,7 +29,7 @@ class TestCANMetadata:
         msg_data.push(*Numeric('linear_accel', 16).encode(1234))
         msg_data.push(*Numeric('angular_velocity', 16).encode(5678))
 
-        res = parsley.parse_fields(msg_data, CAN_MESSAGE.get_fields('SENSOR_IMU_Y')[3:]) # skip first 3 fields (MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID)
+        res = parsley.parse_fields(msg_data, CAN_MESSAGE.get_fields('SENSOR_IMU_Y')[4:]) # skip first 3 fields (MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID)
         assert res['time'] == tu.approx(1.234)
         assert res['imu_id'] == 'IMU_PROC_LSM6DSO32'
         assert res['linear_accel'] == 1234
