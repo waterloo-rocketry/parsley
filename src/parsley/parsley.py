@@ -3,7 +3,7 @@ from typing import Any
 import struct
 from parsley.bitstring import BitString
 from parsley.fields import Field, Switch, Bitfield
-from parsley.message_definitions import CAN_MESSAGE, MESSAGE_PRIO, MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_SID
+from parsley.message_definitions import CAN_MESSAGE, MESSAGE_METADATA, MESSAGE_PRIO, MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_SID
 import parsley.message_types as mt
 import parsley.parse_utils as pu
 from deprecated import deprecated
@@ -143,6 +143,7 @@ MSG_PRIO_LEN = max([len(msg_prio) for msg_prio in mt.msg_prio])
 MSG_TYPE_LEN = max([len(msg_type) for msg_type in mt.msg_type])
 BOARD_TYPE_ID_LEN = max([len(board_type_id) for board_type_id in mt.board_type_id])
 BOARD_INST_ID_LEN = max([len(board_inst_id) for board_inst_id in mt.board_inst_id])
+MSG_METADATA_LEN = 8
 
 # formats a parsed CAN message (dictionary) into a singular line
 @deprecated(version='2026.2', reason="Deprecated; use _ParsleyParseInternal.format_line in parsley.parse_to_object (or whichever object the data is supposed to become)")

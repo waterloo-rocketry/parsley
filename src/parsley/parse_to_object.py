@@ -4,7 +4,7 @@ Contains the new static class implementation of Parsley.py
 from typing import Any
 from parsley.parsley_message import ParsleyObject, ParsleyError
 from parsley.bitstring import BitString
-from parsley.message_definitions import CAN_MESSAGE, MESSAGE_PRIO, MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_SID
+from parsley.message_definitions import CAN_MESSAGE, MESSAGE_PRIO, MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA, MESSAGE_SID
 import parsley.parse_utils as pu
 from parsley.fields import Field, Switch, Bitfield
 from abc import ABC, abstractmethod
@@ -48,17 +48,18 @@ class _ParsleyParseInternal:
         msg_type = parsed_data['msg_type']
         board_type_id = parsed_data['board_type_id']
         board_inst_id = parsed_data['board_inst_id']
+        msg_metadata = parsed_data['msg_metadata']
 
         bit_str = BitString()
         bit_str.push(*MESSAGE_PRIO.encode(msg_prio))
         bit_str.push(*MESSAGE_TYPE.encode(msg_type))
-        bit_str.push(bytes([0, 0]), 2)
         bit_str.push(*BOARD_TYPE_ID.encode(board_type_id))
         bit_str.push(*BOARD_INST_ID.encode(board_inst_id))
+        bit_str.push(*MESSAGE_METADATA.encode(msg_metadata))
         msg_sid = int.from_bytes(bit_str.pop(bit_str.length), byteorder='big')
 
         # skip the first field (board_id) since thats parsed separately
-        for field in CAN_MESSAGE.get_fields(msg_type)[3:]:
+        for field in CAN_MESSAGE.get_fields(msg_type)[4:]:
             bit_str.push(*field.encode(parsed_data[field.name]))
         msg_data = [byte for byte in bit_str.pop(bit_str.length)]
         return msg_sid, msg_data
@@ -139,7 +140,7 @@ class _ParsleyParseInternal:
             msg_type = MESSAGE_TYPE.decode(encoded_msg_type)
             # we splice the first element since we've already manually parsed BOARD_ID
             # if BOARD_ID threw an error, we want to try and parse the rest of the CAN message
-            fields = CAN_MESSAGE.get_fields(msg_type)[3:]
+            fields = CAN_MESSAGE.get_fields(msg_type)[4:]
             data = _ParsleyParseInternal.parse_fields(BitString(msg_data), fields)
         except (ValueError, IndexError, KeyError) as error:
             # convert the 6-bit msg_type into its canlib 12-bit form and include an error object
