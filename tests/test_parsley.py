@@ -3,7 +3,7 @@ import pytest
 
 from parsley.bitstring import BitString
 from parsley.fields import ASCII, Enum, Numeric
-from parsley.message_definitions import MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_SID, MESSAGE_PRIO, TIMESTAMP_2, CAN_MESSAGE
+from parsley.message_definitions import MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_SID, MESSAGE_PRIO, MESSAGE_METADATA, TIMESTAMP_2, CAN_MESSAGE
 
 import parsley.message_types as mt
 import utils as utilities
@@ -14,12 +14,18 @@ PARSE_LOGGER_PAGE_SIZE = 4096
 
 class TestParsley:
     def test_parse(self):
-        msg_sid = utilities.create_msg_sid_from_strings('HIGH', 'GENERAL_BOARD_STATUS', '0', 'RLCS_RELAY', 'PRIMARY')
-        
+        msg_sid = utilities.create_msg_sid_from_strings('HIGH', 'GENERAL_BOARD_STATUS', '0', 'RLCS_RELAY', 'GROUND')
+
         """
-        HIGH = 0x1, GENERAL_BOARD_STATUS = 0x001, RLCS_RELAY = 0x81, PRIMARY = 0x04
+        HIGH = 0x1, GENERAL_BOARD_STATUS = 0x001, RLCS_RELAY = 0x0C, GROUND = 0x01, metadata = 0x00
+        prio:  01
+        type:  0000001
+        btype: 001100
+        binst: 000001
+        meta:  00000000
+        padded to 32 bits: 000 01000 00010011 00000001 00000000 = 0x08130100
         """
-        assert msg_sid == b'\x08\x04\x81\x04'
+        assert msg_sid == b'\x08\x13\x01\x00'
 
         bit_str = BitString()
         bit_str.push(*TIMESTAMP_2.encode(1.234))
@@ -31,12 +37,13 @@ class TestParsley:
         msg_data = bit_str.pop(bit_str.length)
 
         res = parsley.parse(msg_sid, msg_data)
-        
+
         expected_res = {
             'msg_type': 'GENERAL_BOARD_STATUS',
             'board_type_id': 'RLCS_RELAY',
-            'board_inst_id': 'PRIMARY',
+            'board_inst_id': 'GROUND',
             'msg_prio': 'HIGH',
+            'msg_metadata': 0,
             'data': {
                 'time': utilities.approx(1.234),
                 'general_board_status': 'E_5V_OVER_VOLTAGE',
@@ -48,11 +55,17 @@ class TestParsley:
         
     def test_parse_partial_byte_fields(self):
         msg_sid = utilities.create_msg_sid_from_strings('LOW', 'DEBUG_RAW', '0', 'GPS', 'PAYLOAD')
-        
+
         """
-        LOW = 0x3, DEBUG_RAW = 0x003, GPS = 0x08, PAYLOAD = 0x03
+        LOW = 0x3, DEBUG_RAW = 0x003, GPS = 0x07, PAYLOAD(inst) = 0x03, metadata = 0x00
+        prio:  11
+        type:  0000011
+        btype: 000111
+        binst: 000011
+        meta:  00000000
+        padded to 32 bits: 000 11000 00110001 11000011 00000000 = 0x1831C300
         """
-        assert msg_sid == b'\x18\x0c\x08\x03'
+        assert msg_sid == b'\x18\x31\xC3\x00'
 
         bit_str = BitString()
         bit_str.push(*TIMESTAMP_2.encode(0.133))
@@ -60,12 +73,13 @@ class TestParsley:
         msg_data = bit_str.pop(bit_str.length)
 
         res = parsley.parse(msg_sid, msg_data)
-        
+
         expected_res = {
             'msg_type': 'DEBUG_RAW',
             'board_type_id': 'GPS',
             'board_inst_id': 'PAYLOAD',
             'msg_prio': 'LOW',
+            'msg_metadata': 0,
             'data': {
                 'time': utilities.approx(0.133),
                 'string': 'zZz'
@@ -75,29 +89,34 @@ class TestParsley:
         assert res == expected_res
         
     def test_parse_sensor_analog(self):
-        msg_sid = utilities.create_msg_sid_from_strings('MEDIUM', 'SENSOR_ANALOG', '0', 'PAY_SENSOR', 'ANY')
-        
+        msg_sid = utilities.create_msg_sid_from_strings('MEDIUM', 'SENSOR_ANALOG16', '0', 'PAYLOAD', 'ANY')
+
         """
-        MEDIUM = 0x2, SENSOR_ANALOG = 0x013, PAY_SENSOR = 0x40, ANY = 0x00
+        MEDIUM = 0x2, SENSOR_ANALOG16 = 0x00A, PAYLOAD(type) = 0x0A, ANY = 0x00, metadata = 0x00
+        prio:  10
+        type:  0001010
+        btype: 001010
+        binst: 000000
+        meta:  00000000
+        padded to 32 bits: 000 10000 10100010 10000000 00000000 = 0x10A28000
         """
-        assert msg_sid == b'\x10\x4c\x40\x00'
+        assert msg_sid == b'\x10\xA2\x80\x00'
 
         bit_str = BitString()
-        bit_str.push(*TIMESTAMP_2.encode(12.345)) 
-        bit_str.push(*Enum('sensor_id', 8, mt.analog_sensor_id).encode('SENSOR_RA_BATT_VOLT_1'))  # 8-bit sensor ID
-        bit_str.push(*Numeric('value', 16).encode(3300)) 
+        bit_str.push(*TIMESTAMP_2.encode(12.345))
+        bit_str.push(*Numeric('value', 16).encode(3300))
         msg_data = bit_str.pop(bit_str.length)
 
         res = parsley.parse(msg_sid, msg_data)
 
         expected_res = {
-            'msg_type': 'SENSOR_ANALOG',
-            'board_type_id': 'PAY_SENSOR',
+            'msg_type': 'SENSOR_ANALOG16',
+            'board_type_id': 'PAYLOAD',
             'board_inst_id': 'ANY',
             'msg_prio': 'MEDIUM',
+            'msg_metadata': 0,
             'data': {
                 'time': utilities.approx(12.345),
-                'sensor_id': 'SENSOR_RA_BATT_VOLT_1',
                 'value': 3300
             }
         }
@@ -127,20 +146,19 @@ class TestParsley:
         bit_msg_sid = BitString()
         bit_msg_sid.push(*MESSAGE_PRIO.encode('LOW'))
         bit_msg_sid.push(*MESSAGE_TYPE.encode('LEDS_ON'))
-        bit_msg_sid.push(b'\x00', 2)
-        
         bit_msg_sid.push(b'\x1F', BOARD_TYPE_ID.length)  # invalid board_type
         bit_msg_sid.push(b'\x00', BOARD_INST_ID.length)  # dummy board instance
+        bit_msg_sid.push(*MESSAGE_METADATA.encode(0))    # metadata
         msg_sid = bit_msg_sid.pop(MESSAGE_SID.length)
 
         res = parsley.parse(msg_sid, b'')
         assert '0x' in res['board_type_id']
 
     def test_parse_bad_msg_data(self):
-        msg_sid = utilities.create_msg_sid_from_strings('MEDIUM', 'ALT_ARM_STATUS', '0', 'ALTIMETER', 'PRIMARY')
+        msg_sid = utilities.create_msg_sid_from_strings('MEDIUM', 'ALT_ARM_STATUS', '0', 'ALTIMETER', 'ANY')
 
-        # Expects: timestamp + alt_id + alt_arm_state + drogue_v + main_v
-        msg_data = b'\x00\x00\x01\x10\x04'  # missing main_v
+        # Expects: timestamp + alt_arm_state + drogue_v + main_v (5 bytes), supply only 3
+        msg_data = b'\x00\x00\x01'  # truncated, missing drogue_v and main_v
 
         res = parsley.parse(msg_sid, msg_data)
         assert 'error' in res['data']
@@ -150,9 +168,9 @@ class TestParsley:
         bit_msg_sid = BitString()
         bit_msg_sid.push(*MESSAGE_PRIO.encode('LOW'))
         bit_msg_sid.push(*MESSAGE_TYPE.encode('LEDS_ON'))
-        bit_msg_sid.push(b'\x00', 2)
-        bit_msg_sid.push(*BOARD_TYPE_ID.encode('GPS'))  # valid board type
-        bit_msg_sid.push(b'\x1F', BOARD_INST_ID.length)  # invalid board instance
+        bit_msg_sid.push(*BOARD_TYPE_ID.encode('GPS'))      # valid board type
+        bit_msg_sid.push(b'\x1F', BOARD_INST_ID.length)    # invalid board instance
+        bit_msg_sid.push(*MESSAGE_METADATA.encode(0))      # metadata
         msg_sid = bit_msg_sid.pop(MESSAGE_SID.length)
 
         res = parsley.parse(msg_sid, b'')
@@ -203,15 +221,15 @@ class TestParsley:
     def test_calculate_msg_bit_length(self):
         msg = CAN_MESSAGE.get_fields('GENERAL_BOARD_STATUS')
         bit_len = parsley.calculate_msg_bit_len(msg)
-        # GENERAL_BOARD_STATUS fields: msg_prio (2) + board_type_id (8) + board_inst_id (8) + time (16) + general_board_status (32) + board_error_bitfield (16) = 82 bits
-        assert bit_len == 82
+        # GENERAL_BOARD_STATUS fields: msg_prio (2) + board_type_id (6) + board_inst_id (6) + msg_metadata (8) + time (16) + general_board_status (32) + board_error_bitfield (16) = 86 bits
+        assert bit_len == 86
         
     def test_format_line(self):
         parsed_data = {
             'msg_prio': 'HIGH',
             'msg_type': 'GENERAL_BOARD_STATUS',
             'board_type_id': 'RLCS_RELAY',
-            'board_inst_id': 'PRIMARY',
+            'board_inst_id': 'ROCKET',
             'data': {
                 'time': 1.234,
                 'general_board_status': 'E_5V_OVER_VOLTAGE',
@@ -219,8 +237,9 @@ class TestParsley:
             }
         }
         line = parsley.format_line(parsed_data)
-        # format_line uses padding so gotta put padding here too
-        expected_line = '[ HIGH    GENERAL_BOARD_STATUS RLCS_RELAY   PRIMARY  ] time: 1.234 general_board_status: E_5V_OVER_VOLTAGE board_error_bitfield: E_5V_EFUSE_FAULT'
+        # MSG_PRIO_LEN=7 (HIGHEST), MSG_TYPE_LEN=20 (GENERAL_BOARD_STATUS),
+        # BOARD_TYPE_ID_LEN=10 (RLCS_RELAY), BOARD_INST_ID_LEN=15 (RA_STRATOLOGGER)
+        expected_line = '[ HIGH    GENERAL_BOARD_STATUS RLCS_RELAY ROCKET          ] time: 1.234 general_board_status: E_5V_OVER_VOLTAGE board_error_bitfield: E_5V_EFUSE_FAULT'
         assert line == expected_line
         
     def test_encode_data(self):
@@ -229,24 +248,29 @@ class TestParsley:
             'msg_type': 'ALT_ARM_STATUS',
             'board_type_id': 'ALTIMETER',
             'board_inst_id': 'PAYLOAD',
+            'msg_metadata': 0,
             'time': 5.678,
-            'alt_id': 'ALTIMETER_PAYLOAD_RAVEN',
             'alt_arm_state': 'ALT_ARM_STATE_ARMED',
             'drogue_v': 4095,
             'main_v': 2048
         }
         msg_sid, msg_data = parsley.encode_data(parsed_data)
-        
-        # MEDIUM = 0x2, ALT_ARM_STATUS = 0x00A, ALTIMETER = 0x0A, PAYLOAD = 0x03
-        assert msg_sid == int.from_bytes(b'\x10\x28\x0a\x03', byteorder='big')
-        
+
+        # MEDIUM=0x2, ALT_ARM_STATUS=0x009, ALTIMETER=0x08, PAYLOAD(inst)=0x03, metadata=0x00
+        # prio:  10
+        # type:  0001001
+        # btype: 001000
+        # binst: 000011
+        # meta:  00000000
+        # padded: 000 10000 10010010 00000011 00000000 = 0x10920300
+        assert msg_sid == int.from_bytes(b'\x10\x92\x03\x00', byteorder='big')
+
         bit_str = BitString()
         bit_str.push(*TIMESTAMP_2.encode(5.678))
-        bit_str.push(*Enum('alt_id', 8, mt.altimeter_id).encode('ALTIMETER_PAYLOAD_RAVEN'))
         bit_str.push(*Enum('alt_arm_state', 8, mt.alt_arm_state).encode('ALT_ARM_STATE_ARMED'))
         bit_str.push(*Numeric('drogue_v', 16).encode(4095))
         bit_str.push(*Numeric('main_v', 16).encode(2048))
-        
+
         expected_msg_data = bytes(bit_str.pop(bit_str.length))
         assert msg_data == list(expected_msg_data)
     

@@ -59,11 +59,11 @@ class TestASCII:
 class TestEnum:
     def test_enum(self):
         enum = Enum("enum", 8, mt.board_type_id)
-        (data, length) = enum.encode("INJ_SENSOR")
+        (data, length) = enum.encode("INJECTOR")
         assert data == b"\x01"
         assert length == 8
-        data = enum.decode(b"\x40")
-        assert data == "PAY_SENSOR"
+        data = enum.decode(b"\x0A")
+        assert data == "PAYLOAD"
 
     def test_numeric_scale_imprecision(self):
         num = Numeric("time", 24, scale=1 / 1000)

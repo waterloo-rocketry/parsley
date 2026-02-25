@@ -21,16 +21,18 @@ class TestCANMetadata:
         with pytest.raises(ValueError):
             TIMESTAMP_2.encode(66)
         TIMESTAMP_2.encode(30.2312)
-            
+
     def test_timestamp2_message(self):
+        # Test that TIMESTAMP_2 is correctly parsed alongside other fields
+        # Uses ALT_ARM_STATUS which has: TIMESTAMP_2, alt_arm_state, drogue_v, main_v
         msg_data = BitString()
         msg_data.push(*TIMESTAMP_2.encode(1.234))
-        msg_data.push(*Enum('imu_id', 8, mt.imu_id).encode('IMU_PROC_LSM6DSO32'))
-        msg_data.push(*Numeric('linear_accel', 16).encode(1234))
-        msg_data.push(*Numeric('angular_velocity', 16).encode(5678))
+        msg_data.push(*Enum('alt_arm_state', 8, mt.alt_arm_state).encode('ALT_ARM_STATE_ARMED'))
+        msg_data.push(*Numeric('drogue_v', 16).encode(1234))
+        msg_data.push(*Numeric('main_v', 16).encode(5678))
 
-        res = parsley.parse_fields(msg_data, CAN_MESSAGE.get_fields('SENSOR_IMU_Y')[4:]) # skip first 3 fields (MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID)
+        res = parsley.parse_fields(msg_data, CAN_MESSAGE.get_fields('ALT_ARM_STATUS')[4:])
         assert res['time'] == tu.approx(1.234)
-        assert res['imu_id'] == 'IMU_PROC_LSM6DSO32'
-        assert res['linear_accel'] == 1234
-        assert res['angular_velocity'] == 5678
+        assert res['alt_arm_state'] == 'ALT_ARM_STATE_ARMED'
+        assert res['drogue_v'] == 1234
+        assert res['main_v'] == 5678

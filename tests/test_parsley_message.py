@@ -23,6 +23,7 @@ def test_parsley_object_getitem():
         board_inst_id='GROUND',
         msg_prio='HIGH',
         msg_type='RESET_CMD',
+        msg_metadata=0,
         data={}
     )
 
@@ -39,6 +40,7 @@ def test_parsley_object_invalid_prio_raises():
             board_inst_id='GROUND',
             msg_prio='BAD_PRIO',
             msg_type='RESET_CMD',
+            msg_metadata=0,
             data={}
         )
 
@@ -50,5 +52,6 @@ def test_parsley_object_invalid_type_raises():
             board_inst_id='GROUND',
             msg_prio='HIGH',
             msg_type='BAD_TYPE',
+            msg_metadata=0,
             data={}
         )

@@ -9,7 +9,7 @@ BoardTypeID = str
 BoardInstID = str
 MsgPrio = str | None #will be checked during runtime
 MsgType = str | None #will be checked during runtime
-MsgMetadata = str | None #will be checked during runtime
+MsgMetadata = int
 
 @dataclass
 class ParsleyError():
