@@ -18,6 +18,7 @@ authors = [
 requires-python = ">=3.11"
 dependencies = [
     "crc8>=0.2.1",
+    "deprecated>=1.2.18",
     "pydantic>=2.12.3",
 ]
 classifiers = [
