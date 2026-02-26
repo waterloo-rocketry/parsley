@@ -11,7 +11,8 @@ from .parse_to_object import (
     BitstringParser,
 )
 from .parsley import (
-    parse_fields, parse, parse_board_type_id, parse_board_inst_id,
+    parse_fields, 
+    parse, 
     parse_bitstring,
     parse_live_telemetry,
     parse_usb_debug,
