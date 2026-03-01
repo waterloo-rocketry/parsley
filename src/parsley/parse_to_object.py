@@ -105,6 +105,10 @@ class _ParsleyParseInternal:
         except ValueError:
             board_inst_id = pu.hexify(encoded_board_inst_id)
         return board_inst_id
+
+    @staticmethod
+    def parse_msg_metadata(encoded_msg_metadata: bytes) -> int:
+        return MESSAGE_METADATA.decode(encoded_msg_metadata) #no try-catch since we want to error out if metadata is malformed
     
     @staticmethod
     def parse_to_object(msg_sid: bytes, msg_data: bytes) -> ParsleyObject | ParsleyError:
@@ -128,12 +132,11 @@ class _ParsleyParseInternal:
 
         board_type_id = _ParsleyParseInternal.parse_board_type_id(encoded_board_type_id)
         board_inst_id = _ParsleyParseInternal.parse_board_inst_id(encoded_board_inst_id)
+        msg_metadata = _ParsleyParseInternal.parse_msg_metadata(encoded_msg_metadata)
 
         msg_prio = None
         msg_type = None
         data: dict[str, Any] = {}
-
-        msg_metadata = MESSAGE_METADATA.decode(encoded_msg_metadata)
 
         try:
             msg_prio = MESSAGE_PRIO.decode(encoded_msg_prio)
@@ -148,7 +151,8 @@ class _ParsleyParseInternal:
                 board_type_id=board_type_id,
                 board_inst_id=board_inst_id,
                 msg_type=pu.hexify(encoded_msg_type, is_msg_type=True),
-                msg_data =pu.hexify(msg_data),
+                msg_metadata=msg_metadata,
+                msg_data=pu.hexify(msg_data),
                 error=f"error: {error}"
             )
             

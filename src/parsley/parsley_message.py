@@ -17,6 +17,7 @@ class ParsleyError():
     board_type_id: BoardTypeID
     board_inst_id: BoardInstID
     msg_type: MsgType
+    msg_metadata: MsgMetadata
     msg_data: str
     error: str
 

@@ -8,6 +8,7 @@ def test_parsley_error_getitem():
         board_type_id='ANY',
         board_inst_id='GROUND',
         msg_type='RESET_CMD',
+        msg_metadata=0,
         msg_data='deadbeef',
         error='something went wrong'
     )
