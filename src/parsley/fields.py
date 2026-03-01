@@ -228,11 +228,20 @@ class Bitfield(Field):
         return f"{'|'.join(status)}"
 
     def encode(self, value: Any) -> Tuple[bytes, int]:
-        
-        if self.map_name_offset is None: # Custom bitfield so value is a binary string like "0b110"
-            encoded_data = int(value, 0).to_bytes((self.length + 7) // 8, byteorder='big')
-            return (encoded_data, self.length)
+        if not isinstance(value, str):
+            raise ValueError(f'Value "{value}" is not a valid bitfield string')
 
+        if self.map_name_offset is None: # Custom bitfield so value is a binary string like "0b110"
+            try:
+                bitfield_value = int(value, 0)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f'Value "{value}" is not a valid bitfield string') from exc
+            if bitfield_value < 0 or bitfield_value >= (1 << self.length):
+                raise ValueError(f'Value "{value}" does not fit in {self.length} bits')
+            
+            encoded_data = bitfield_value.to_bytes((self.length + 7) // 8, byteorder='big')
+            return (encoded_data, self.length)
+        
         # Named bitfield where value is a string of flag names seperated by "|"
         # Default string represents "no bits set" (bitmask == 0)
         if value == self.default:
@@ -243,6 +252,8 @@ class Bitfield(Field):
                 if name not in self.map_name_offset:
                     raise ValueError(f'Name "{name}" not found in bitfield "{self.name}"')
                 bitfield_value |= (1 << self.map_name_offset[name])
+        if bitfield_value >= (1 << self.length):
+            raise ValueError(f'Value "{value}" does not fit in {self.length} bits')
 
         encoded_data = bitfield_value.to_bytes((self.length + 7) // 8, byteorder='big')
         return (encoded_data, self.length)

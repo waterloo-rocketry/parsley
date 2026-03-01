@@ -303,8 +303,22 @@ class TestBitfieldLogs:
         with pytest.raises(ValueError):
             bitfield.encode("E_NOT_A_REAL_FLAG")
 
+    def test_encode_non_string_raises(self, bitfield):
+        with pytest.raises(ValueError):
+            bitfield.encode(42)
+
     def test_encode_custom_bitfield(self):
         bf = Bitfield("raw", 16, map_name_offset=None)
         (data, length) = bf.encode("0b110")
         assert data == b"\x00\x06"
         assert length == 16
+
+    def test_encode_custom_bitfield_invalid_string_raises(self):
+        bf = Bitfield("raw", 16, map_name_offset=None)
+        with pytest.raises(ValueError):
+            bf.encode("not_a_number")
+
+    def test_encode_custom_bitfield_overflow_raises(self):
+        bf = Bitfield("raw", 8, map_name_offset=None)
+        with pytest.raises(ValueError):
+            bf.encode("0x1FF")  # 511 doesn't fit in 8 bits
