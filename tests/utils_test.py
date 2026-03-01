@@ -20,3 +20,9 @@ def test_create_msg_sid():
 	# padded to 32 bits: 000 01000 00010011 00000001 00000000
 	# turns into \x08\x13\x01\x00
 	assert sid == b'\x08\x13\x01\x00'
+
+def test_create_msg_sid_non_numeric_metadata_falls_back_to_zero():
+	# non-numeric metadata_str silently falls back to 0, same result as passing '0'
+	sid_non_numeric = utilities.create_msg_sid_from_strings('HIGH', 'GENERAL_BOARD_STATUS', 'ACTUATOR_OX_INJECTOR_VALVE', 'RLCS_RELAY', 'GROUND')
+	sid_zero = utilities.create_msg_sid_from_strings('HIGH', 'GENERAL_BOARD_STATUS', '0', 'RLCS_RELAY', 'GROUND')
+	assert sid_non_numeric == sid_zero

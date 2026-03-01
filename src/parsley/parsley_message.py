@@ -47,6 +47,12 @@ class ParsleyObject(BaseModel, Generic[T]):
         if value not in mt.msg_type:
             raise ValueError(f"Invalid msg_type type '{value}'")
         return value
+
+    @field_validator("msg_metadata")
+    def validate_msg_metadata(cls, value):
+        if not (0 <= value <= 255):
+            raise ValueError(f"msg_metadata '{value}' is out of range (0-255)")
+        return value
     
     def __getitem__(self, key: str):        
         return self.model_dump()[key]

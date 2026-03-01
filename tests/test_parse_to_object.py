@@ -107,6 +107,21 @@ class TestParseToObject:
 
         assert res == expected_res
 
+    def test_parse_nonzero_metadata(self):
+        # metadata=42
+        msg_sid = utilities.create_msg_sid_from_strings('LOW', 'DEBUG_RAW', '42', 'GPS', 'ROCKET')
+
+        bit_str = BitString()
+        bit_str.push(*TIMESTAMP_2.encode(1.0))
+        bit_str.push(*ASCII('string', 48).encode('abc'))
+        msg_data = bit_str.pop(bit_str.length)
+
+        result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
+        res = self._to_dict(result)
+
+        assert res['msg_metadata'] == 42
+        assert res['msg_type'] == 'DEBUG_RAW'
+
     def test_parse_bad_msg_type(self):
         msg_sid = b'\x00\x00'
         msg_data = b'\xAB\xCD\xEF\x00'
@@ -260,6 +275,25 @@ class TestParseToObject:
         expected_msg_data = bytes(bit_str.pop(bit_str.length))
         assert msg_data == list(expected_msg_data)
     
+    def test_encode_parse_actuator_cmd_metadata(self):
+        # ACTUATOR_CMD uses msg_metadata to carry the actuator_id
+        actuator_id = mt.actuator_id['ACTUATOR_FUEL_INJECTOR_VALVE']
+        parsed_data = {
+            'msg_prio': 'HIGH',
+            'msg_type': 'ACTUATOR_CMD',
+            'board_type_id': 'INJECTOR',
+            'board_inst_id': 'ROCKET',
+            'msg_metadata': actuator_id,
+            'time': 1.0,
+            'cmd_state': 'ACT_STATE_ON',
+        }
+        msg_sid, msg_data = _ParsleyParseInternal.encode_data(parsed_data)
+        result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
+        res = self._to_dict(result)
+
+        assert res['msg_metadata'] == actuator_id
+        assert res['msg_type'] == 'ACTUATOR_CMD'
+
     def test_parse_usb_debug(self):
         line = "$1234ABCD:12,34,56,78\r\n\0"
         #you get \x12\x34\xAB\xCD as SID and \x12\x34\x56\x78 as data (first part vs second part)
