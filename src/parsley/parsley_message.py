@@ -7,8 +7,8 @@ T = TypeVar("T")
 
 BoardTypeID = str
 BoardInstID = str
-MsgPrio = str | None #will be checked during runtime
-MsgType = str | None #will be checked during runtime
+MsgPrio = str
+MsgType = str
 MsgMetadata = int
 
 @dataclass

@@ -97,6 +97,17 @@ class TestEnum:
         with pytest.raises(ValueError):
             enum.encode("d")
 
+    def test_enum_decode_error_unknown_value(self):
+        map = {"a": 1, "b": 2, "c": 3}
+        enum = Enum("enum", 8, map)
+        with pytest.raises(ValueError):
+            enum.decode(b"\xff")
+
+    def test_enum_get_keys(self):
+        map = {"a": 1, "b": 2}
+        enum = Enum("enum", 8, map)
+        assert set(enum.get_keys()) == {"a", "b"}
+
 
 class TestNumeric:
     def test_numeric(self):
@@ -185,6 +196,16 @@ class TestFloating:
         assert fl.decode(fl.encode(69.0)[0]) == 69.0
         assert fl.decode(fl.encode(420.0)[0]) == 420.0
 
+    def test_floating_little_endian(self):
+        fl = Floating("Num", big_endian=False)
+        assert fl.decode(fl.encode(2.0)[0]) == 2.0
+        assert fl.decode(fl.encode(0.5)[0]) == 0.5
+
+    def test_floating_encode_error_not_num(self):
+        fl = Floating("Num")
+        with pytest.raises(ValueError):
+            fl.encode("not a number")
+
 
 class TestSwitch:
     def test_switch(self):
@@ -197,6 +218,11 @@ class TestSwitch:
         decoded_data = switch.decode(data)
         assert decoded_data == "a"
         assert switch.get_fields(decoded_data) == [0, 1]
+
+    def test_switch_get_keys(self):
+        enum = {"a": 0x01, "b": 0x02}
+        switch = Switch("status", 8, enum, {"a": [], "b": []})
+        assert set(switch.get_keys()) == {"a", "b"}
 
 
 class TestBitfieldLogs:
@@ -240,3 +266,45 @@ class TestBitfieldLogs:
     )
     def test_decode_from_bytes(self, bitfield, bytes, expected):
         assert bitfield.decode(bytes) == expected
+
+    def test_decode_from_hex_string(self, bitfield):
+        # decode() also accepts a hex string — covers the isinstance(data, str) branch
+        assert bitfield.decode("0001") == "E_5V_OVER_CURRENT"
+        assert bitfield.decode("0000") == "E_NOMINAL"
+
+    def test_decode_custom_bitfield(self):
+        # map_name_offset=None → returns bin() string
+        bf = Bitfield("raw", 16, map_name_offset=None)
+        assert bf.decode(b"\x00\x06") == "0b110"
+        assert bf.decode(b"\x00\x00") == "0b0"
+
+    @pytest.mark.parametrize(
+        "value,expected_bytes",
+        [
+            ("E_NOMINAL", b"\x00\x00"),
+            ("E_5V_OVER_CURRENT", b"\x00\x01"),
+            ("E_5V_OVER_VOLTAGE", b"\x00\x02"),
+            ("E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE", b"\x00\x03"),
+            ("E_5V_OVER_CURRENT|E_5V_UNDER_VOLTAGE", b"\x00\x05"),
+            ("E_WATCHDOG_TIMEOUT", b"\x10\x00"),
+        ],
+    )
+    
+    def test_encode(self, bitfield, value, expected_bytes):
+        (data, length) = bitfield.encode(value)
+        assert data == expected_bytes
+        assert length == 16
+
+    def test_encode_decode_roundtrip(self, bitfield):
+        for value in ("E_NOMINAL", "E_5V_OVER_CURRENT", "E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE"):
+            assert bitfield.decode(bitfield.encode(value)[0]) == value
+
+    def test_encode_unknown_flag_raises(self, bitfield):
+        with pytest.raises(ValueError):
+            bitfield.encode("E_NOT_A_REAL_FLAG")
+
+    def test_encode_custom_bitfield(self):
+        bf = Bitfield("raw", 16, map_name_offset=None)
+        (data, length) = bf.encode("0b110")
+        assert data == b"\x00\x06"
+        assert length == 16

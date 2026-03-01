@@ -227,6 +227,22 @@ class Bitfield(Field):
 
         return f"{'|'.join(status)}"
 
-
     def encode(self, value: Any) -> Tuple[bytes, int]:
-        return (value, self.length)
+        
+        if self.map_name_offset is None: # Custom bitfield so value is a binary string like "0b110"
+            encoded_data = int(value, 0).to_bytes((self.length + 7) // 8, byteorder='big')
+            return (encoded_data, self.length)
+
+        # Named bitfield where value is a string of flag names seperated by "|"
+        # Default string represents "no bits set" (bitmask == 0)
+        if value == self.default:
+            bitfield_value = 0
+        else:
+            bitfield_value = 0
+            for name in value.split('|'):
+                if name not in self.map_name_offset:
+                    raise ValueError(f'Name "{name}" not found in bitfield "{self.name}"')
+                bitfield_value |= (1 << self.map_name_offset[name])
+
+        encoded_data = bitfield_value.to_bytes((self.length + 7) // 8, byteorder='big')
+        return (encoded_data, self.length)

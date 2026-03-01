@@ -78,8 +78,6 @@ class _ParsleyParseInternal:
             if isinstance(field, Switch):
                 nested_fields = field.get_fields(res[field.name])
                 res.update(_ParsleyParseInternal.parse_fields(bit_str, nested_fields))
-            if isinstance(field, Bitfield):
-                res[field.name] = field.decode(data)
             
         return res
 
