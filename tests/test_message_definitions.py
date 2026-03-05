@@ -1,6 +1,6 @@
 import pytest
 import parsley
- 
+
 from pytest import approx
 from parsley.bitstring import BitString
 from parsley.fields import ASCII, Enum, Numeric, Floating, Bitfield
@@ -20,16 +20,16 @@ class TestCANMessage:
         bit_str2.push(*TIMESTAMP_2.encode(3))
         return bit_str2
 
-    
+
     def test_general_board_status(self, bit_str2):
-        # 0b [...(32) 1011] [...(16)] 
+        # 0b [...(32) 1011] [...(16)]
         bit_str2.push(b"\x00\x00\x00\x0B" + b"\x00\x00", 48)
         res = parsley.parse_fields(bit_str2, MESSAGES["GENERAL_BOARD_STATUS"][4:]) # [4:] to skip prio, type, inst
         assert res["general_board_status"] == 'E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE|E_12V_OVER_CURRENT'
         assert res["board_error_bitfield"] == 'E_NOMINAL'
 
     def test_reset_cmd(self, bit_str2):
-        bit_str2.push(b"\x0A\x00", 16) # 0x0A (ALTIMETER), 0x00 (ANY)
+        bit_str2.push(b"\x08\x00", 16) # 0x08 (ALTIMETER), 0x00 (ANY)
         res = parsley.parse_fields(bit_str2, MESSAGES["RESET_CMD"][4:])
 
         assert res["board_type_id"] == 'ALTIMETER'
@@ -42,11 +42,11 @@ class TestCANMessage:
         assert res["string"] == "rawmsg"
 
     def test_config_set(self, bit_str2):
-        # 0x01 (INJ_SENSOR), 0x02 (ROCKET), 0x0304 (ID), 0x0506 (Value)
+        # 0x01 (INJECTOR), 0x02 (ROCKET), 0x0304 (ID), 0x0506 (Value)
         bit_str2.push(b"\x01\x02\x03\x04\x05\x06", 48)
         res = parsley.parse_fields(bit_str2, MESSAGES["CONFIG_SET"][4:])
 
-        assert res["board_type_id"] == 'INJ_SENSOR'
+        assert res["board_type_id"] == 'INJECTOR'
         assert res["board_inst_id"] == 'ROCKET'
         assert res["config_id"] == 0x0304
         assert res["config_value"] == 0x0506
@@ -60,44 +60,32 @@ class TestCANMessage:
         assert res["config_value"] == 0x3344
 
     def test_actuator_cmd(self, bit_str2):
-        # 0x00 (ACTUATOR_OX_INJECTOR_VALVE), 0x00 (ACT_STATE_ON)
-        bit_str2.push(b"\x00\x00", 16)
+        # 0x00 (ACT_STATE_ON) — actuator ID now encoded in msg_metadata
+        bit_str2.push(b"\x00", 8)
         res = parsley.parse_fields(bit_str2, MESSAGES["ACTUATOR_CMD"][4:])
 
-        assert res["actuator"] == "ACTUATOR_OX_INJECTOR_VALVE"
         assert res["cmd_state"] == "ACT_STATE_ON"
 
-    def test_actuator_analog_cmd(self, bit_str2):
-        # 0x11 (ACTUATOR_CANARD_ANGLE), 0x0100 (cmd_state=256)
-        bit_str2.push(b"\x11\x01\x00", 24)
-        res = parsley.parse_fields(bit_str2, MESSAGES["ACTUATOR_ANALOG_CMD"][4:])
-
-        assert res["actuator"] == "ACTUATOR_CANARD_ANGLE"
-        assert res["cmd_state"] == 256
-
     def test_actuator_status(self, bit_str2):
-        # 0x01 (ACTUATOR_FUEL_INJECTOR_VALVE), 0x00 (curr_state=ON), 0x01 (cmd_state=OFF)
-        bit_str2.push(b"\x01\x00\x01", 24)
+        # 0x00 (curr_state=ON), 0x01 (cmd_state=OFF) — actuator ID now in msg_metadata
+        bit_str2.push(b"\x00\x01", 16)
         res = parsley.parse_fields(bit_str2, MESSAGES["ACTUATOR_STATUS"][4:])
 
-        assert res["actuator"] == "ACTUATOR_FUEL_INJECTOR_VALVE"
         assert res["curr_state"] == "ACT_STATE_ON"
         assert res["cmd_state"] == "ACT_STATE_OFF"
 
     def test_alt_arm_cmd(self, bit_str2):
-        # 0x02 (ALTIMETER_ROCKET_SRAD), 0x01 (ALT_ARM_STATE_ARMED)
-        bit_str2.push(b"\x02\x01", 16)
+        # 0x01 (ALT_ARM_STATE_ARMED) — alt_id now encoded in msg_metadata
+        bit_str2.push(b"\x01", 8)
         res = parsley.parse_fields(bit_str2, MESSAGES["ALT_ARM_CMD"][4:])
 
-        assert res["alt_id"] == "ALTIMETER_ROCKET_SRAD"
         assert res["alt_arm_state"] == "ALT_ARM_STATE_ARMED"
 
     def test_alt_arm_status(self, bit_str2):
-        # 0x00 (ALTIMETER_ROCKET_RAVEN), 0x01 (ARMED), 0x0500 (drogue=1280), 0x0A00 (main=2560)
-        bit_str2.push(b"\x00\x01\x05\x00\x0A\x00", 48)
+        # 0x01 (ARMED), 0x0500 (drogue=1280), 0x0A00 (main=2560) — alt_id now in msg_metadata
+        bit_str2.push(b"\x01\x05\x00\x0A\x00", 40)
         res = parsley.parse_fields(bit_str2, MESSAGES["ALT_ARM_STATUS"][4:])
 
-        assert res["alt_id"] == "ALTIMETER_ROCKET_RAVEN"
         assert res["alt_arm_state"] == "ALT_ARM_STATE_ARMED"
         assert res["drogue_v"] == 1280
         assert res["main_v"] == 2560
@@ -109,64 +97,25 @@ class TestCANMessage:
 
         assert res["total_size"] == 2587
         assert res["tx_size"] == 5
-    
+
     def test_stream_data(self, bit_str2):
-        # seq_id 0x12 (18), data "cools"
-        # push seq_id first (8 bits) then the 40-bit ASCII field (5 bytes)
-        bit_str2.push(b"\x12", 8)
-        bit_str2.push(b"cools", 40)
+        # 48-bit ASCII data field
+        bit_str2.push(b"hello!", 48)
         res = parsley.parse_fields(bit_str2, MESSAGES["STREAM_DATA"][4:])
 
-        assert res["seq_id"] == 18
-        assert res["data"] == "cools"
-        
+        assert res["data"] == "hello!"
+
     def test_stream_retry(self, bit_str2):
-        # seq_id 0x34 (52)
-        bit_str2.push(b"\x34", 8)
+        # STREAM_RETRY has no payload fields beyond TIMESTAMP_2
         res = parsley.parse_fields(bit_str2, MESSAGES["STREAM_RETRY"][4:])
 
-        assert res["seq_id"] == 52
+        assert res["time"] == approx(3, abs=1e-3)
 
-    def test_sensor_altitude(self, bit_str2):
-        # Altitude 3000m (0x00000BB8), APOGEE_NOT_REACHED (0x01)
-        bit_str2.push(b"\x00\x00\x0B\xB8\x01", 40)
-        res = parsley.parse_fields(bit_str2, MESSAGES["SENSOR_ALTITUDE"][4:])
+    def test_sensor_analog16(self, bit_str2):
+        # sensor ID now in msg_metadata; payload is just value (16-bit)
+        bit_str2.push(b"\x03\xE8", 16)
+        res = parsley.parse_fields(bit_str2, MESSAGES["SENSOR_ANALOG16"][4:])
 
-        assert res["altitude"] == 3000
-        assert res["apogee_state"] == "APOGEE_NOT_REACHED"
-
-    def test_sensor_imu_x(self, bit_str2):
-        # 0x01 (IMU_PROC_MTI630), linear_accel 1024 (0x0400), angular_velocity 512 (0x0200)
-        bit_str2.push(b"\x01\x04\x00\x02\x00", 40)
-        res = parsley.parse_fields(bit_str2, MESSAGES["SENSOR_IMU_X"][4:])
-
-        assert res["imu_id"] == "IMU_PROC_MTI630"
-        assert res["linear_accel"] == 1024
-        assert res["angular_velocity"] == 512
-
-    def test_sensor_mag_x(self, bit_str2):
-        # 0x00 (IMU_PROC_ALTIMU10), mag 1000 (0x03E8)
-        bit_str2.push(b"\x00\x03\xE8", 24)
-        res = parsley.parse_fields(bit_str2, MESSAGES["SENSOR_MAG_X"][4:])
-
-        assert res["imu_id"] == "IMU_PROC_ALTIMU10"
-        assert res["mag"] == 1000
-
-    def test_sensor_baro(self, bit_str2):
-        # 0x00 (IMU_PROC_ALTIMU10), pressure 101325 (0x018B6D), temp 298 (0x012A)
-        bit_str2.push(b"\x00\x01\x8B\x6D\x01\x2A", 48) # imu_id, pressure, temp
-        res = parsley.parse_fields(bit_str2, MESSAGES["SENSOR_BARO"][4:])
-
-        assert res["imu_id"] == "IMU_PROC_ALTIMU10"
-        assert res["pressure"] == 101229
-        assert res["temp"] == 298
-
-    def test_sensor_analog(self, bit_str2):
-        # 0x07 (SENSOR_BATT_CURR), value 1000 (0x03E8)
-        bit_str2.push(b"\x07\x03\xE8", 24)
-        res = parsley.parse_fields(bit_str2, MESSAGES["SENSOR_ANALOG"][4:])
-
-        assert res["sensor_id"] == "SENSOR_BATT_CURR"
         assert res["value"] == 1000
 
     def test_gps_timestamp(self, bit_str2):
@@ -214,14 +163,6 @@ class TestCANMessage:
 
         assert res["num_sats"] == 5
         assert res["quality"] == 2
-
-    def test_state_est_data(self, bit_str2):
-        # 0x0A (STATE_ID_ALT), data 123.45 (approx 0x42F6E666 float)
-        bit_str2.push(b"\x0A\x42\xF6\xE6\x66", 40)
-        res = parsley.parse_fields(bit_str2, MESSAGES["STATE_EST_DATA"][4:])
-
-        assert res["state_id"] == "STATE_ID_ALT"
-        assert res["data"] == approx(123.45, abs=1e-3)
 
     def test_leds_on(self, bit_str2):
         res = parsley.parse_fields(bit_str2, [])

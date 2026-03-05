@@ -78,8 +78,6 @@ class _ParsleyParseInternal:
             if isinstance(field, Switch):
                 nested_fields = field.get_fields(res[field.name])
                 res.update(_ParsleyParseInternal.parse_fields(bit_str, nested_fields))
-            if isinstance(field, Bitfield):
-                res[field.name] = field.decode(data)
             
         return res
 
@@ -107,6 +105,10 @@ class _ParsleyParseInternal:
         except ValueError:
             board_inst_id = pu.hexify(encoded_board_inst_id)
         return board_inst_id
+
+    @staticmethod
+    def parse_msg_metadata(encoded_msg_metadata: bytes) -> int:
+        return MESSAGE_METADATA.decode(encoded_msg_metadata) #no try-catch since we want to error out if metadata is malformed
     
     @staticmethod
     def parse_to_object(msg_sid: bytes, msg_data: bytes) -> ParsleyObject | ParsleyError:
@@ -124,12 +126,13 @@ class _ParsleyParseInternal:
         bit_str_msg_sid = BitString(msg_sid, MESSAGE_SID.length)
         encoded_msg_prio = bit_str_msg_sid.pop(MESSAGE_PRIO.length)
         encoded_msg_type = bit_str_msg_sid.pop(MESSAGE_TYPE.length)
-        bit_str_msg_sid.pop(2)  # reserved field
         encoded_board_type_id = bit_str_msg_sid.pop(BOARD_TYPE_ID.length)
         encoded_board_inst_id = bit_str_msg_sid.pop(BOARD_INST_ID.length)
+        encoded_msg_metadata = bit_str_msg_sid.pop(MESSAGE_METADATA.length)
 
         board_type_id = _ParsleyParseInternal.parse_board_type_id(encoded_board_type_id)
         board_inst_id = _ParsleyParseInternal.parse_board_inst_id(encoded_board_inst_id)
+        msg_metadata = _ParsleyParseInternal.parse_msg_metadata(encoded_msg_metadata)
 
         msg_prio = None
         msg_type = None
@@ -148,7 +151,8 @@ class _ParsleyParseInternal:
                 board_type_id=board_type_id,
                 board_inst_id=board_inst_id,
                 msg_type=pu.hexify(encoded_msg_type, is_msg_type=True),
-                msg_data =pu.hexify(msg_data),
+                msg_metadata=msg_metadata,
+                msg_data=pu.hexify(msg_data),
                 error=f"error: {error}"
             )
             
@@ -157,6 +161,7 @@ class _ParsleyParseInternal:
             msg_type=msg_type,
             board_type_id=board_type_id,
             board_inst_id=board_inst_id,
+            msg_metadata=msg_metadata,
             data=data,
         )
         

@@ -7,9 +7,9 @@ T = TypeVar("T")
 
 BoardTypeID = str
 BoardInstID = str
-MsgPrio = str | None #will be checked during runtime
-MsgType = str | None #will be checked during runtime
-MsgMetadata = str | None #will be checked during runtime
+MsgPrio = str
+MsgType = str
+MsgMetadata = int
 
 @dataclass
 class ParsleyError():
@@ -17,6 +17,7 @@ class ParsleyError():
     board_type_id: BoardTypeID
     board_inst_id: BoardInstID
     msg_type: MsgType
+    msg_metadata: MsgMetadata
     msg_data: str
     error: str
 
@@ -45,6 +46,12 @@ class ParsleyObject(BaseModel, Generic[T]):
     def validate_msg_type(cls, value):
         if value not in mt.msg_type:
             raise ValueError(f"Invalid msg_type type '{value}'")
+        return value
+
+    @field_validator("msg_metadata")
+    def validate_msg_metadata(cls, value):
+        if not (0 <= value <= 255):
+            raise ValueError(f"msg_metadata '{value}' is out of range (0-255)")
         return value
     
     def __getitem__(self, key: str):        

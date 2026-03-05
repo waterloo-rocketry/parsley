@@ -10,7 +10,7 @@ from deprecated import deprecated
 from parsley.parse_to_object import _ParsleyParseInternal 
 from parsley.parsley_message import ParsleyError
 
-@deprecated(version='2026.2', reason="Deprecated; use _ParsleyParseInternal.parse_fields in parsley.parse_to_object (or whichever object the data is supposed to become)")
+@deprecated(version='2026.2', reason="Deprecated; use a ParsleyParser subclass (USBDebugParser, LiveTelemetryParser, LoggerParser, BitstringParser) from parsley.parse_to_object")
 def parse_fields(bit_str: BitString, fields: list[Field]) -> dict[str, Any]:
     """
     Parses binary data stored in a BitString and decodes the data
@@ -19,7 +19,7 @@ def parse_fields(bit_str: BitString, fields: list[Field]) -> dict[str, Any]:
     """
     return _ParsleyParseInternal.parse_fields(bit_str, fields)
 
-@deprecated(version='2026.2', reason="Deprecated; use _ParsleyParseInternal.parse_to_object in parsley.parse_to_object (or whichever object the data is supposed to become)")
+@deprecated(version='2026.2', reason="Deprecated; use a ParsleyParser subclass (USBDebugParser, LiveTelemetryParser, LoggerParser, BitstringParser) from parsley.parse_to_object")
 def parse(msg_sid: bytes, msg_data: bytes) -> dict:
     """
     Extracts the message_type and board_id from msg_sid to construct a CAN message along with message_data.
@@ -130,27 +130,21 @@ def parse_logger(buf: bytes, page_number: int) -> tuple[bytes, bytes] | None:
         yield format_can_message(sid, data)
 
 # our three parsing functions create ints, but after the rewrite, they should return bytes
-@deprecated(version='2026.2', reason="Deprecated; use _ParsleyParseInternal.format_can_message in parsley.parse_to_object (or whichever object the data is supposed to become)")
+@deprecated(version='2026.2', reason="Deprecated; use a ParsleyParser subclass (USBDebugParser, LiveTelemetryParser, LoggerParser, BitstringParser) from parsley.parse_to_object")
 def format_can_message(msg_sid: int, msg_data: list[int]) -> tuple[bytes, bytes]:
     return _ParsleyParseInternal.format_can_message(msg_sid, msg_data)
 
 # given a dictionary of CAN message data, return the CAN message bits
-@deprecated(version='2026.2', reason="Deprecated; use _ParsleyParseInternal.encode_data in parsley.parse_to_object (or whichever object the data is supposed to become)")
+@deprecated(version='2026.2', reason="Deprecated; use _ParsleyParseInternal.encode_data in parsley.parse_to_object")
 def encode_data(parsed_data: dict) -> tuple[int, list[int]]:
     return _ParsleyParseInternal.encode_data(parsed_data)
 
-MSG_PRIO_LEN = max([len(msg_prio) for msg_prio in mt.msg_prio])
-MSG_TYPE_LEN = max([len(msg_type) for msg_type in mt.msg_type])
-BOARD_TYPE_ID_LEN = max([len(board_type_id) for board_type_id in mt.board_type_id])
-BOARD_INST_ID_LEN = max([len(board_inst_id) for board_inst_id in mt.board_inst_id])
-MSG_METADATA_LEN = 8
-
 # formats a parsed CAN message (dictionary) into a singular line
-@deprecated(version='2026.2', reason="Deprecated; use _ParsleyParseInternal.format_line in parsley.parse_to_object (or whichever object the data is supposed to become)")
+@deprecated(version='2026.2', reason="Deprecated; use _ParsleyParseInternal.format_line in parsley.parse_to_object")
 def format_line(parsed_data: dict) -> str:
     return _ParsleyParseInternal.format_line(parsed_data)
 
 # can_message is an array of parsley fields
-@deprecated(version='2026.2', reason="Deprecated; use _ParsleyParseInternal.calculate_msg_bit_len in parsley.parse_to_object (or whichever object the data is supposed to become)")
+@deprecated(version='2026.2', reason="Deprecated; use _ParsleyParseInternal.calculate_msg_bit_len in parsley.parse_to_object")
 def calculate_msg_bit_len(can_message):
     return _ParsleyParseInternal.calculate_msg_bit_len(can_message)
