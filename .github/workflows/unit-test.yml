@@ -1,0 +1,17 @@
+name: Run Unit Tests
+
+# Runs on pushes to pull request
+on: pull_request
+
+jobs:
+  build:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+      - name: Update dependency
+        run: uv sync
+      - name: Run tests
+        run: uv run pytest
