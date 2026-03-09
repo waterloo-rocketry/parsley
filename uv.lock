@@ -176,7 +176,7 @@ wheels = [
 
 [[package]]
 name = "parsley"
-version = "2026.2"
+version = "2026.3"
 source = { editable = "." }
 dependencies = [
     { name = "crc8" },
