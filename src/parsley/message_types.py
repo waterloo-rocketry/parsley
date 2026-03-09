@@ -20,17 +20,18 @@ msg_type = {
     'ALT_ARM_STATUS':       0x009,
     'SENSOR_ANALOG16':      0x00A,
     'SENSOR_ANALOG32':      0x00B,
-    'SENSOR_DEM_ANALOG16':  0x00C,
-    'GPS_TIMESTAMP':        0x00D,
-    'GPS_LATITUDE':         0x00E,
-    'GPS_LONGITUDE':        0x00F,
-    'GPS_ALTITUDE':         0x010,
-    'GPS_INFO':             0x011,
-    'STREAM_STATUS':        0x012,
-    'STREAM_DATA':          0x013,
-    'STREAM_RETRY':         0x014,
-    'LEDS_ON':              0x015,
-    'LEDS_OFF':             0x016,
+    'SENSOR_2D_ANALOG24':   0x00C,
+    'SENSOR_3D_ANALOG16':   0x00D,
+    'GPS_TIMESTAMP':        0x00E,
+    'GPS_LATITUDE':         0x00F,
+    'GPS_LONGITUDE':        0x010,
+    'GPS_ALTITUDE':         0x011,
+    'GPS_INFO':             0x012,
+    'STREAM_STATUS':        0x013,
+    'STREAM_DATA':          0x014,
+    'STREAM_RETRY':         0x015,
+    'LEDS_ON':              0x016,
+    'LEDS_OFF':             0x017,
 }
 
 board_type_id = {
@@ -182,7 +183,7 @@ dem_sensor_id = {
     'DEM_SENSOR_CANARD_ADXL380_ACCEL': 0x0E,
 }
 
-general_board_status_offset = {
+board_error_bitfield_offset = {
     'E_5V_OVER_CURRENT':   0x00,
     'E_5V_OVER_VOLTAGE':   0x01,
     'E_5V_UNDER_VOLTAGE':  0x02,
@@ -196,11 +197,8 @@ general_board_status_offset = {
     'E_IO_ERROR':          0x0A,
     'E_FS_ERROR':          0x0B,
     'E_WATCHDOG_TIMEOUT':  0x0C,
-}
-
-board_specific_status_offset = {
-    'E_12V_EFUSE_FAULT':   0x00,
-    'E_5V_EFUSE_FAULT':    0x01,
-    'E_PT_OUT_OF_RANGE':   0x02,
+    'E_12V_EFUSE_FAULT':   0x0D,
+    'E_5V_EFUSE_FAULT':    0x0E,
+    'E_PT_OUT_OF_RANGE':   0x0F,
 }
 
