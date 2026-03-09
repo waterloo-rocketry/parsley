@@ -232,7 +232,7 @@ class TestBitfieldLogs:
             name="general_board_status",
             length=16,
             default="E_NOMINAL",
-            map_name_offset=mt.general_board_status_offset,
+            map_name_offset=mt.board_error_bitfield_offset,
         )
 
     @pytest.mark.parametrize(

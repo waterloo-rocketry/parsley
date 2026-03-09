@@ -22,11 +22,10 @@ class TestCANMessage:
 
 
     def test_general_board_status(self, bit_str2):
-        # 0b [...(32) 1011] [...(16)]
-        bit_str2.push(b"\x00\x00\x00\x0B" + b"\x00\x00", 48)
+        # 0x000B -> bits 0,1,3 set -> E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE|E_12V_OVER_CURRENT
+        bit_str2.push(b"\x00\x0B", 16)
         res = parsley.parse_fields(bit_str2, MESSAGES["GENERAL_BOARD_STATUS"][4:]) # [4:] to skip prio, type, inst
-        assert res["general_board_status"] == 'E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE|E_12V_OVER_CURRENT'
-        assert res["board_error_bitfield"] == 'E_NOMINAL'
+        assert res["board_error_bitfield"] == 'E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE|E_12V_OVER_CURRENT'
 
     def test_reset_cmd(self, bit_str2):
         bit_str2.push(b"\x08\x00", 16) # 0x08 (ALTIMETER), 0x00 (ANY)
@@ -60,19 +59,19 @@ class TestCANMessage:
         assert res["config_value"] == 0x3344
 
     def test_actuator_cmd(self, bit_str2):
-        # 0x00 (ACT_STATE_ON) — actuator ID now encoded in msg_metadata
+        # 0x00 (ACT_STATE_ON)
         bit_str2.push(b"\x00", 8)
         res = parsley.parse_fields(bit_str2, MESSAGES["ACTUATOR_CMD"][4:])
 
         assert res["cmd_state"] == "ACT_STATE_ON"
 
     def test_actuator_status(self, bit_str2):
-        # 0x00 (curr_state=ON), 0x01 (cmd_state=OFF) — actuator ID now in msg_metadata
+        # 0x00 (cmd_state=ON), 0x01 (curr_state=OFF)
         bit_str2.push(b"\x00\x01", 16)
         res = parsley.parse_fields(bit_str2, MESSAGES["ACTUATOR_STATUS"][4:])
 
-        assert res["curr_state"] == "ACT_STATE_ON"
-        assert res["cmd_state"] == "ACT_STATE_OFF"
+        assert res["cmd_state"] == "ACT_STATE_ON"
+        assert res["curr_state"] == "ACT_STATE_OFF"
 
     def test_alt_arm_cmd(self, bit_str2):
         # 0x01 (ALT_ARM_STATE_ARMED) — alt_id now encoded in msg_metadata
@@ -118,6 +117,30 @@ class TestCANMessage:
 
         assert res["value"] == 1000
 
+    def test_sensor_analog32(self, bit_str2):
+        # sensor ID in msg_metadata; 32-bit value
+        bit_str2.push(b"\x00\x01\x86\xA0", 32)  # 100000
+        res = parsley.parse_fields(bit_str2, MESSAGES["SENSOR_ANALOG32"][4:])
+
+        assert res["value"] == 100000
+
+    def test_sensor_2d_analog24(self, bit_str2):
+        # dem_sensor_id in msg_metadata; value_x and value_y (24-bit each)
+        bit_str2.push(b"\x00\x01\xF4" + b"\x00\x03\xE8", 48)  # x=500, y=1000
+        res = parsley.parse_fields(bit_str2, MESSAGES["SENSOR_2D_ANALOG24"][4:])
+
+        assert res["value_x"] == 500
+        assert res["value_y"] == 1000
+
+    def test_sensor_3d_analog16(self, bit_str2):
+        # dem_sensor_id in msg_metadata; value_x, value_y, value_z (16-bit each)
+        bit_str2.push(b"\x01\xF4\x03\xE8\x05\xDC", 48)  # x=500, y=1000, z=1500
+        res = parsley.parse_fields(bit_str2, MESSAGES["SENSOR_3D_ANALOG16"][4:])
+
+        assert res["value_x"] == 500
+        assert res["value_y"] == 1000
+        assert res["value_z"] == 1500
+
     def test_gps_timestamp(self, bit_str2):
         # 10 hrs (0x0A), 30 mins (0x1E), 59 secs (0x3B), 99 dsecs (0x63) -> 10:30:59.99
         bit_str2.push(b"\x0A\x1E\x3B\x63", 32)
@@ -149,13 +172,12 @@ class TestCANMessage:
         assert res["direction"] == 'W'
 
     def test_gps_altitude(self, bit_str2):
-        # altitude 500 (0x01F4), daltitude 25 (0x19), 'M' (0x4D) -> 500.25 M
-        bit_str2.push(b"\x01\xF4\x19\x4D", 32)
+        # altitude 500 (0x000001F4, 32-bit), daltitude 25 (0x19)
+        bit_str2.push(b"\x00\x00\x01\xF4\x19", 40)
         res = parsley.parse_fields(bit_str2, MESSAGES["GPS_ALTITUDE"][4:])
 
         assert res["altitude"] == 500
         assert res["daltitude"] == 25
-        assert res["unit"] == 'M'
 
     def test_gps_info(self, bit_str2):
         bit_str2.push(b"\x05\x02", 16) # 5 sats, quality 2
@@ -165,5 +187,9 @@ class TestCANMessage:
         assert res["quality"] == 2
 
     def test_leds_on(self, bit_str2):
+        res = parsley.parse_fields(bit_str2, [])
+        assert res == {}
+
+    def test_leds_off(self, bit_str2):
         res = parsley.parse_fields(bit_str2, [])
         assert res == {}

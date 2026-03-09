@@ -29,9 +29,8 @@ class TestParsley:
 
         bit_str = BitString()
         bit_str.push(*TIMESTAMP_2.encode(1.234))
-        general_status_value = (1 << mt.general_board_status_offset['E_5V_OVER_VOLTAGE'])
-        bit_str.push(*Numeric('general_board_status', 32).encode(general_status_value))
-        board_error_value = (1 << mt.board_specific_status_offset['E_5V_EFUSE_FAULT'])
+        board_error_value = (1 << mt.board_error_bitfield_offset['E_5V_OVER_VOLTAGE'])
+        board_error_value |= (1 << mt.board_error_bitfield_offset['E_5V_EFUSE_FAULT'])
         bit_str.push(*Numeric('board_error_bitfield', 16).encode(board_error_value))
 
         msg_data = bit_str.pop(bit_str.length)
@@ -46,8 +45,7 @@ class TestParsley:
             'msg_metadata': 0,
             'data': {
                 'time': utilities.approx(1.234),
-                'general_board_status': 'E_5V_OVER_VOLTAGE',
-                'board_error_bitfield': 'E_5V_EFUSE_FAULT'
+                'board_error_bitfield': 'E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'
             }
         }
 
@@ -221,8 +219,8 @@ class TestParsley:
     def test_calculate_msg_bit_length(self):
         msg = CAN_MESSAGE.get_fields('GENERAL_BOARD_STATUS')
         bit_len = parsley.calculate_msg_bit_len(msg)
-        # GENERAL_BOARD_STATUS fields: msg_prio (2) + board_type_id (6) + board_inst_id (6) + msg_metadata (8) + time (16) + general_board_status (32) + board_error_bitfield (16) = 86 bits
-        assert bit_len == 86
+        # GENERAL_BOARD_STATUS fields: msg_prio (2) + board_type_id (6) + board_inst_id (6) + msg_metadata (8) + time (16) + board_error_bitfield (16) = 54 bits
+        assert bit_len == 54
         
     def test_format_line(self):
         parsed_data = {
@@ -232,14 +230,13 @@ class TestParsley:
             'board_inst_id': 'ROCKET',
             'data': {
                 'time': 1.234,
-                'general_board_status': 'E_5V_OVER_VOLTAGE',
-                'board_error_bitfield': 'E_5V_EFUSE_FAULT'
+                'board_error_bitfield': 'E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'
             }
         }
         line = parsley.format_line(parsed_data)
         # MSG_PRIO_LEN=7 (HIGHEST), MSG_TYPE_LEN=20 (GENERAL_BOARD_STATUS),
         # BOARD_TYPE_ID_LEN=10 (RLCS_RELAY), BOARD_INST_ID_LEN=15 (RA_STRATOLOGGER)
-        expected_line = '[ HIGH    GENERAL_BOARD_STATUS RLCS_RELAY ROCKET          ] time: 1.234 general_board_status: E_5V_OVER_VOLTAGE board_error_bitfield: E_5V_EFUSE_FAULT'
+        expected_line = '[ HIGH    GENERAL_BOARD_STATUS RLCS_RELAY ROCKET          ] time: 1.234 board_error_bitfield: E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'
         assert line == expected_line
         
     def test_encode_data(self):
