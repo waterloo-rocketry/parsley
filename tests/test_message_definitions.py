@@ -22,8 +22,8 @@ class TestCANMessage:
 
 
     def test_general_board_status(self, bit_str2):
-        # 0x000B -> bits 0,1,3 set -> E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE|E_12V_OVER_CURRENT
-        bit_str2.push(b"\x00\x0B", 16)
+        # 0x0000000B -> bits 0,1,3 set -> E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE|E_12V_OVER_CURRENT
+        bit_str2.push(b"\x00\x00\x00\x0B", 32)
         res = parsley.parse_fields(bit_str2, MESSAGES["GENERAL_BOARD_STATUS"][4:]) # [4:] to skip prio, type, inst
         assert res["board_error_bitfield"] == 'E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE|E_12V_OVER_CURRENT'
 

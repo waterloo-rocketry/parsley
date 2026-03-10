@@ -15,7 +15,7 @@ MESSAGE_SID = Enum('msg_sid', MESSAGE_PRIO.length + MESSAGE_TYPE.length + BOARD_
 # we parse BOARD_ID seperately from the CAN message (since we want to continue parsing even if BOARD_ID throws)
 # but BOARD_ID is still here so that Omnibus has all the fields it needs when creating messages to send
 MESSAGES = {
-    'GENERAL_BOARD_STATUS': [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA, TIMESTAMP_2, Bitfield('board_error_bitfield', 16, "E_NOMINAL", mt.board_error_bitfield_offset)],
+    'GENERAL_BOARD_STATUS': [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA, TIMESTAMP_2, Bitfield('board_error_bitfield', 32, "E_NOMINAL", mt.board_error_bitfield_offset)],
     'RESET_CMD':            [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA, TIMESTAMP_2, Enum('board_type_id', 8, mt.board_type_id), Enum('board_inst_id', 8, mt.board_inst_id)],
     'DEBUG_RAW':            [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA, TIMESTAMP_2, ASCII('string', 48)],
     'CONFIG_SET':           [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA, TIMESTAMP_2, Enum('board_type_id', 8, mt.board_type_id), Enum('board_inst_id', 8, mt.board_inst_id), Numeric('config_id', 16), Numeric('config_value', 16)],

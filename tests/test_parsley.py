@@ -31,7 +31,7 @@ class TestParsley:
         bit_str.push(*TIMESTAMP_2.encode(1.234))
         board_error_value = (1 << mt.board_error_bitfield_offset['E_5V_OVER_VOLTAGE'])
         board_error_value |= (1 << mt.board_error_bitfield_offset['E_5V_EFUSE_FAULT'])
-        bit_str.push(*Numeric('board_error_bitfield', 16).encode(board_error_value))
+        bit_str.push(*Numeric('board_error_bitfield', 32).encode(board_error_value))
 
         msg_data = bit_str.pop(bit_str.length)
 
@@ -219,8 +219,8 @@ class TestParsley:
     def test_calculate_msg_bit_length(self):
         msg = CAN_MESSAGE.get_fields('GENERAL_BOARD_STATUS')
         bit_len = parsley.calculate_msg_bit_len(msg)
-        # GENERAL_BOARD_STATUS fields: msg_prio (2) + board_type_id (6) + board_inst_id (6) + msg_metadata (8) + time (16) + board_error_bitfield (16) = 54 bits
-        assert bit_len == 54
+        # GENERAL_BOARD_STATUS fields: msg_prio (2) + board_type_id (6) + board_inst_id (6) + msg_metadata (8) + time (16) + board_error_bitfield (32) = 70 bits
+        assert bit_len == 70
         
     def test_format_line(self):
         parsed_data = {
