@@ -185,8 +185,8 @@ class TestParseToObject:
         assert res['data']['data'] == 'hello!'
 
     def test_parse_sensor_2d_analog24_metadata(self):
-        # metadata carries DEM_SENSOR_CANARD_NAV_ANGLE_VEL (0x02)
-        dem_id_val = mt.dem_sensor_id['DEM_SENSOR_CANARD_NAV_ANGLE_VEL']
+        # metadata carries DEM_2D_SENSOR_CANARD_MS5611_BARO_TEMP (0x00)
+        dem_id_val = mt.dem_2d_sensor_id['DEM_2D_SENSOR_CANARD_MS5611_BARO_TEMP']
         msg_sid = utilities.create_msg_sid_from_strings('MEDIUM', 'SENSOR_2D_ANALOG24', str(dem_id_val), 'CANARD', 'ROCKET')
 
         bit_str = BitString()
@@ -198,13 +198,13 @@ class TestParseToObject:
         result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
         res = self._to_dict(result)
 
-        assert res['msg_metadata'] == 'DEM_SENSOR_CANARD_NAV_ANGLE_VEL'
+        assert res['msg_metadata'] == 'DEM_2D_SENSOR_CANARD_MS5611_BARO_TEMP'
         assert res['data']['value_x'] == 500
         assert res['data']['value_y'] == 1000
 
     def test_parse_sensor_3d_analog16_metadata(self):
-        # metadata carries DEM_SENSOR_CANARD_LSM6DSV32X_ACCEL (0x04)
-        dem_id_val = mt.dem_sensor_id['DEM_SENSOR_CANARD_LSM6DSV32X_ACCEL']
+        # metadata carries DEM_3D_SENSOR_CANARD_LSM6DSV32X_ACCEL (0x04)
+        dem_id_val = mt.dem_3d_sensor_id['DEM_3D_SENSOR_CANARD_LSM6DSV32X_ACCEL']
         msg_sid = utilities.create_msg_sid_from_strings('MEDIUM', 'SENSOR_3D_ANALOG16', str(dem_id_val), 'CANARD', 'ROCKET')
 
         bit_str = BitString()
@@ -217,10 +217,34 @@ class TestParseToObject:
         result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
         res = self._to_dict(result)
 
-        assert res['msg_metadata'] == 'DEM_SENSOR_CANARD_LSM6DSV32X_ACCEL'
+        assert res['msg_metadata'] == 'DEM_3D_SENSOR_CANARD_LSM6DSV32X_ACCEL'
         assert res['data']['value_x'] == 100
         assert res['data']['value_y'] == 200
         assert res['data']['value_z'] == 300
+
+    def test_parse_corrupt_enum_metadata_falls_back_to_int(self):
+        # ACTUATOR_CMD uses actuator_id enum for metadata, but 0xFF is not a valid actuator_id
+        # -> should fall back to raw int instead of raising
+        bit_msg_sid = BitString()
+        bit_msg_sid.push(*MESSAGE_PRIO.encode('HIGH'))
+        bit_msg_sid.push(*MESSAGE_TYPE.encode('ACTUATOR_CMD'))
+        bit_msg_sid.push(*BOARD_TYPE_ID.encode('INJECTOR'))
+        bit_msg_sid.push(*BOARD_INST_ID.encode('ROCKET'))
+        bit_msg_sid.push(b'\xFF', MESSAGE_METADATA.length)  # 0xFF not in actuator_id enum
+        msg_sid = bit_msg_sid.pop(MESSAGE_SID.length)
+
+        bit_str = BitString()
+        bit_str.push(*TIMESTAMP_2.encode(1.0))
+        bit_str.push(*Enum('cmd_state', 8, mt.actuator_state).encode('ACT_STATE_ON'))
+        msg_data = bit_str.pop(bit_str.length)
+
+        result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
+        res = self._to_dict(result)
+
+        assert isinstance(result, ParsleyObject)
+        assert res['msg_metadata'] == 255  # falls back to raw int 0xFF
+        assert res['msg_type'] == 'ACTUATOR_CMD'
+        assert res['data']['cmd_state'] == 'ACT_STATE_ON'
 
     def test_parse_bad_msg_type(self):
         msg_sid = b'\x00\x00'
