@@ -112,7 +112,7 @@ class TestParsley:
             'board_type_id': 'PAYLOAD',
             'board_inst_id': 'ANY',
             'msg_prio': 'MEDIUM',
-            'msg_metadata': 0,
+            'msg_metadata': 'SENSOR_5V_VOLT',
             'data': {
                 'time': utilities.approx(12.345),
                 'value': 3300
@@ -245,7 +245,7 @@ class TestParsley:
             'msg_type': 'ALT_ARM_STATUS',
             'board_type_id': 'ALTIMETER',
             'board_inst_id': 'PAYLOAD',
-            'msg_metadata': 0,
+            'msg_metadata': 'ALTIMETER_RAVEN',
             'time': 5.678,
             'alt_arm_state': 'ALT_ARM_STATE_ARMED',
             'drogue_v': 4095,
@@ -253,7 +253,7 @@ class TestParsley:
         }
         msg_sid, msg_data = parsley.encode_data(parsed_data)
 
-        # MEDIUM=0x2, ALT_ARM_STATUS=0x009, ALTIMETER=0x08, PAYLOAD(inst)=0x03, metadata=0x00
+        # MEDIUM=0x2, ALT_ARM_STATUS=0x009, ALTIMETER=0x08, PAYLOAD(inst)=0x03, metadata=0x00 (ALTIMETER_RAVEN)
         # prio:  10
         # type:  0001001
         # btype: 001000

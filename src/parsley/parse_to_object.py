@@ -55,7 +55,7 @@ class _ParsleyParseInternal:
         bit_str.push(*MESSAGE_TYPE.encode(msg_type))
         bit_str.push(*BOARD_TYPE_ID.encode(board_type_id))
         bit_str.push(*BOARD_INST_ID.encode(board_inst_id))
-        bit_str.push(*MESSAGE_METADATA.encode(msg_metadata))
+        bit_str.push(*CAN_MESSAGE.get_fields(msg_type)[3].encode(msg_metadata))
         msg_sid = int.from_bytes(bit_str.pop(bit_str.length), byteorder='big')
 
         # skip the first field (board_id) since thats parsed separately
@@ -107,9 +107,20 @@ class _ParsleyParseInternal:
         return board_inst_id
 
     @staticmethod
-    def parse_msg_metadata(encoded_msg_metadata: bytes) -> int:
-        return MESSAGE_METADATA.decode(encoded_msg_metadata) #no try-catch since we want to error out if metadata is malformed
-    
+    def parse_msg_prio(encoded_msg_prio: bytes) -> str:
+        try:
+            return MESSAGE_PRIO.decode(encoded_msg_prio)
+        except ValueError:
+            return pu.hexify(encoded_msg_prio)
+
+    @staticmethod
+    def parse_msg_metadata(encoded_msg_metadata: bytes, msg_type: str) -> int | str:
+        try:
+            metadata_field = CAN_MESSAGE.get_fields(msg_type)[3]
+            return metadata_field.decode(encoded_msg_metadata)
+        except ValueError:
+            return MESSAGE_METADATA.decode(encoded_msg_metadata) # if value error based on message type just decode as number
+
     @staticmethod
     def parse_to_object(msg_sid: bytes, msg_data: bytes) -> ParsleyObject | ParsleyError:
         """
@@ -121,7 +132,7 @@ class _ParsleyParseInternal:
             sid_bytes, data_bytes = _ParsleyParseInternal.format_can_message(msg_sid,list(msg_data))
             msg_sid = sid_bytes
             msg_data = data_bytes
-        
+
         # begin parsing
         bit_str_msg_sid = BitString(msg_sid, MESSAGE_SID.length)
         encoded_msg_prio = bit_str_msg_sid.pop(MESSAGE_PRIO.length)
@@ -132,15 +143,15 @@ class _ParsleyParseInternal:
 
         board_type_id = _ParsleyParseInternal.parse_board_type_id(encoded_board_type_id)
         board_inst_id = _ParsleyParseInternal.parse_board_inst_id(encoded_board_inst_id)
-        msg_metadata = _ParsleyParseInternal.parse_msg_metadata(encoded_msg_metadata)
+        msg_prio = _ParsleyParseInternal.parse_msg_prio(encoded_msg_prio)
 
-        msg_prio = None
         msg_type = None
+        msg_metadata: int | str = MESSAGE_METADATA.decode(encoded_msg_metadata)  # numeric default if msg_type decode fails
         data: dict[str, Any] = {}
 
         try:
-            msg_prio = MESSAGE_PRIO.decode(encoded_msg_prio)
             msg_type = MESSAGE_TYPE.decode(encoded_msg_type)
+            msg_metadata = _ParsleyParseInternal.parse_msg_metadata(encoded_msg_metadata, msg_type)
             # we splice the first element since we've already manually parsed BOARD_ID
             # if BOARD_ID threw an error, we want to try and parse the rest of the CAN message
             fields = CAN_MESSAGE.get_fields(msg_type)[4:]

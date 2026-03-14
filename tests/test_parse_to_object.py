@@ -96,7 +96,7 @@ class TestParseToObject:
             'board_type_id': 'PAYLOAD',
             'board_inst_id': 'ANY',
             'msg_prio': 'MEDIUM',
-            'msg_metadata': 0,
+            'msg_metadata': 'SENSOR_5V_VOLT',
             'data': {
                 'time': utilities.approx(12.345),
                 'value': 3300
@@ -133,7 +133,7 @@ class TestParseToObject:
         result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
         res = self._to_dict(result)
 
-        assert res['msg_metadata'] == actuator_id_val
+        assert res['msg_metadata'] == 'ACTUATOR_FUEL_INJECTOR_VALVE'
         assert res['data']['cmd_state'] == 'ACT_STATE_ON'
 
     def test_parse_sensor_analog16_metadata(self):
@@ -149,7 +149,7 @@ class TestParseToObject:
         result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
         res = self._to_dict(result)
 
-        assert res['msg_metadata'] == sensor_id_val
+        assert res['msg_metadata'] == 'SENSOR_5V_CURR'
         assert res['data']['value'] == 4800
 
     def test_parse_alt_arm_cmd_metadata(self):
@@ -165,7 +165,7 @@ class TestParseToObject:
         result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
         res = self._to_dict(result)
 
-        assert res['msg_metadata'] == alt_id_val
+        assert res['msg_metadata'] == 'ALTIMETER_STRATOLOGGER'
         assert res['data']['alt_arm_state'] == 'ALT_ARM_STATE_ARMED'
 
     def test_parse_stream_data_metadata(self):
@@ -198,7 +198,7 @@ class TestParseToObject:
         result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
         res = self._to_dict(result)
 
-        assert res['msg_metadata'] == dem_id_val
+        assert res['msg_metadata'] == 'DEM_SENSOR_CANARD_NAV_ANGLE_VEL'
         assert res['data']['value_x'] == 500
         assert res['data']['value_y'] == 1000
 
@@ -217,7 +217,7 @@ class TestParseToObject:
         result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
         res = self._to_dict(result)
 
-        assert res['msg_metadata'] == dem_id_val
+        assert res['msg_metadata'] == 'DEM_SENSOR_CANARD_LSM6DSV32X_ACCEL'
         assert res['data']['value_x'] == 100
         assert res['data']['value_y'] == 200
         assert res['data']['value_z'] == 300
@@ -353,7 +353,7 @@ class TestParseToObject:
             'msg_type': 'ALT_ARM_STATUS',
             'board_type_id': 'ALTIMETER',
             'board_inst_id': 'PAYLOAD',
-            'msg_metadata': 0,
+            'msg_metadata': 'ALTIMETER_RAVEN',
             'time': 5.678,
             'alt_arm_state': 'ALT_ARM_STATE_ARMED',
             'drogue_v': 4095,
@@ -361,7 +361,7 @@ class TestParseToObject:
         }
         msg_sid, msg_data = _ParsleyParseInternal.encode_data(parsed_data)
 
-        # MEDIUM=0x2, ALT_ARM_STATUS=0x009, ALTIMETER=0x08, PAYLOAD(inst)=0x03, metadata=0x00
+        # MEDIUM=0x2, ALT_ARM_STATUS=0x009, ALTIMETER=0x08, PAYLOAD(inst)=0x03, metadata=0x00 (ALTIMETER_RAVEN)
         # padded: 000 10000 10010010 00000011 00000000 = 0x10920300
         assert msg_sid == int.from_bytes(b'\x10\x92\x03\x00', byteorder='big')
 
@@ -376,13 +376,12 @@ class TestParseToObject:
     
     def test_encode_parse_actuator_cmd_metadata(self):
         # ACTUATOR_CMD uses msg_metadata to carry the actuator_id
-        actuator_id = mt.actuator_id['ACTUATOR_FUEL_INJECTOR_VALVE']
         parsed_data = {
             'msg_prio': 'HIGH',
             'msg_type': 'ACTUATOR_CMD',
             'board_type_id': 'INJECTOR',
             'board_inst_id': 'ROCKET',
-            'msg_metadata': actuator_id,
+            'msg_metadata': 'ACTUATOR_FUEL_INJECTOR_VALVE',
             'time': 1.0,
             'cmd_state': 'ACT_STATE_ON',
         }
@@ -390,7 +389,7 @@ class TestParseToObject:
         result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
         res = self._to_dict(result)
 
-        assert res['msg_metadata'] == actuator_id
+        assert res['msg_metadata'] == 'ACTUATOR_FUEL_INJECTOR_VALVE'
         assert res['msg_type'] == 'ACTUATOR_CMD'
 
     def test_parse_usb_debug(self):
