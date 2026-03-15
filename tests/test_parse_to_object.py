@@ -32,10 +32,9 @@ class TestParseToObject:
 
         bit_str = BitString()
         bit_str.push(*TIMESTAMP_2.encode(1.234))
-        general_status_value = (1 << mt.general_board_status_offset['E_5V_OVER_VOLTAGE'])
-        bit_str.push(*Numeric('general_board_status', 32).encode(general_status_value))
-        board_error_value = (1 << mt.board_specific_status_offset['E_5V_EFUSE_FAULT'])
-        bit_str.push(*Numeric('board_error_bitfield', 16).encode(board_error_value))
+        board_error_value = (1 << mt.board_error_bitfield_offset['E_5V_OVER_VOLTAGE'])
+        board_error_value |= (1 << mt.board_error_bitfield_offset['E_5V_EFUSE_FAULT'])
+        bit_str.push(*Numeric('board_error_bitfield', 32).encode(board_error_value))
 
         msg_data = bit_str.pop(bit_str.length)
 
@@ -50,15 +49,14 @@ class TestParseToObject:
             'msg_metadata': 0,
             'data': {
                 'time': utilities.approx(1.234),
-                'general_board_status': 'E_5V_OVER_VOLTAGE',
-                'board_error_bitfield': 'E_5V_EFUSE_FAULT'
+                'board_error_bitfield': 'E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'
             }
         }
 
         assert res == expected_res
 
     def test_parse_partial_byte_fields(self):
-        msg_sid = utilities.create_msg_sid_from_strings('LOW', 'DEBUG_RAW', '0', 'GPS', 'PAYLOAD')
+        msg_sid = utilities.create_msg_sid_from_strings('LOW', 'DEBUG_RAW', '0', 'GPS', 'ROCKET')
 
         bit_str = BitString()
         bit_str.push(*TIMESTAMP_2.encode(0.133))
@@ -71,7 +69,7 @@ class TestParseToObject:
         expected_res = {
             'msg_type': 'DEBUG_RAW',
             'board_type_id': 'GPS',
-            'board_inst_id': 'PAYLOAD',
+            'board_inst_id': 'ROCKET',
             'msg_prio': 'LOW',
             'msg_metadata': 0,
             'data': {
@@ -98,7 +96,7 @@ class TestParseToObject:
             'board_type_id': 'PAYLOAD',
             'board_inst_id': 'ANY',
             'msg_prio': 'MEDIUM',
-            'msg_metadata': 0,
+            'msg_metadata': 'SENSOR_5V_VOLT',
             'data': {
                 'time': utilities.approx(12.345),
                 'value': 3300
@@ -121,6 +119,132 @@ class TestParseToObject:
 
         assert res['msg_metadata'] == 42
         assert res['msg_type'] == 'DEBUG_RAW'
+
+    def test_parse_actuator_cmd_metadata(self):
+        # metadata carries ACTUATOR_FUEL_INJECTOR_VALVE (0x01)
+        actuator_id_val = mt.actuator_id['ACTUATOR_FUEL_INJECTOR_VALVE']
+        msg_sid = utilities.create_msg_sid_from_strings('HIGH', 'ACTUATOR_CMD', str(actuator_id_val), 'INJECTOR', 'ROCKET')
+
+        bit_str = BitString()
+        bit_str.push(*TIMESTAMP_2.encode(2.0))
+        bit_str.push(*Enum('cmd_state', 8, mt.actuator_state).encode('ACT_STATE_ON'))
+        msg_data = bit_str.pop(bit_str.length)
+
+        result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
+        res = self._to_dict(result)
+
+        assert res['msg_metadata'] == 'ACTUATOR_FUEL_INJECTOR_VALVE'
+        assert res['data']['cmd_state'] == 'ACT_STATE_ON'
+
+    def test_parse_sensor_analog16_metadata(self):
+        # metadata carries SENSOR_5V_CURR (0x01)
+        sensor_id_val = mt.analog_sensor_id['SENSOR_5V_CURR']
+        msg_sid = utilities.create_msg_sid_from_strings('MEDIUM', 'SENSOR_ANALOG16', str(sensor_id_val), 'POWER', 'ROCKET')
+
+        bit_str = BitString()
+        bit_str.push(*TIMESTAMP_2.encode(5.0))
+        bit_str.push(*Numeric('value', 16).encode(4800))
+        msg_data = bit_str.pop(bit_str.length)
+
+        result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
+        res = self._to_dict(result)
+
+        assert res['msg_metadata'] == 'SENSOR_5V_CURR'
+        assert res['data']['value'] == 4800
+
+    def test_parse_alt_arm_cmd_metadata(self):
+        # metadata carries ALTIMETER_STRATOLOGGER (0x01)
+        alt_id_val = mt.altimeter_id['ALTIMETER_STRATOLOGGER']
+        msg_sid = utilities.create_msg_sid_from_strings('HIGH', 'ALT_ARM_CMD', str(alt_id_val), 'ALTIMETER', 'ROCKET')
+
+        bit_str = BitString()
+        bit_str.push(*TIMESTAMP_2.encode(1.0))
+        bit_str.push(*Enum('alt_arm_state', 8, mt.alt_arm_state).encode('ALT_ARM_STATE_ARMED'))
+        msg_data = bit_str.pop(bit_str.length)
+
+        result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
+        res = self._to_dict(result)
+
+        assert res['msg_metadata'] == 'ALTIMETER_STRATOLOGGER'
+        assert res['data']['alt_arm_state'] == 'ALT_ARM_STATE_ARMED'
+
+    def test_parse_stream_data_metadata(self):
+        # metadata carries SEQ_ID = 5
+        seq_id = 5
+        msg_sid = utilities.create_msg_sid_from_strings('LOW', 'STREAM_DATA', str(seq_id), 'LOGGER', 'ROCKET')
+
+        bit_str = BitString()
+        bit_str.push(*TIMESTAMP_2.encode(3.0))
+        bit_str.push(*ASCII('data', 48).encode('hello!'))
+        msg_data = bit_str.pop(bit_str.length)
+
+        result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
+        res = self._to_dict(result)
+
+        assert res['msg_metadata'] == seq_id
+        assert res['data']['data'] == 'hello!'
+
+    def test_parse_sensor_2d_analog24_metadata(self):
+        # metadata carries DEM_2D_SENSOR_CANARD_MS5611_BARO_TEMP (0x00)
+        dem_id_val = mt.dem_2d_sensor_id['DEM_2D_SENSOR_CANARD_MS5611_BARO_TEMP']
+        msg_sid = utilities.create_msg_sid_from_strings('MEDIUM', 'SENSOR_2D_ANALOG24', str(dem_id_val), 'CANARD', 'ROCKET')
+
+        bit_str = BitString()
+        bit_str.push(*TIMESTAMP_2.encode(1.5))
+        bit_str.push(*Numeric('value_x', 24).encode(500))
+        bit_str.push(*Numeric('value_y', 24).encode(1000))
+        msg_data = bit_str.pop(bit_str.length)
+
+        result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
+        res = self._to_dict(result)
+
+        assert res['msg_metadata'] == 'DEM_2D_SENSOR_CANARD_MS5611_BARO_TEMP'
+        assert res['data']['value_x'] == 500
+        assert res['data']['value_y'] == 1000
+
+    def test_parse_sensor_3d_analog16_metadata(self):
+        # metadata carries DEM_3D_SENSOR_CANARD_LSM6DSV32X_ACCEL (0x04)
+        dem_id_val = mt.dem_3d_sensor_id['DEM_3D_SENSOR_CANARD_LSM6DSV32X_ACCEL']
+        msg_sid = utilities.create_msg_sid_from_strings('MEDIUM', 'SENSOR_3D_ANALOG16', str(dem_id_val), 'CANARD', 'ROCKET')
+
+        bit_str = BitString()
+        bit_str.push(*TIMESTAMP_2.encode(1.5))
+        bit_str.push(*Numeric('value_x', 16).encode(100))
+        bit_str.push(*Numeric('value_y', 16).encode(200))
+        bit_str.push(*Numeric('value_z', 16).encode(300))
+        msg_data = bit_str.pop(bit_str.length)
+
+        result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
+        res = self._to_dict(result)
+
+        assert res['msg_metadata'] == 'DEM_3D_SENSOR_CANARD_LSM6DSV32X_ACCEL'
+        assert res['data']['value_x'] == 100
+        assert res['data']['value_y'] == 200
+        assert res['data']['value_z'] == 300
+
+    def test_parse_corrupt_enum_metadata_falls_back_to_int(self):
+        # ACTUATOR_CMD uses actuator_id enum for metadata, but 0xFF is not a valid actuator_id
+        # -> should fall back to raw int instead of raising
+        bit_msg_sid = BitString()
+        bit_msg_sid.push(*MESSAGE_PRIO.encode('HIGH'))
+        bit_msg_sid.push(*MESSAGE_TYPE.encode('ACTUATOR_CMD'))
+        bit_msg_sid.push(*BOARD_TYPE_ID.encode('INJECTOR'))
+        bit_msg_sid.push(*BOARD_INST_ID.encode('ROCKET'))
+        bit_msg_sid.push(b'\xFF', MESSAGE_METADATA.length)  # 0xFF not in actuator_id enum
+        msg_sid = bit_msg_sid.pop(MESSAGE_SID.length)
+
+        bit_str = BitString()
+        bit_str.push(*TIMESTAMP_2.encode(1.0))
+        bit_str.push(*Enum('cmd_state', 8, mt.actuator_state).encode('ACT_STATE_ON'))
+        msg_data = bit_str.pop(bit_str.length)
+
+        result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
+        res = self._to_dict(result)
+
+        assert isinstance(result, ParsleyObject)
+        assert res['msg_metadata'] == 255  # falls back to raw int 0xFF
+        assert res['msg_type'] == 'ACTUATOR_CMD'
+        assert res['data']['cmd_state'] == 'ACT_STATE_ON'
 
     def test_parse_bad_msg_type(self):
         msg_sid = b'\x00\x00'
@@ -227,8 +351,8 @@ class TestParseToObject:
     def test_calculate_msg_bit_length(self):
         msg = CAN_MESSAGE.get_fields('GENERAL_BOARD_STATUS')
         bit_len = _ParsleyParseInternal.calculate_msg_bit_len(msg)
-        # GENERAL_BOARD_STATUS fields: msg_prio (2) + board_type_id (6) + board_inst_id (6) + msg_metadata (8) + time (16) + general_board_status (32) + board_error_bitfield (16) = 86 bits
-        assert bit_len == 86
+        # GENERAL_BOARD_STATUS fields: msg_prio (2) + board_type_id (6) + board_inst_id (6) + msg_metadata (8) + time (16) + board_error_bitfield (32) = 70 bits
+        assert bit_len == 70
         
     def test_format_line(self):
         parsed_data = {
@@ -238,14 +362,13 @@ class TestParseToObject:
             'board_inst_id': 'ROCKET',
             'data': {
                 'time': 1.234,
-                'general_board_status': 'E_5V_OVER_VOLTAGE',
-                'board_error_bitfield': 'E_5V_EFUSE_FAULT'
+                'board_error_bitfield': 'E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'
             }
         }
         line = _ParsleyParseInternal.format_line(parsed_data)
         # MSG_PRIO_LEN=7 (HIGHEST), MSG_TYPE_LEN=20 (GENERAL_BOARD_STATUS),
         # BOARD_TYPE_ID_LEN=10 (RLCS_RELAY), BOARD_INST_ID_LEN=15 (RA_STRATOLOGGER)
-        expected_line = '[ HIGH    GENERAL_BOARD_STATUS RLCS_RELAY ROCKET          ] time: 1.234 general_board_status: E_5V_OVER_VOLTAGE board_error_bitfield: E_5V_EFUSE_FAULT'
+        expected_line = '[ HIGH    GENERAL_BOARD_STATUS RLCS_RELAY ROCKET          ] time: 1.234 board_error_bitfield: E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'
         assert line == expected_line
         
     def test_encode_data(self):
@@ -253,8 +376,8 @@ class TestParseToObject:
             'msg_prio': 'MEDIUM',
             'msg_type': 'ALT_ARM_STATUS',
             'board_type_id': 'ALTIMETER',
-            'board_inst_id': 'PAYLOAD',
-            'msg_metadata': 0,
+            'board_inst_id': 'ROCKET',
+            'msg_metadata': 'ALTIMETER_RAVEN',
             'time': 5.678,
             'alt_arm_state': 'ALT_ARM_STATE_ARMED',
             'drogue_v': 4095,
@@ -262,9 +385,9 @@ class TestParseToObject:
         }
         msg_sid, msg_data = _ParsleyParseInternal.encode_data(parsed_data)
 
-        # MEDIUM=0x2, ALT_ARM_STATUS=0x009, ALTIMETER=0x08, PAYLOAD(inst)=0x03, metadata=0x00
+        # MEDIUM=0x2, ALT_ARM_STATUS=0x009, ALTIMETER=0x08, ROCKET(inst)=0x02, metadata=0x00 (ALTIMETER_RAVEN)
         # padded: 000 10000 10010010 00000011 00000000 = 0x10920300
-        assert msg_sid == int.from_bytes(b'\x10\x92\x03\x00', byteorder='big')
+        assert msg_sid == int.from_bytes(b'\x10\x92\x02\x00', byteorder='big')
 
         bit_str = BitString()
         bit_str.push(*TIMESTAMP_2.encode(5.678))
@@ -277,13 +400,12 @@ class TestParseToObject:
     
     def test_encode_parse_actuator_cmd_metadata(self):
         # ACTUATOR_CMD uses msg_metadata to carry the actuator_id
-        actuator_id = mt.actuator_id['ACTUATOR_FUEL_INJECTOR_VALVE']
         parsed_data = {
             'msg_prio': 'HIGH',
             'msg_type': 'ACTUATOR_CMD',
             'board_type_id': 'INJECTOR',
             'board_inst_id': 'ROCKET',
-            'msg_metadata': actuator_id,
+            'msg_metadata': 'ACTUATOR_FUEL_INJECTOR_VALVE',
             'time': 1.0,
             'cmd_state': 'ACT_STATE_ON',
         }
@@ -291,7 +413,7 @@ class TestParseToObject:
         result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
         res = self._to_dict(result)
 
-        assert res['msg_metadata'] == actuator_id
+        assert res['msg_metadata'] == 'ACTUATOR_FUEL_INJECTOR_VALVE'
         assert res['msg_type'] == 'ACTUATOR_CMD'
 
     def test_parse_usb_debug(self):
