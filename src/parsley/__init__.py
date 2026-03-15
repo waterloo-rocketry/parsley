@@ -1,3 +1,4 @@
+# pyright: strict
 from .bitstring import BitString
 from . import fields
 from . import message_definitions
@@ -12,14 +13,14 @@ from .parse_to_object import (
 )
 from .parsley import (
     parse_fields, 
-    parse, 
+    parse,  # pyright: ignore[reportUnknownVariableType]
     parse_bitstring,
     parse_live_telemetry,
     parse_usb_debug,
     parse_logger,
-    format_line,
-    encode_data,
-    calculate_msg_bit_len
+    format_line,  # pyright: ignore[reportUnknownVariableType]
+    encode_data,  # pyright: ignore[reportUnknownVariableType]
+    calculate_msg_bit_len  # pyright: ignore[reportUnknownVariableType]
 )
 
 __all__ = [

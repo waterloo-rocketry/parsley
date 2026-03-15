@@ -1,4 +1,6 @@
+# pyright: standard
 import crc8
+from collections.abc import Generator
 from typing import Any
 import struct
 from parsley.bitstring import BitString
@@ -48,7 +50,7 @@ def parse_bitstring(bit_str: BitString) -> tuple[bytes, bytes]:
     return format_can_message(msg_sid, list(msg_data))
 
 @deprecated(version='2026.2', reason="Deprecated; use LiveTelemetryParser.parse in the new LiveTelemetryParser object")
-def parse_live_telemetry(frame: bytes) -> tuple[bytes, bytes] | None:
+def parse_live_telemetry(frame: bytes) -> tuple[bytes, bytes]:
     if len(frame) < 7:   raise ValueError("Incorrect frame length")
     if frame[0] != 0x02: raise ValueError("Incorrect frame header")
 
@@ -64,7 +66,7 @@ def parse_live_telemetry(frame: bytes) -> tuple[bytes, bytes] | None:
     return format_can_message(msg_sid, list(msg_data))
 
 @deprecated(version='2026.2', reason="Deprecated; use USBDebugParser.parse in the new USBDebugParser object")
-def parse_usb_debug(line: str) -> tuple[bytes, bytes] | None:
+def parse_usb_debug(line: str) -> tuple[bytes, bytes]:
     line = line.strip(' \0\r\n')
     if len(line) == 0 or line[0] != '$':
         raise ValueError("Incorrect line format")
@@ -81,7 +83,7 @@ def parse_usb_debug(line: str) -> tuple[bytes, bytes] | None:
     return format_can_message(msg_sid, msg_data)
 
 @deprecated(version='2026.2', reason="Deprecated; use LoggerParser.parse in the new LoggerParser object")
-def parse_logger(buf: bytes, page_number: int) -> tuple[bytes, bytes] | None:
+def parse_logger(buf: bytes, page_number: int) -> Generator[tuple[bytes, bytes], None, None]:
     """
     Parse one logger record.
 

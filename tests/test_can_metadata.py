@@ -1,3 +1,4 @@
+# pyright: standard
 import pytest
 import parsley
 

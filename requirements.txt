@@ -1,2 +1,3 @@
 pytest
 crc8
+deprecated

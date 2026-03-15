@@ -1,4 +1,5 @@
-def hexify(data: bytes, is_msg_type=False):
+# pyright: strict
+def hexify(data: bytes, is_msg_type: bool = False) -> str:
     """
     Formats byte strings into its respective hexadecimal strings.
 
