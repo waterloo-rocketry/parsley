@@ -1,7 +1,7 @@
 import pytest
 
 from parsley.bitstring import BitString
-from parsley.message_definitions import MESSAGE_PRIO, MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_SID
+from parsley.types import MESSAGE_PRIO, MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_SID
 import utils as utilities
 
 def test_create_msg_sid():
