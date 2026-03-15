@@ -1,7 +1,7 @@
 import pytest
 
 from parsley.bitstring import BitString
-from parsley.message_definitions import MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_SID, MESSAGE_PRIO, MESSAGE_METADATA
+from parsley.types import MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_SID, MESSAGE_PRIO, MESSAGE_METADATA
 
 FLOAT_TOLERANCE = 0.01
 

@@ -4,7 +4,7 @@ Contains the new static class implementation of Parsley.py
 from typing import Any
 from parsley.parsley_message import ParsleyObject, ParsleyError
 from parsley.bitstring import BitString
-from parsley.message_definitions import CAN_MESSAGE, MESSAGE_PRIO, MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA, MESSAGE_SID
+from parsley.types import CAN_MESSAGE, MESSAGE_PRIO, MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA, MESSAGE_SID, MESSAGES, parse_payload
 import parsley.parse_utils as pu
 from parsley.fields import Field, Switch, Bitfield
 from abc import ABC, abstractmethod
@@ -141,10 +141,10 @@ class _ParsleyParseInternal:
         try:
             msg_prio = MESSAGE_PRIO.decode(encoded_msg_prio)
             msg_type = MESSAGE_TYPE.decode(encoded_msg_type)
-            # we splice the first element since we've already manually parsed BOARD_ID
-            # if BOARD_ID threw an error, we want to try and parse the rest of the CAN message
-            fields = CAN_MESSAGE.get_fields(msg_type)[4:]
-            data = _ParsleyParseInternal.parse_fields(BitString(msg_data), fields)
+            if msg_type not in MESSAGES:
+                raise KeyError(f"Unknown message type: {msg_type}")
+            payload = parse_payload(msg_type, BitString(msg_data))
+            data = payload if payload is not None else {}
         except (ValueError, IndexError, KeyError) as error:
             # convert the 6-bit msg_type into its canlib 12-bit form and include an error object
             return ParsleyError(

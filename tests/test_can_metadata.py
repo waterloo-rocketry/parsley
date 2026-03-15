@@ -3,7 +3,7 @@ import parsley
 
 from parsley.bitstring import BitString
 from parsley.fields import Enum, Numeric
-from parsley.message_definitions import TIMESTAMP_2, CAN_MESSAGE
+from parsley.types import TIMESTAMP_2, CAN_MESSAGE
 
 import parsley.message_types as mt
 import utils as tu

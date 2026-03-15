@@ -3,7 +3,7 @@ from typing import Any
 import struct
 from parsley.bitstring import BitString
 from parsley.fields import Field, Switch, Bitfield
-from parsley.message_definitions import CAN_MESSAGE, MESSAGE_METADATA, MESSAGE_PRIO, MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_SID
+from parsley.types import CAN_MESSAGE, MESSAGE_METADATA, MESSAGE_PRIO, MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_SID
 import parsley.message_types as mt
 import parsley.parse_utils as pu
 from deprecated import deprecated
