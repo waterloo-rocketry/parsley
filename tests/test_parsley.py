@@ -59,9 +59,9 @@ class TestParsley:
         prio:  11
         type:  0000011
         btype: 000111
-        binst: 000011
+        binst: 000010
         meta:  00000000
-        padded to 32 bits: 000 11000 00110001 11000011 00000000 = 0x1831C300
+        padded to 32 bits: 000 11000 00110001 11000010 00000000 = 0x1831C200
         """
         assert msg_sid == b'\x18\x31\xC2\x00'
 
@@ -257,9 +257,9 @@ class TestParsley:
         # prio:  10
         # type:  0001001
         # btype: 001000
-        # binst: 000011
+        # binst: 000010
         # meta:  00000000
-        # padded: 000 10000 10010010 00000011 00000000 = 0x10920300
+        # padded: 000 10000 10010010 00000010 00000000 = 0x10920200
         assert msg_sid == int.from_bytes(b'\x10\x92\x02\x00', byteorder='big')
 
         bit_str = BitString()
