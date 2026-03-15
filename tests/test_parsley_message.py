@@ -76,3 +76,26 @@ def test_parsley_object_invalid_type_raises():
             msg_metadata=0,
             data={}
         )
+
+def test_parsley_object_to_flat_dict():
+    sensor_data = {
+        'time': 40.423, 
+        'mag_x': 100, 
+        'mag_y': 200
+    }
+
+    obj = ParsleyObject(
+        board_type_id='PROCESSOR',
+        board_inst_id='GENERIC',
+        msg_prio='LOW',
+        msg_type='RESET_CMD',  
+        msg_metadata=10,
+        data=sensor_data
+    )
+
+    flat = obj.to_flat_dict()
+
+    assert flat['board_type_id'] == 'PROCESSOR'
+    assert 'data' not in flat
+    assert flat['mag_x'] == 100
+    assert len(flat) == 8
