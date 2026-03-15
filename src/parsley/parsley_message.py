@@ -25,9 +25,7 @@ class ParsleyError():
         return asdict(self)[key]
     
     def to_flat_dict(self) -> dict[str, Any]:
-        dumped = asdict(self)
-        error_data = {"error": dumped.pop("error"), "msg_data": dumped.pop("msg_data")}
-        return {**dumped, **error_data}
+        return asdict(self)
     
 class ParsleyObject(BaseModel, Generic[T]):
     """

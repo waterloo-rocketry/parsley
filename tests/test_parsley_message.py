@@ -99,3 +99,25 @@ def test_parsley_object_to_flat_dict():
     assert 'data' not in flat
     assert flat['mag_x'] == 100
     assert len(flat) == 8
+
+def test_parsley_error_to_flat_dict():
+    err = ParsleyError(
+        board_type_id='GPS',
+        board_inst_id='ROCKET',
+        msg_type='GPS_ALTITUDE',
+        msg_metadata=0x42,
+        msg_data='0xFFEEDDCC',
+        error='ChecksumMismatch: GPS packet corrupted'
+    )
+    flat_err = err.to_flat_dict()
+    assert flat_err['board_type_id'] == 'GPS'
+    assert flat_err['board_inst_id'] == 'ROCKET'
+    assert flat_err['msg_type'] == 'GPS_ALTITUDE'
+    
+    assert 'error' in flat_err
+    assert 'msg_data' in flat_err
+    
+    assert isinstance(flat_err, dict)
+    assert len(flat_err) == 6
+
+    
