@@ -1,3 +1,4 @@
+# pyright: strict
 # Auto generated file, do not edit directly
 
 msg_prio = {

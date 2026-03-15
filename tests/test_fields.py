@@ -1,3 +1,4 @@
+# pyright: standard
 import pytest
 
 from parsley.fields import ASCII, Enum, Numeric, Switch, Floating, Bitfield
@@ -211,7 +212,7 @@ class TestSwitch:
     def test_switch(self):
         enum = {"a": 0x01, "b": 0x02, "c": 0x03}
         map_key_enum = {"a": [0, 1], "b": [1, 2], "c": [2, 3]}
-        switch = Switch("status", 8, enum, map_key_enum)
+        switch = Switch("status", 8, enum, map_key_enum)  # pyright: ignore[reportArgumentType]
         (data, length) = switch.encode("a")
         assert data == b"\x01"
         assert length == 8

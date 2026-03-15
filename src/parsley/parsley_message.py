@@ -1,5 +1,6 @@
+# pyright: strict
 from dataclasses import dataclass, asdict
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 from pydantic import BaseModel, field_validator
 import parsley.message_types as mt
 
@@ -21,7 +22,7 @@ class ParsleyError():
     msg_data: str
     error: str
 
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> Any:
         return asdict(self)[key]
     
 class ParsleyObject(BaseModel, Generic[T]):
@@ -37,22 +38,25 @@ class ParsleyObject(BaseModel, Generic[T]):
     data: T # ParsleyDataType
 
     @field_validator("msg_prio")
-    def validate_msg_prio(cls, value):
+    @classmethod
+    def validate_msg_prio(cls, value: str) -> str:
         if value not in mt.msg_prio:
             raise ValueError(f"Invalid msg_prio type '{value}'")
         return value
     
     @field_validator("msg_type")
-    def validate_msg_type(cls, value):
+    @classmethod
+    def validate_msg_type(cls, value: str) -> str:
         if value not in mt.msg_type:
             raise ValueError(f"Invalid msg_type type '{value}'")
         return value
 
     @field_validator("msg_metadata")
-    def validate_msg_metadata(cls, value):
+    @classmethod
+    def validate_msg_metadata(cls, value: int) -> int:
         if not (0 <= value <= 255):
             raise ValueError(f"msg_metadata '{value}' is out of range (0-255)")
         return value
     
-    def __getitem__(self, key: str):        
+    def __getitem__(self, key: str) -> Any:        
         return self.model_dump()[key]

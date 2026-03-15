@@ -1,3 +1,4 @@
+# pyright: standard
 import parsley
 import pytest
 
@@ -393,7 +394,7 @@ class TestParsley:
     
         frame[1] = len(frame) + 1  #makes length +1 cause cyclic redundancy check byte
         
-        crc = crc8.crc8(frame).digest()[0]
+        crc = crc8.crc8(bytes(frame)).digest()[0]
         frame.append(crc) #actually adds the crc byte
 
         msg_sid, msg_data = parsley.parse_live_telemetry(bytes(frame))

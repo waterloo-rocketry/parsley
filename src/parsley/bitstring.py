@@ -1,13 +1,14 @@
+# pyright: strict
 class BitString:
     """
     Stores the message data bits that we have yet to parse and lets us read arbitrary-length
     bits from the front. We need to operate at the bit level since some fields are
     non-byte-aligned (eg. DEBUG_MSG's 4-bit DEBUG_LEVEL and DEBUG_MSG's 12-bit LINE_NUM)
     """
-    def __init__(self, data=b'', data_bit_length=0):
-        self.length = data_bit_length or len(data) * 8 # length in bits
+    def __init__(self, data: bytes = b'', data_bit_length: int = 0) -> None:
+        self.length: int = data_bit_length or len(data) * 8 # length in bits
         # store the data as an int which is unbounded and lets us do bitwise manipulations
-        self.data = int.from_bytes(data, byteorder='big')
+        self.data: int = int.from_bytes(data, byteorder='big')
 
     def pop(self, field_length: int, variable_length: bool = False) -> bytes:
         """
@@ -27,7 +28,7 @@ class BitString:
         self.data = self.data & ((1 << self.length) - 1) # and then mask them out
         return res.to_bytes((field_length + 7) // 8, byteorder='big') # and convert to a bytes object
 
-    def push(self, value: bytes, field_length: int):
+    def push(self, value: bytes, field_length: int) -> None:
         """
         Appends the next field_length least significant bits of data from value (to the back).
 
@@ -36,14 +37,14 @@ class BitString:
         will append only 110000
         """
         self.length += field_length
-        value = int.from_bytes(value, byteorder='big') # convert to int to do bitwise maniuplations
-        value = value & ((1 << field_length) - 1) # extract the field_length least significant bits
-        self.data = (self.data << field_length) | value # and then append value to the back of data
+        int_value = int.from_bytes(value, byteorder='big') # convert to int to do bitwise maniuplations
+        int_value = int_value & ((1 << field_length) - 1) # extract the field_length least significant bits
+        self.data = (self.data << field_length) | int_value # and then append value to the back of data
 
-    def push_front(self, value: bytes, field_length: int):
+    def push_front(self, value: bytes, field_length: int) -> None:
         """
         Prepends the next field_length least significant bits of data from value (to the front).
         """
-        value = int.from_bytes(value, byteorder='big')
-        self.data = (value << self.length) | self.data # prepend value to the front of data
+        int_value = int.from_bytes(value, byteorder='big')
+        self.data = (int_value << self.length) | self.data # prepend value to the front of data
         self.length += field_length
