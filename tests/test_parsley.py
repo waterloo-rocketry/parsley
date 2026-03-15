@@ -52,10 +52,10 @@ class TestParsley:
         assert res == expected_res
         
     def test_parse_partial_byte_fields(self):
-        msg_sid = utilities.create_msg_sid_from_strings('LOW', 'DEBUG_RAW', '0', 'GPS', 'PAYLOAD')
+        msg_sid = utilities.create_msg_sid_from_strings('LOW', 'DEBUG_RAW', '0', 'GPS', 'ROCKET')
 
         """
-        LOW = 0x3, DEBUG_RAW = 0x003, GPS = 0x07, PAYLOAD(inst) = 0x03, metadata = 0x00
+        LOW = 0x3, DEBUG_RAW = 0x003, GPS = 0x07, ROCKET(inst) = 0x02, metadata = 0x00
         prio:  11
         type:  0000011
         btype: 000111
@@ -63,7 +63,7 @@ class TestParsley:
         meta:  00000000
         padded to 32 bits: 000 11000 00110001 11000011 00000000 = 0x1831C300
         """
-        assert msg_sid == b'\x18\x31\xC3\x00'
+        assert msg_sid == b'\x18\x31\xC2\x00'
 
         bit_str = BitString()
         bit_str.push(*TIMESTAMP_2.encode(0.133))
@@ -75,7 +75,7 @@ class TestParsley:
         expected_res = {
             'msg_type': 'DEBUG_RAW',
             'board_type_id': 'GPS',
-            'board_inst_id': 'PAYLOAD',
+            'board_inst_id': 'ROCKET',
             'msg_prio': 'LOW',
             'msg_metadata': 0,
             'data': {
@@ -244,7 +244,7 @@ class TestParsley:
             'msg_prio': 'MEDIUM',
             'msg_type': 'ALT_ARM_STATUS',
             'board_type_id': 'ALTIMETER',
-            'board_inst_id': 'PAYLOAD',
+            'board_inst_id': 'ROCKET',
             'msg_metadata': 'ALTIMETER_RAVEN',
             'time': 5.678,
             'alt_arm_state': 'ALT_ARM_STATE_ARMED',
@@ -253,14 +253,14 @@ class TestParsley:
         }
         msg_sid, msg_data = parsley.encode_data(parsed_data)
 
-        # MEDIUM=0x2, ALT_ARM_STATUS=0x009, ALTIMETER=0x08, PAYLOAD(inst)=0x03, metadata=0x00 (ALTIMETER_RAVEN)
+        # MEDIUM=0x2, ALT_ARM_STATUS=0x009, ALTIMETER=0x08, ROCKET(inst)=0x02, metadata=0x00 (ALTIMETER_RAVEN)
         # prio:  10
         # type:  0001001
         # btype: 001000
         # binst: 000011
         # meta:  00000000
         # padded: 000 10000 10010010 00000011 00000000 = 0x10920300
-        assert msg_sid == int.from_bytes(b'\x10\x92\x03\x00', byteorder='big')
+        assert msg_sid == int.from_bytes(b'\x10\x92\x02\x00', byteorder='big')
 
         bit_str = BitString()
         bit_str.push(*TIMESTAMP_2.encode(5.678))

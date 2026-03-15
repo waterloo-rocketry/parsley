@@ -56,7 +56,7 @@ class TestParseToObject:
         assert res == expected_res
 
     def test_parse_partial_byte_fields(self):
-        msg_sid = utilities.create_msg_sid_from_strings('LOW', 'DEBUG_RAW', '0', 'GPS', 'PAYLOAD')
+        msg_sid = utilities.create_msg_sid_from_strings('LOW', 'DEBUG_RAW', '0', 'GPS', 'ROCKET')
 
         bit_str = BitString()
         bit_str.push(*TIMESTAMP_2.encode(0.133))
@@ -69,7 +69,7 @@ class TestParseToObject:
         expected_res = {
             'msg_type': 'DEBUG_RAW',
             'board_type_id': 'GPS',
-            'board_inst_id': 'PAYLOAD',
+            'board_inst_id': 'ROCKET',
             'msg_prio': 'LOW',
             'msg_metadata': 0,
             'data': {
@@ -376,7 +376,7 @@ class TestParseToObject:
             'msg_prio': 'MEDIUM',
             'msg_type': 'ALT_ARM_STATUS',
             'board_type_id': 'ALTIMETER',
-            'board_inst_id': 'PAYLOAD',
+            'board_inst_id': 'ROCKET',
             'msg_metadata': 'ALTIMETER_RAVEN',
             'time': 5.678,
             'alt_arm_state': 'ALT_ARM_STATE_ARMED',
@@ -385,9 +385,9 @@ class TestParseToObject:
         }
         msg_sid, msg_data = _ParsleyParseInternal.encode_data(parsed_data)
 
-        # MEDIUM=0x2, ALT_ARM_STATUS=0x009, ALTIMETER=0x08, PAYLOAD(inst)=0x03, metadata=0x00 (ALTIMETER_RAVEN)
+        # MEDIUM=0x2, ALT_ARM_STATUS=0x009, ALTIMETER=0x08, ROCKET(inst)=0x02, metadata=0x00 (ALTIMETER_RAVEN)
         # padded: 000 10000 10010010 00000011 00000000 = 0x10920300
-        assert msg_sid == int.from_bytes(b'\x10\x92\x03\x00', byteorder='big')
+        assert msg_sid == int.from_bytes(b'\x10\x92\x02\x00', byteorder='big')
 
         bit_str = BitString()
         bit_str.push(*TIMESTAMP_2.encode(5.678))
