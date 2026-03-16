@@ -29,10 +29,9 @@ class TestParsley:
 
         bit_str = BitString()
         bit_str.push(*TIMESTAMP_2.encode(1.234))
-        general_status_value = (1 << mt.general_board_status_offset['E_5V_OVER_VOLTAGE'])
-        bit_str.push(*Numeric('general_board_status', 32).encode(general_status_value))
-        board_error_value = (1 << mt.board_specific_status_offset['E_5V_EFUSE_FAULT'])
-        bit_str.push(*Numeric('board_error_bitfield', 16).encode(board_error_value))
+        board_error_value = (1 << mt.board_error_bitfield_offset['E_5V_OVER_VOLTAGE'])
+        board_error_value |= (1 << mt.board_error_bitfield_offset['E_5V_EFUSE_FAULT'])
+        bit_str.push(*Numeric('board_error_bitfield', 32).encode(board_error_value))
 
         msg_data = bit_str.pop(bit_str.length)
 
@@ -46,26 +45,25 @@ class TestParsley:
             'msg_metadata': 0,
             'data': {
                 'time': utilities.approx(1.234),
-                'general_board_status': 'E_5V_OVER_VOLTAGE',
-                'board_error_bitfield': 'E_5V_EFUSE_FAULT'
+                'board_error_bitfield': 'E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'
             }
         }
 
         assert res == expected_res
         
     def test_parse_partial_byte_fields(self):
-        msg_sid = utilities.create_msg_sid_from_strings('LOW', 'DEBUG_RAW', '0', 'GPS', 'PAYLOAD')
+        msg_sid = utilities.create_msg_sid_from_strings('LOW', 'DEBUG_RAW', '0', 'GPS', 'ROCKET')
 
         """
-        LOW = 0x3, DEBUG_RAW = 0x003, GPS = 0x07, PAYLOAD(inst) = 0x03, metadata = 0x00
+        LOW = 0x3, DEBUG_RAW = 0x003, GPS = 0x07, ROCKET(inst) = 0x02, metadata = 0x00
         prio:  11
         type:  0000011
         btype: 000111
-        binst: 000011
+        binst: 000010
         meta:  00000000
-        padded to 32 bits: 000 11000 00110001 11000011 00000000 = 0x1831C300
+        padded to 32 bits: 000 11000 00110001 11000010 00000000 = 0x1831C200
         """
-        assert msg_sid == b'\x18\x31\xC3\x00'
+        assert msg_sid == b'\x18\x31\xC2\x00'
 
         bit_str = BitString()
         bit_str.push(*TIMESTAMP_2.encode(0.133))
@@ -77,7 +75,7 @@ class TestParsley:
         expected_res = {
             'msg_type': 'DEBUG_RAW',
             'board_type_id': 'GPS',
-            'board_inst_id': 'PAYLOAD',
+            'board_inst_id': 'ROCKET',
             'msg_prio': 'LOW',
             'msg_metadata': 0,
             'data': {
@@ -114,7 +112,7 @@ class TestParsley:
             'board_type_id': 'PAYLOAD',
             'board_inst_id': 'ANY',
             'msg_prio': 'MEDIUM',
-            'msg_metadata': 0,
+            'msg_metadata': 'SENSOR_5V_VOLT',
             'data': {
                 'time': utilities.approx(12.345),
                 'value': 3300
@@ -221,8 +219,8 @@ class TestParsley:
     def test_calculate_msg_bit_length(self):
         msg = CAN_MESSAGE.get_fields('GENERAL_BOARD_STATUS')
         bit_len = parsley.calculate_msg_bit_len(msg)
-        # GENERAL_BOARD_STATUS fields: msg_prio (2) + board_type_id (6) + board_inst_id (6) + msg_metadata (8) + time (16) + general_board_status (32) + board_error_bitfield (16) = 86 bits
-        assert bit_len == 86
+        # GENERAL_BOARD_STATUS fields: msg_prio (2) + board_type_id (6) + board_inst_id (6) + msg_metadata (8) + time (16) + board_error_bitfield (32) = 70 bits
+        assert bit_len == 70
         
     def test_format_line(self):
         parsed_data = {
@@ -232,14 +230,13 @@ class TestParsley:
             'board_inst_id': 'ROCKET',
             'data': {
                 'time': 1.234,
-                'general_board_status': 'E_5V_OVER_VOLTAGE',
-                'board_error_bitfield': 'E_5V_EFUSE_FAULT'
+                'board_error_bitfield': 'E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'
             }
         }
         line = parsley.format_line(parsed_data)
         # MSG_PRIO_LEN=7 (HIGHEST), MSG_TYPE_LEN=20 (GENERAL_BOARD_STATUS),
         # BOARD_TYPE_ID_LEN=10 (RLCS_RELAY), BOARD_INST_ID_LEN=15 (RA_STRATOLOGGER)
-        expected_line = '[ HIGH    GENERAL_BOARD_STATUS RLCS_RELAY ROCKET          ] time: 1.234 general_board_status: E_5V_OVER_VOLTAGE board_error_bitfield: E_5V_EFUSE_FAULT'
+        expected_line = '[ HIGH    GENERAL_BOARD_STATUS RLCS_RELAY ROCKET          ] time: 1.234 board_error_bitfield: E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'
         assert line == expected_line
         
     def test_encode_data(self):
@@ -247,8 +244,8 @@ class TestParsley:
             'msg_prio': 'MEDIUM',
             'msg_type': 'ALT_ARM_STATUS',
             'board_type_id': 'ALTIMETER',
-            'board_inst_id': 'PAYLOAD',
-            'msg_metadata': 0,
+            'board_inst_id': 'ROCKET',
+            'msg_metadata': 'ALTIMETER_RAVEN',
             'time': 5.678,
             'alt_arm_state': 'ALT_ARM_STATE_ARMED',
             'drogue_v': 4095,
@@ -256,14 +253,14 @@ class TestParsley:
         }
         msg_sid, msg_data = parsley.encode_data(parsed_data)
 
-        # MEDIUM=0x2, ALT_ARM_STATUS=0x009, ALTIMETER=0x08, PAYLOAD(inst)=0x03, metadata=0x00
+        # MEDIUM=0x2, ALT_ARM_STATUS=0x009, ALTIMETER=0x08, ROCKET(inst)=0x02, metadata=0x00 (ALTIMETER_RAVEN)
         # prio:  10
         # type:  0001001
         # btype: 001000
-        # binst: 000011
+        # binst: 000010
         # meta:  00000000
-        # padded: 000 10000 10010010 00000011 00000000 = 0x10920300
-        assert msg_sid == int.from_bytes(b'\x10\x92\x03\x00', byteorder='big')
+        # padded: 000 10000 10010010 00000010 00000000 = 0x10920200
+        assert msg_sid == int.from_bytes(b'\x10\x92\x02\x00', byteorder='big')
 
         bit_str = BitString()
         bit_str.push(*TIMESTAMP_2.encode(5.678))
