@@ -1,49 +1,85 @@
-'''
-Contains the new static class implementation of Parsley.py
-'''
-from typing import Any
-from parsley.parsley_message import ParsleyObject, ParsleyError
-from parsley.bitstring import BitString
-from parsley.types import CAN_MESSAGE, MESSAGE_PRIO, MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA, MESSAGE_SID, MESSAGES, parse_payload
-import parsley.parse_utils as pu
-from parsley.fields import Field, Switch, Bitfield
+"""Parser classes for CAN message input formats."""
+
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 import struct
-import crc8
-import parsley.message_types as mt
+from typing import Generator
 
-#Used for formatting lines
-MSG_PRIO_LEN = max([len(msg_prio) for msg_prio in mt.msg_prio])
-MSG_TYPE_LEN = max([len(msg_type) for msg_type in mt.msg_type])
-BOARD_TYPE_ID_LEN = max([len(board_type_id) for board_type_id in mt.board_type_id])
-BOARD_INST_ID_LEN = max([len(board_inst_id) for board_inst_id in mt.board_inst_id])
+import crc8
+
+from parsley.bitstring import BitString
+from parsley.fields import Enum, Numeric, Field
+from parsley.parsley_message import ParsleyObject, ParsleyError
+from parsley.payloads import ParsleyDataPayload, get_payload_type
+import parsley.message_types as mt
+import parsley.parse_utils as pu
+
+
+# ── SID-level field constants (private) ────────────────────────────────────
+
+_MESSAGE_PRIO = Enum('msg_prio', 2, mt.msg_prio)
+_MESSAGE_TYPE = Enum('msg_type', 7, mt.msg_type)
+_BOARD_TYPE_ID = Enum('board_type_id', 6, mt.board_type_id)
+_BOARD_INST_ID = Enum('board_inst_id', 6, mt.board_inst_id)
+_MESSAGE_METADATA = Numeric('msg_metadata', 8)
+_MESSAGE_SID = Enum(
+    'msg_sid',
+    _MESSAGE_PRIO.length + _MESSAGE_TYPE.length + _BOARD_TYPE_ID.length
+    + _BOARD_INST_ID.length + _MESSAGE_METADATA.length,
+    {},
+)
+
+# Used for formatting lines
+_MSG_PRIO_LEN = max(len(p) for p in mt.msg_prio)
+_MSG_TYPE_LEN = max(len(t) for t in mt.msg_type)
+_BOARD_TYPE_ID_LEN = max(len(b) for b in mt.board_type_id)
+_BOARD_INST_ID_LEN = max(len(b) for b in mt.board_inst_id)
+
 
 class _ParsleyParseInternal:
-    def __init__(self):
+    def __init__(self) -> None:
         raise NotImplementedError("This class is static only do not instantiate it")
 
     @staticmethod
-    def format_line(parsed_data: dict) -> str:
+    def parse_fields(bit_str: BitString, fields: list[Field]) -> dict[str, object]:
+        """Parse binary data stored in a BitString using the given fields."""
+        res: dict[str, object] = {}
+        for field in fields:
+            data = bit_str.pop(field.length, field.variable_length)
+            res[field.name] = field.decode(data)
+        return res
+
+    @staticmethod
+    def format_line(parsed_data: dict[str, object]) -> str:
         msg_prio = parsed_data['msg_prio']
         msg_type = parsed_data['msg_type']
         board_type_id = parsed_data['board_type_id']
         board_inst_id = parsed_data['board_inst_id']
         data = parsed_data['data']
-        res = f'[ {msg_prio:<{MSG_PRIO_LEN}} {msg_type:<{MSG_TYPE_LEN}} {board_type_id:<{BOARD_TYPE_ID_LEN}} {board_inst_id:<{BOARD_INST_ID_LEN}} ]'
-        for k, v in data.items():
-            formatted_value = f"{v:.3f}" if isinstance(v, float) else v
-            res += f' {k}: {formatted_value}'
+        res = (
+            f'[ {msg_prio:<{_MSG_PRIO_LEN}} {msg_type:<{_MSG_TYPE_LEN}}'
+            f' {board_type_id:<{_BOARD_TYPE_ID_LEN}} {board_inst_id:<{_BOARD_INST_ID_LEN}} ]'
+        )
+        if isinstance(data, dict):
+            for k, v in data.items():
+                formatted_value = f"{v:.3f}" if isinstance(v, float) else v
+                res += f' {k}: {formatted_value}'
+        elif isinstance(data, ParsleyDataPayload):
+            for k, v in data.to_dict().items():
+                formatted_value = f"{v:.3f}" if isinstance(v, float) else v
+                res += f' {k}: {formatted_value}'
         return res
 
     @staticmethod
-    def calculate_msg_bit_len(can_message):
+    def calculate_msg_bit_len(can_message: list[Field]) -> int:
         bit_len = 0
         for field in can_message:
             bit_len += field.length
         return bit_len
 
     @staticmethod
-    def encode_data(parsed_data: dict) -> tuple[int, list[int]]:
+    def encode_data(parsed_data: dict[str, object]) -> tuple[int, list[int]]:
         msg_prio = parsed_data['msg_prio']
         msg_type = parsed_data['msg_type']
         board_type_id = parsed_data['board_type_id']
@@ -51,35 +87,19 @@ class _ParsleyParseInternal:
         msg_metadata = parsed_data['msg_metadata']
 
         bit_str = BitString()
-        bit_str.push(*MESSAGE_PRIO.encode(msg_prio))
-        bit_str.push(*MESSAGE_TYPE.encode(msg_type))
-        bit_str.push(*BOARD_TYPE_ID.encode(board_type_id))
-        bit_str.push(*BOARD_INST_ID.encode(board_inst_id))
-        bit_str.push(*MESSAGE_METADATA.encode(msg_metadata))
+        bit_str.push(*_MESSAGE_PRIO.encode(msg_prio))
+        bit_str.push(*_MESSAGE_TYPE.encode(msg_type))
+        bit_str.push(*_BOARD_TYPE_ID.encode(board_type_id))
+        bit_str.push(*_BOARD_INST_ID.encode(board_inst_id))
+        bit_str.push(*_MESSAGE_METADATA.encode(msg_metadata))
         msg_sid = int.from_bytes(bit_str.pop(bit_str.length), byteorder='big')
 
-        # skip the first field (board_id) since thats parsed separately
-        for field in CAN_MESSAGE.get_fields(msg_type)[4:]:
-            bit_str.push(*field.encode(parsed_data[field.name]))
-        msg_data = [byte for byte in bit_str.pop(bit_str.length)]
+        payload_cls = get_payload_type(str(msg_type))
+        if payload_cls is not None:
+            for field in payload_cls.FIELDS:
+                bit_str.push(*field.encode(parsed_data[field.name]))
+        msg_data = list(bit_str.pop(bit_str.length))
         return msg_sid, msg_data
-
-    @staticmethod
-    def parse_fields(bit_str: BitString, fields: list[Field]) -> dict[str, Any]:
-        """
-        Parses binary data stored in a BitString and decodes the data
-        based on each field's decode() implementation. Returns a dictionary
-        of each field's name to its decoded python value.
-        """
-        res: dict[str, Any] = {}
-        for field in fields:
-            data = bit_str.pop(field.length, field.variable_length)
-            res[field.name] = field.decode(data)
-            if isinstance(field, Switch):
-                nested_fields = field.get_fields(res[field.name])
-                res.update(_ParsleyParseInternal.parse_fields(bit_str, nested_fields))
-            
-        return res
 
     @staticmethod
     def format_can_message(msg_sid: int, msg_data: list[int]) -> tuple[bytes, bytes]:
@@ -90,72 +110,59 @@ class _ParsleyParseInternal:
 
     @staticmethod
     def parse_board_type_id(encoded_board_type_id: bytes) -> str:
-        board_type_id = None
         try:
-            board_type_id = BOARD_TYPE_ID.decode(encoded_board_type_id)
+            return _BOARD_TYPE_ID.decode(encoded_board_type_id)
         except ValueError:
-            board_type_id = pu.hexify(encoded_board_type_id)
-        return board_type_id
+            return pu.hexify(encoded_board_type_id)
 
     @staticmethod
     def parse_board_inst_id(encoded_board_inst_id: bytes) -> str:
-        board_inst_id = None
         try:
-            board_inst_id = BOARD_INST_ID.decode(encoded_board_inst_id)
+            return _BOARD_INST_ID.decode(encoded_board_inst_id)
         except ValueError:
-            board_inst_id = pu.hexify(encoded_board_inst_id)
-        return board_inst_id
+            return pu.hexify(encoded_board_inst_id)
 
     @staticmethod
     def parse_msg_metadata(encoded_msg_metadata: bytes) -> int:
-        return MESSAGE_METADATA.decode(encoded_msg_metadata) #no try-catch since we want to error out if metadata is malformed
-    
+        return _MESSAGE_METADATA.decode(encoded_msg_metadata)
+
     @staticmethod
-    def parse_to_object(msg_sid: bytes, msg_data: bytes) -> ParsleyObject | ParsleyError:
+    def parse_to_object(msg_sid: bytes | int, msg_data: bytes | list[int]) -> ParsleyObject | ParsleyError:
+        """Extract msg_type and board_id from msg_sid to construct a ParsleyObject.
+
+        Returns ParsleyError on malformed data.
         """
-        Extracts the message_type and board_id from msg_sid to construct a Parsley Object along with message_data.
-        Upon reading poorly formatted data, the error is caught and returned in a ParsleyError object.
-        """
-        # Allow callers to pass integer SID
         if isinstance(msg_sid, int):
-            sid_bytes, data_bytes = _ParsleyParseInternal.format_can_message(msg_sid,list(msg_data))
+            sid_bytes, data_bytes = _ParsleyParseInternal.format_can_message(msg_sid, list(msg_data))
             msg_sid = sid_bytes
             msg_data = data_bytes
-        
-        # begin parsing
-        bit_str_msg_sid = BitString(msg_sid, MESSAGE_SID.length)
-        encoded_msg_prio = bit_str_msg_sid.pop(MESSAGE_PRIO.length)
-        encoded_msg_type = bit_str_msg_sid.pop(MESSAGE_TYPE.length)
-        encoded_board_type_id = bit_str_msg_sid.pop(BOARD_TYPE_ID.length)
-        encoded_board_inst_id = bit_str_msg_sid.pop(BOARD_INST_ID.length)
-        encoded_msg_metadata = bit_str_msg_sid.pop(MESSAGE_METADATA.length)
+
+        bit_str_msg_sid = BitString(msg_sid, _MESSAGE_SID.length)
+        encoded_msg_prio = bit_str_msg_sid.pop(_MESSAGE_PRIO.length)
+        encoded_msg_type = bit_str_msg_sid.pop(_MESSAGE_TYPE.length)
+        encoded_board_type_id = bit_str_msg_sid.pop(_BOARD_TYPE_ID.length)
+        encoded_board_inst_id = bit_str_msg_sid.pop(_BOARD_INST_ID.length)
+        encoded_msg_metadata = bit_str_msg_sid.pop(_MESSAGE_METADATA.length)
 
         board_type_id = _ParsleyParseInternal.parse_board_type_id(encoded_board_type_id)
         board_inst_id = _ParsleyParseInternal.parse_board_inst_id(encoded_board_inst_id)
         msg_metadata = _ParsleyParseInternal.parse_msg_metadata(encoded_msg_metadata)
 
-        msg_prio = None
-        msg_type = None
-        data: dict[str, Any] = {}
-
         try:
-            msg_prio = MESSAGE_PRIO.decode(encoded_msg_prio)
-            msg_type = MESSAGE_TYPE.decode(encoded_msg_type)
-            if msg_type not in MESSAGES:
-                raise KeyError(f"Unknown message type: {msg_type}")
-            payload = parse_payload(msg_type, BitString(msg_data))
-            data = payload if payload is not None else {}
+            msg_prio: str = _MESSAGE_PRIO.decode(encoded_msg_prio)
+            msg_type: str = _MESSAGE_TYPE.decode(encoded_msg_type)
+            payload_cls = get_payload_type(msg_type)
+            data: ParsleyDataPayload | None = payload_cls.from_bitstring(BitString(msg_data)) if payload_cls else None
         except (ValueError, IndexError, KeyError) as error:
-            # convert the 6-bit msg_type into its canlib 12-bit form and include an error object
             return ParsleyError(
                 board_type_id=board_type_id,
                 board_inst_id=board_inst_id,
                 msg_type=pu.hexify(encoded_msg_type, is_msg_type=True),
                 msg_metadata=msg_metadata,
                 msg_data=pu.hexify(msg_data),
-                error=f"error: {error}"
+                error=f"error: {error}",
             )
-            
+
         return ParsleyObject(
             msg_prio=msg_prio,
             msg_type=msg_type,
@@ -164,16 +171,18 @@ class _ParsleyParseInternal:
             msg_metadata=msg_metadata,
             data=data,
         )
-        
+
+
 class ParsleyParser(ABC):
-    """ Abstract base for different input-format parsers """
+    """Abstract base for different input-format parsers."""
 
     @abstractmethod
-    def parse(self, *args, **kwargs):
+    def parse(self, *args: object, **kwargs: object) -> object:
         raise NotImplementedError("This class is an abstract class")
 
+
 class USBDebugParser(ParsleyParser):
-    """ Parse ASCII USB-debug lines """
+    """Parse ASCII USB-debug lines."""
 
     def parse(self, line: str) -> ParsleyObject | ParsleyError:
         line = line.strip(' \0\r\n')
@@ -182,17 +191,18 @@ class USBDebugParser(ParsleyParser):
         line = line[1:]
 
         if ':' in line:
-            msg_sid, msg_data = line.split(':')
-            msg_sid_int = int(msg_sid, 16)
-            msg_data_list = [int(byte, 16) for byte in msg_data.split(',')]
+            msg_sid_str, msg_data_str = line.split(':')
+            msg_sid_int = int(msg_sid_str, 16)
+            msg_data_list = [int(byte, 16) for byte in msg_data_str.split(',')]
         else:
             msg_sid_int = int(line, 16)
-            msg_data_list = []
+            msg_data_list: list[int] = []
 
         return _ParsleyParseInternal.parse_to_object(msg_sid_int, msg_data_list)
 
+
 class LiveTelemetryParser(ParsleyParser):
-    """ Parse binary live-telemetry """
+    """Parse binary live-telemetry frames."""
 
     def parse(self, frame: bytes) -> ParsleyObject | ParsleyError:
         if len(frame) < 7:
@@ -202,51 +212,45 @@ class LiveTelemetryParser(ParsleyParser):
 
         frame_len = frame[1]
         msg_sid = int.from_bytes(bytes([frame[2] & 0x1F]) + frame[3:6], byteorder='big')
-        msg_data = frame[6:frame_len-1]
-        exp_crc = frame[frame_len-1]
-        msg_crc = crc8.crc8(frame[:frame_len-1]).digest()[0]
+        msg_data = frame[6:frame_len - 1]
+        exp_crc = frame[frame_len - 1]
+        msg_crc = crc8.crc8(frame[:frame_len - 1]).digest()[0]
 
         if msg_crc != exp_crc:
             raise ValueError(f'Bad checksum, expected {exp_crc:02X} but got {msg_crc:02X}')
 
         return _ParsleyParseInternal.parse_to_object(msg_sid, list(msg_data))
 
-class LoggerParser(ParsleyParser):
-    """ Parses logger pages and yields `ParsleyObject` items """
-    
-    """
-    Parse one logger record.
 
-    Layout  (little-endian unless stated):
+class LoggerParser(ParsleyParser):
+    """Parses logger pages and yields ParsleyObject items.
+
+    Layout (little-endian unless stated):
         0  - 2  : ASCII 'L','O','G'
         3       : page number (uint8)
         4  - 12 : SID (uint32 LE) | timestamp (uint32 LE) | DLC (uint8)
         13 - .. : up to 8 bytes CAN payload
         -- ff-padding may follow, removed before parsing --
-
-    Returns whatever `format_can_message()` returns.
-    Raises ValueError on any structural problem.
     """
 
-    LOG_MAGIC = b'LOG'                       # ASCII “LOG” = 0x4c4f47
-    HEADER_FMT = '<IIB'                      # SID(uint32 LE), timestamp(uint32 LE), DLC(uint8)
-    HEADER_LEN = struct.calcsize(HEADER_FMT) # == 9
+    LOG_MAGIC = b'LOG'
+    HEADER_FMT = '<IIB'
+    HEADER_LEN = struct.calcsize(HEADER_FMT)  # == 9
     PARSE_LOGGER_PAGE_SIZE = 4096
 
-    def parse(self, buf: bytes, page_number: int) -> ParsleyObject | ParsleyError:
-        # Strip the buffer to 4096 bytes, as required by the logger.
+    def parse(self, buf: bytes, page_number: int) -> Generator[ParsleyObject | ParsleyError, None, None]:
         if len(buf) != self.PARSE_LOGGER_PAGE_SIZE:
             raise ValueError('Logger message must be exactly 4096 bytes')
-        
+
         if not buf.startswith(self.LOG_MAGIC):
             raise ValueError("Missing 'LOG' signature")
-        
+
         if buf[3] != page_number % 256:
             raise ValueError(f'Page number mismatch: expected {page_number % 256}, got {buf[3]}')
 
-        offset = 4 # start of the header
-        
-        while (self.PARSE_LOGGER_PAGE_SIZE - offset > self.HEADER_LEN): # at least one message
+        offset = 4
+
+        while self.PARSE_LOGGER_PAGE_SIZE - offset > self.HEADER_LEN:
             sid, _, dlc = struct.unpack_from(self.HEADER_FMT, buf, offset)
 
             if sid & 0xE000_0000:
@@ -260,11 +264,12 @@ class LoggerParser(ParsleyParser):
             offset += dlc
 
             yield _ParsleyParseInternal.parse_to_object(sid, data_list)
-            
+
+
 class BitstringParser(ParsleyParser):
-    ''' Parse BitString objects '''
+    """Parse BitString objects."""
 
     def parse(self, bit_str: BitString) -> ParsleyObject | ParsleyError:
-        msg_sid = int.from_bytes(bit_str.pop(MESSAGE_SID.length), byteorder='big')
-        msg_data = [byte for byte in bit_str.pop(bit_str.length)]
+        msg_sid = int.from_bytes(bit_str.pop(_MESSAGE_SID.length), byteorder='big')
+        msg_data = list(bit_str.pop(bit_str.length))
         return _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)

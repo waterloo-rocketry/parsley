@@ -3,7 +3,7 @@ import parsley
 
 from parsley.bitstring import BitString
 from parsley.fields import Enum, Numeric
-from parsley.types import TIMESTAMP_2, CAN_MESSAGE
+from parsley.payloads import TIMESTAMP_2, ALT_ARM_STATUS
 
 import parsley.message_types as mt
 import utils as tu
@@ -31,7 +31,7 @@ class TestCANMetadata:
         msg_data.push(*Numeric('drogue_v', 16).encode(1234))
         msg_data.push(*Numeric('main_v', 16).encode(5678))
 
-        res = parsley.parse_fields(msg_data, CAN_MESSAGE.get_fields('ALT_ARM_STATUS')[4:])
+        res = parsley.parse_fields(msg_data, ALT_ARM_STATUS.FIELDS)
         assert res['time'] == tu.approx(1.234)
         assert res['alt_arm_state'] == 'ALT_ARM_STATE_ARMED'
         assert res['drogue_v'] == 1234

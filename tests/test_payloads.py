@@ -1,7 +1,7 @@
 import pytest
 
-from parsley.types import (
-    parse_payload,
+from parsley.payloads import (
+    get_payload_type,
     ParsleyDataPayload,
     GENERAL_BOARD_STATUS,
     RESET_CMD,
@@ -14,7 +14,8 @@ from parsley.types import (
     ALT_ARM_STATUS,
     SENSOR_ANALOG16,
     SENSOR_ANALOG32,
-    SENSOR_DEM_ANALOG16,
+    SENSOR_2D_ANALOG24,
+    SENSOR_3D_ANALOG16,
     GPS_TIMESTAMP,
     GPS_LATITUDE,
     GPS_LONGITUDE,
@@ -23,11 +24,8 @@ from parsley.types import (
     STREAM_STATUS,
     STREAM_DATA,
     STREAM_RETRY,
-    MESSAGES,
-    _SID_HEADER,
 )
 from parsley.bitstring import BitString
-from parsley import message_types as mt
 from parsley.parse_to_object import _ParsleyParseInternal
 from parsley.parsley_message import ParsleyObject
 
@@ -40,74 +38,72 @@ def _make_bitstring(*byte_values: int) -> BitString:
 
 # ── Factory function ────────────────────────────────────────────────────────
 
-class TestParsePayloadFactory:
-    """Tests for the parse_payload factory function."""
 
-    def test_returns_none_for_unknown_type(self):
-        bs = BitString(b'\x00\x00', 16)
-        result = parse_payload("UNKNOWN_TYPE", bs)
-        assert result is None
+class TestGetPayloadType:
+    """Tests for the get_payload_type factory function."""
+
+    def test_raises_for_unknown_type(self):
+        with pytest.raises(ValueError, match="Unknown message type"):
+            get_payload_type("UNKNOWN_TYPE")
 
     def test_returns_none_for_leds_on(self):
-        bs = BitString(b'', 0)
-        result = parse_payload("LEDS_ON", bs)
-        assert result is None
+        assert get_payload_type("LEDS_ON") is None
 
     def test_returns_none_for_leds_off(self):
-        bs = BitString(b'', 0)
-        result = parse_payload("LEDS_OFF", bs)
-        assert result is None
+        assert get_payload_type("LEDS_OFF") is None
 
-    def test_dispatches_actuator_cmd(self):
-        # timestamp=1000ms (0x03E8), state=ACT_STATE_ON (0x00)
-        bs = _make_bitstring(0x03, 0xE8, 0x00)
-        result = parse_payload("ACTUATOR_CMD", bs)
-        assert isinstance(result, ACTUATOR_CMD)
+    def test_returns_class_for_actuator_cmd(self):
+        assert get_payload_type("ACTUATOR_CMD") is ACTUATOR_CMD
 
-    def test_dispatches_sensor_analog16(self):
-        # timestamp=500 (0x01F4), value=100 (0x0064)
-        bs = _make_bitstring(0x01, 0xF4, 0x00, 0x64)
-        result = parse_payload("SENSOR_ANALOG16", bs)
-        assert isinstance(result, SENSOR_ANALOG16)
+    def test_returns_class_for_sensor_analog16(self):
+        assert get_payload_type("SENSOR_ANALOG16") is SENSOR_ANALOG16
 
-    def test_dispatches_sensor_analog32(self):
-        # timestamp=500 (0x01F4), value=100000 (0x000186A0)
-        bs = _make_bitstring(0x01, 0xF4, 0x00, 0x01, 0x86, 0xA0)
-        result = parse_payload("SENSOR_ANALOG32", bs)
-        assert isinstance(result, SENSOR_ANALOG32)
+    def test_returns_class_for_sensor_analog32(self):
+        assert get_payload_type("SENSOR_ANALOG32") is SENSOR_ANALOG32
+
+    def test_returns_class_for_sensor_2d_analog24(self):
+        assert get_payload_type("SENSOR_2D_ANALOG24") is SENSOR_2D_ANALOG24
+
+    def test_returns_class_for_sensor_3d_analog16(self):
+        assert get_payload_type("SENSOR_3D_ANALOG16") is SENSOR_3D_ANALOG16
 
 
 # ── Payload dataclass tests ─────────────────────────────────────────────────
 
+
 class TestGeneralBoardStatus:
     def test_nominal(self):
-        # timestamp=1234ms (0x04D2), status=0x00000000 (nominal), error=0x0000 (nominal)
-        bs = _make_bitstring(0x04, 0xD2, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
+        # timestamp=1234ms (0x04D2), board_error_bitfield=0x00000000 (nominal)
+        bs = _make_bitstring(0x04, 0xD2, 0x00, 0x00, 0x00, 0x00)
         result = GENERAL_BOARD_STATUS.from_bitstring(bs)
         assert result.time == pytest.approx(1.234, abs=0.01)
-        assert result.general_board_status == 'E_NOMINAL'
         assert result.board_error_bitfield == 'E_NOMINAL'
 
     def test_with_errors(self):
-        # timestamp=1000ms (0x03E8), status bit 1 set (E_5V_OVER_VOLTAGE), error bit 1 set (E_5V_EFUSE_FAULT)
-        bs = _make_bitstring(0x03, 0xE8, 0x00, 0x00, 0x00, 0x02, 0x00, 0x02)
+        # timestamp=1000ms (0x03E8), bit 1 set (E_5V_OVER_VOLTAGE)
+        bs = _make_bitstring(0x03, 0xE8, 0x00, 0x00, 0x00, 0x02)
         result = GENERAL_BOARD_STATUS.from_bitstring(bs)
-        assert 'E_5V_OVER_VOLTAGE' in result.general_board_status
-        assert 'E_5V_EFUSE_FAULT' in result.board_error_bitfield
+        assert 'E_5V_OVER_VOLTAGE' in result.board_error_bitfield
 
     def test_to_dict(self):
-        bs = _make_bitstring(0x04, 0xD2, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
+        bs = _make_bitstring(0x04, 0xD2, 0x00, 0x00, 0x00, 0x00)
         result = GENERAL_BOARD_STATUS.from_bitstring(bs)
         d = result.to_dict()
         assert 'time' in d
-        assert 'general_board_status' in d
         assert 'board_error_bitfield' in d
 
     def test_frozen(self):
-        bs = _make_bitstring(0x04, 0xD2, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
+        bs = _make_bitstring(0x04, 0xD2, 0x00, 0x00, 0x00, 0x00)
         result = GENERAL_BOARD_STATUS.from_bitstring(bs)
         with pytest.raises(AttributeError):
             result.time = 0  # type: ignore[misc]
+
+    def test_to_bytes_round_trip(self):
+        # Use timestamp=0 to avoid float precision issues
+        bs = _make_bitstring(0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
+        result = GENERAL_BOARD_STATUS.from_bitstring(bs)
+        encoded = result.to_bytes()
+        assert encoded == bytes([0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
 
 
 class TestResetCmd:
@@ -136,7 +132,6 @@ class TestDebugRaw:
 
 class TestConfigSet:
     def test_basic(self):
-        # timestamp=100ms (0x0064), board_type=INJECTOR(1), board_inst=GROUND(1), config_id=0x0001, config_value=0x00FF
         bs = _make_bitstring(0x00, 0x64, 0x01, 0x01, 0x00, 0x01, 0x00, 0xFF)
         result = CONFIG_SET.from_bitstring(bs)
         assert result.time == pytest.approx(0.1, abs=0.01)
@@ -148,7 +143,6 @@ class TestConfigSet:
 
 class TestConfigStatus:
     def test_basic(self):
-        # timestamp=100ms (0x0064), config_id=0x0001, config_value=0x0042
         bs = _make_bitstring(0x00, 0x64, 0x00, 0x01, 0x00, 0x42)
         result = CONFIG_STATUS.from_bitstring(bs)
         assert result.time == pytest.approx(0.1, abs=0.01)
@@ -158,7 +152,6 @@ class TestConfigStatus:
 
 class TestActuatorCmd:
     def test_basic(self):
-        # timestamp=1000ms (0x03E8), cmd_state=ACT_STATE_ON(0x00)
         bs = _make_bitstring(0x03, 0xE8, 0x00)
         result = ACTUATOR_CMD.from_bitstring(bs)
         assert result.time == pytest.approx(1.0, abs=0.01)
@@ -178,17 +171,16 @@ class TestActuatorCmd:
 
 class TestActuatorStatus:
     def test_basic(self):
-        # timestamp=1000ms (0x03E8), curr_state=ACT_STATE_ON(0x00), cmd_state=ACT_STATE_OFF(0x01)
+        # timestamp=1000ms (0x03E8), cmd_state=ACT_STATE_ON(0x00), curr_state=ACT_STATE_OFF(0x01)
         bs = _make_bitstring(0x03, 0xE8, 0x00, 0x01)
         result = ACTUATOR_STATUS.from_bitstring(bs)
         assert result.time == pytest.approx(1.0, abs=0.01)
-        assert result.curr_state == 'ACT_STATE_ON'
-        assert result.cmd_state == 'ACT_STATE_OFF'
+        assert result.cmd_state == 'ACT_STATE_ON'
+        assert result.curr_state == 'ACT_STATE_OFF'
 
 
 class TestAltArmCmd:
     def test_basic(self):
-        # timestamp=1000ms (0x03E8), alt_arm_state=ALT_ARM_STATE_ARMED(0x01)
         bs = _make_bitstring(0x03, 0xE8, 0x01)
         result = ALT_ARM_CMD.from_bitstring(bs)
         assert result.time == pytest.approx(1.0, abs=0.01)
@@ -197,8 +189,6 @@ class TestAltArmCmd:
 
 class TestAltArmStatus:
     def test_basic(self):
-        # timestamp=1000ms (0x03E8), alt_arm_state=ALT_ARM_STATE_DISARMED(0x00),
-        # drogue_v=1000 (0x03E8), main_v=2000 (0x07D0)
         bs = _make_bitstring(0x03, 0xE8, 0x00, 0x03, 0xE8, 0x07, 0xD0)
         result = ALT_ARM_STATUS.from_bitstring(bs)
         assert result.time == pytest.approx(1.0, abs=0.01)
@@ -209,7 +199,6 @@ class TestAltArmStatus:
 
 class TestSensorAnalog16:
     def test_basic(self):
-        # timestamp=500ms (0x01F4), value=1234 (0x04D2)
         bs = _make_bitstring(0x01, 0xF4, 0x04, 0xD2)
         result = SENSOR_ANALOG16.from_bitstring(bs)
         assert result.time == pytest.approx(0.5, abs=0.01)
@@ -218,28 +207,52 @@ class TestSensorAnalog16:
 
 class TestSensorAnalog32:
     def test_basic(self):
-        # timestamp=500ms (0x01F4), value=100000 (0x000186A0)
         bs = _make_bitstring(0x01, 0xF4, 0x00, 0x01, 0x86, 0xA0)
         result = SENSOR_ANALOG32.from_bitstring(bs)
         assert result.time == pytest.approx(0.5, abs=0.01)
         assert result.value == 100000
 
 
-class TestSensorDemAnalog16:
+class TestSensor2DAnalog24:
     def test_basic(self):
-        # timestamp=500ms (0x01F4), value_x=100 (0x0064), value_y=200 (0x00C8), value_z=300 (0x012C)
+        bs = _make_bitstring(0x01, 0xF4, 0x00, 0x12, 0x34, 0x00, 0x56, 0x78)
+        result = SENSOR_2D_ANALOG24.from_bitstring(bs)
+        assert result.time == pytest.approx(0.5, abs=0.01)
+        assert result.value_x == 0x001234
+        assert result.value_y == 0x005678
+
+    def test_to_dict(self):
+        bs = _make_bitstring(0x01, 0xF4, 0x00, 0x12, 0x34, 0x00, 0x56, 0x78)
+        result = SENSOR_2D_ANALOG24.from_bitstring(bs)
+        d = result.to_dict()
+        assert set(d.keys()) == {'time', 'value_x', 'value_y'}
+
+    def test_frozen(self):
+        bs = _make_bitstring(0x01, 0xF4, 0x00, 0x12, 0x34, 0x00, 0x56, 0x78)
+        result = SENSOR_2D_ANALOG24.from_bitstring(bs)
+        with pytest.raises(AttributeError):
+            result.time = 0  # type: ignore[misc]
+
+
+class TestSensor3DAnalog16:
+    def test_basic(self):
         bs = _make_bitstring(0x01, 0xF4, 0x00, 0x64, 0x00, 0xC8, 0x01, 0x2C)
-        result = SENSOR_DEM_ANALOG16.from_bitstring(bs)
+        result = SENSOR_3D_ANALOG16.from_bitstring(bs)
         assert result.time == pytest.approx(0.5, abs=0.01)
         assert result.value_x == 100
         assert result.value_y == 200
         assert result.value_z == 300
 
+    def test_to_dict(self):
+        bs = _make_bitstring(0x01, 0xF4, 0x00, 0x64, 0x00, 0xC8, 0x01, 0x2C)
+        result = SENSOR_3D_ANALOG16.from_bitstring(bs)
+        d = result.to_dict()
+        assert set(d.keys()) == {'time', 'value_x', 'value_y', 'value_z'}
+
 
 class TestGpsTimestamp:
     def test_basic(self):
-        # timestamp=1000ms (0x03E8), hrs=12, mins=30, secs=45, dsecs=5
-        bs = _make_bitstring(0x03, 0xE8, 12, 30, 45, 5)
+        bs = _make_bitstring(0x03, 0xE8, 0x0C, 0x1E, 0x2D, 0x05)
         result = GPS_TIMESTAMP.from_bitstring(bs)
         assert result.time == pytest.approx(1.0, abs=0.01)
         assert result.hrs == 12
@@ -250,8 +263,7 @@ class TestGpsTimestamp:
 
 class TestGpsLatitude:
     def test_basic(self):
-        # timestamp=1000ms (0x03E8), degs=43, mins=28, dmins=1234 (0x04D2), direction='N'
-        bs = _make_bitstring(0x03, 0xE8, 43, 28, 0x04, 0xD2, ord('N'))
+        bs = _make_bitstring(0x03, 0xE8, 0x2B, 0x1C, 0x04, 0xD2, 0x4E)
         result = GPS_LATITUDE.from_bitstring(bs)
         assert result.time == pytest.approx(1.0, abs=0.01)
         assert result.degs == 43
@@ -262,8 +274,7 @@ class TestGpsLatitude:
 
 class TestGpsLongitude:
     def test_basic(self):
-        # timestamp=1000ms (0x03E8), degs=80, mins=31, dmins=5678 (0x162E), direction='W'
-        bs = _make_bitstring(0x03, 0xE8, 80, 31, 0x16, 0x2E, ord('W'))
+        bs = _make_bitstring(0x03, 0xE8, 0x50, 0x1F, 0x16, 0x2E, 0x57)
         result = GPS_LONGITUDE.from_bitstring(bs)
         assert result.time == pytest.approx(1.0, abs=0.01)
         assert result.degs == 80
@@ -274,19 +285,22 @@ class TestGpsLongitude:
 
 class TestGpsAltitude:
     def test_basic(self):
-        # timestamp=1000ms (0x03E8), altitude=1500 (0x05DC), daltitude=50, unit='M'
-        bs = _make_bitstring(0x03, 0xE8, 0x05, 0xDC, 50, ord('M'))
+        # altitude is now 32-bit, no unit field
+        bs = _make_bitstring(0x03, 0xE8, 0x00, 0x00, 0x05, 0xDC, 0x32)
         result = GPS_ALTITUDE.from_bitstring(bs)
         assert result.time == pytest.approx(1.0, abs=0.01)
         assert result.altitude == 1500
         assert result.daltitude == 50
-        assert result.unit == 'M'
+
+    def test_large_altitude(self):
+        bs = _make_bitstring(0x03, 0xE8, 0x00, 0x01, 0x86, 0xA0, 0x00)
+        result = GPS_ALTITUDE.from_bitstring(bs)
+        assert result.altitude == 100000
 
 
 class TestGpsInfo:
     def test_basic(self):
-        # timestamp=1000ms (0x03E8), num_sats=12, quality=2
-        bs = _make_bitstring(0x03, 0xE8, 12, 2)
+        bs = _make_bitstring(0x03, 0xE8, 0x0C, 0x02)
         result = GPS_INFO.from_bitstring(bs)
         assert result.time == pytest.approx(1.0, abs=0.01)
         assert result.num_sats == 12
@@ -295,7 +309,6 @@ class TestGpsInfo:
 
 class TestStreamStatus:
     def test_basic(self):
-        # timestamp=1000ms (0x03E8), total_size=0x010000, tx_size=0x008000
         bs = _make_bitstring(0x03, 0xE8, 0x01, 0x00, 0x00, 0x00, 0x80, 0x00)
         result = STREAM_STATUS.from_bitstring(bs)
         assert result.time == pytest.approx(1.0, abs=0.01)
@@ -305,7 +318,6 @@ class TestStreamStatus:
 
 class TestStreamData:
     def test_basic(self):
-        # timestamp=1000ms (0x03E8), data="Hello\x00" (48 bits = 6 bytes)
         bs = _make_bitstring(0x03, 0xE8, 0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x00)
         result = STREAM_DATA.from_bitstring(bs)
         assert result.time == pytest.approx(1.0, abs=0.01)
@@ -314,7 +326,6 @@ class TestStreamData:
 
 class TestStreamRetry:
     def test_basic(self):
-        # timestamp=1000ms (0x03E8)
         bs = _make_bitstring(0x03, 0xE8)
         result = STREAM_RETRY.from_bitstring(bs)
         assert result.time == pytest.approx(1.0, abs=0.01)
@@ -322,38 +333,33 @@ class TestStreamRetry:
 
 # ── Interface / structural tests ────────────────────────────────────────────
 
-class TestPayloadInterface:
-    """Verify every payload class implements the ParsleyDataPayload interface."""
 
-    ALL_TYPES = [
+class TestPayloadInterface:
+    """Verify every payload class implements the Payload interface."""
+
+    ALL_TYPES: list[type[ParsleyDataPayload]] = [
         GENERAL_BOARD_STATUS, RESET_CMD, DEBUG_RAW, CONFIG_SET, CONFIG_STATUS,
         ACTUATOR_CMD, ACTUATOR_STATUS, ALT_ARM_CMD, ALT_ARM_STATUS,
-        SENSOR_ANALOG16, SENSOR_ANALOG32, SENSOR_DEM_ANALOG16,
+        SENSOR_ANALOG16, SENSOR_ANALOG32, SENSOR_2D_ANALOG24, SENSOR_3D_ANALOG16,
         GPS_TIMESTAMP, GPS_LATITUDE, GPS_LONGITUDE, GPS_ALTITUDE, GPS_INFO,
         STREAM_STATUS, STREAM_DATA, STREAM_RETRY,
     ]
 
     def test_all_types_are_subclasses(self):
         for cls in self.ALL_TYPES:
-            assert issubclass(cls, ParsleyDataPayload), f"{cls.__name__} is not a ParsleyDataPayload subclass"
+            assert issubclass(cls, ParsleyDataPayload), f"{cls.__name__} is not a Payload subclass"
 
     def test_all_types_have_fields(self):
         for cls in self.ALL_TYPES:
             assert hasattr(cls, 'FIELDS'), f"{cls.__name__} missing FIELDS"
             assert len(cls.FIELDS) > 0, f"{cls.__name__} has empty FIELDS"
 
-    def test_fields_match_messages_dict(self):
-        """Verify MESSAGES dict is built correctly from FIELDS."""
-        sid_len = len(_SID_HEADER)
-        for msg_type, fields in MESSAGES.items():
-            if msg_type in ('LEDS_ON', 'LEDS_OFF'):
-                assert len(fields) == sid_len
-                continue
-            payload_fields = fields[sid_len:]
-            # Find the payload class for this msg_type
-            result = parse_payload(msg_type, _make_bitstring(*([0] * 8)))
-            if result is not None:
-                assert payload_fields == type(result).FIELDS
+    def test_all_payload_map_types_covered(self):
+        """Verify every non-None entry in _PAYLOAD_MAP is in ALL_TYPES."""
+        from parsley.payloads import _PAYLOAD_MAP
+        for name, cls in _PAYLOAD_MAP.items():
+            if cls is not None:
+                assert cls in self.ALL_TYPES, f"{name} -> {cls.__name__} not in ALL_TYPES"
 
 
 class TestRoundTrip:
@@ -365,13 +371,23 @@ class TestRoundTrip:
         assert bs.length == 0
 
     def test_gps_info_consumes_all_bits(self):
-        bs = _make_bitstring(0x03, 0xE8, 12, 2)
+        bs = _make_bitstring(0x03, 0xE8, 0x0C, 0x02)
         GPS_INFO.from_bitstring(bs)
         assert bs.length == 0
 
     def test_stream_retry_consumes_all_bits(self):
         bs = _make_bitstring(0x03, 0xE8)
         STREAM_RETRY.from_bitstring(bs)
+        assert bs.length == 0
+
+    def test_sensor_2d_analog24_consumes_all_bits(self):
+        bs = _make_bitstring(0x01, 0xF4, 0x00, 0x12, 0x34, 0x00, 0x56, 0x78)
+        SENSOR_2D_ANALOG24.from_bitstring(bs)
+        assert bs.length == 0
+
+    def test_sensor_3d_analog16_consumes_all_bits(self):
+        bs = _make_bitstring(0x01, 0xF4, 0x00, 0x64, 0x00, 0xC8, 0x01, 0x2C)
+        SENSOR_3D_ANALOG16.from_bitstring(bs)
         assert bs.length == 0
 
 
@@ -387,11 +403,95 @@ class TestToDictRoundTrip:
         assert d['cmd_state'] == 'ACT_STATE_ON'
 
     def test_general_board_status_to_dict(self):
-        bs = _make_bitstring(0x04, 0xD2, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
+        bs = _make_bitstring(0x04, 0xD2, 0x00, 0x00, 0x00, 0x00)
         result = GENERAL_BOARD_STATUS.from_bitstring(bs)
         d = result.to_dict()
         assert isinstance(d, dict)
-        assert set(d.keys()) == {'time', 'general_board_status', 'board_error_bitfield'}
+        assert set(d.keys()) == {'time', 'board_error_bitfield'}
+
+
+class TestToBytes:
+    """Verify to_bytes produces correct encoding."""
+
+    def test_actuator_cmd_to_bytes(self):
+        # Use timestamp=0 to avoid float precision issues with scaled timestamps
+        bs = _make_bitstring(0x00, 0x00, 0x00)
+        result = ACTUATOR_CMD.from_bitstring(bs)
+        encoded = result.to_bytes()
+        assert encoded == bytes([0x00, 0x00, 0x00])
+
+    def test_sensor_analog16_to_bytes(self):
+        bs = _make_bitstring(0x00, 0x00, 0x04, 0xD2)
+        result = SENSOR_ANALOG16.from_bitstring(bs)
+        encoded = result.to_bytes()
+        assert encoded == bytes([0x00, 0x00, 0x04, 0xD2])
+
+    def test_gps_altitude_to_bytes(self):
+        bs = _make_bitstring(0x00, 0x00, 0x00, 0x00, 0x05, 0xDC, 0x32)
+        result = GPS_ALTITUDE.from_bitstring(bs)
+        encoded = result.to_bytes()
+        assert encoded == bytes([0x00, 0x00, 0x00, 0x00, 0x05, 0xDC, 0x32])
+
+    def test_to_bytes_non_timestamp_fields_exact(self):
+        """Integer-only fields encode/decode exactly."""
+        bs = _make_bitstring(0x00, 0x00, 0x0C, 0x1E, 0x2D, 0x05)
+        result = GPS_TIMESTAMP.from_bitstring(bs)
+        encoded = result.to_bytes()
+        assert encoded[2:] == bytes([0x0C, 0x1E, 0x2D, 0x05])
+
+
+# ── Malformed payload bitstring tests ────────────────────────────────────
+
+
+class TestMalformedPayloads:
+    """Verify payload classes handle malformed bitstrings correctly."""
+
+    # ── Truncation (tested once — same IndexError path for all payloads) ───
+
+    def test_empty_bitstring_raises(self):
+        bs = _make_bitstring()
+        with pytest.raises(IndexError):
+            ACTUATOR_CMD.from_bitstring(bs)
+
+    def test_truncated_payload_raises(self):
+        """Timestamp present but remaining fields missing."""
+        bs = _make_bitstring(0x03, 0xE8)
+        with pytest.raises(IndexError):
+            ACTUATOR_CMD.from_bitstring(bs)
+
+    # ── Invalid enum values (message-specific) ─────────────────────────────
+
+    def test_invalid_actuator_state(self):
+        """cmd_state maps 0x00-0x03; 0xFF is invalid."""
+        bs = _make_bitstring(0x03, 0xE8, 0xFF)
+        with pytest.raises(ValueError):
+            ACTUATOR_CMD.from_bitstring(bs)
+
+    def test_invalid_board_type_in_reset_cmd(self):
+        """board_type_id in RESET_CMD payload maps 0x00-0x0D; 0xFF is invalid."""
+        bs = _make_bitstring(0x03, 0xE8, 0xFF, 0x00)
+        with pytest.raises(ValueError):
+            RESET_CMD.from_bitstring(bs)
+
+    def test_invalid_board_inst_in_reset_cmd(self):
+        """board_inst_id in RESET_CMD payload maps 0x00-0x07; 0xFF is invalid."""
+        bs = _make_bitstring(0x03, 0xE8, 0x00, 0xFF)
+        with pytest.raises(ValueError):
+            RESET_CMD.from_bitstring(bs)
+
+    def test_invalid_alt_arm_state(self):
+        """alt_arm_state maps 0x00 (DISARMED) and 0x01 (ARMED); 0x05 is invalid."""
+        bs = _make_bitstring(0x03, 0xE8, 0x05)
+        with pytest.raises(ValueError):
+            ALT_ARM_CMD.from_bitstring(bs)
+
+    # ── Variable-length ASCII edge case ────────────────────────────────────
+
+    def test_gps_latitude_missing_direction_returns_empty(self):
+        """ASCII direction field is variable-length; 0 remaining bits yield empty string."""
+        bs = _make_bitstring(0x03, 0xE8, 0x2B, 0x1C, 0x04, 0xD2)
+        result = GPS_LATITUDE.from_bitstring(bs)
+        assert result.direction == ''
 
 
 class TestParseToObjectIntegration:
@@ -423,11 +523,11 @@ class TestParseToObjectIntegration:
         dumped = result.model_dump(mode='json')
         assert dumped['data'] == {'time': pytest.approx(1.0, abs=0.01), 'cmd_state': 'ACT_STATE_ON'}
 
-    def test_leds_on_returns_empty_dict(self):
+    def test_leds_on_returns_none(self):
         msg_sid, msg_data = self._build_msg(
             'HIGHEST', 'LEDS_ON', '0', 'INJECTOR', 'ROCKET',
             []
         )
         result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
         assert isinstance(result, ParsleyObject)
-        assert result.data == {}
+        assert result.data is None
