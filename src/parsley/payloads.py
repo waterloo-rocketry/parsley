@@ -1,35 +1,20 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, asdict
-from typing import ClassVar
+from typing import ClassVar, Self
 
 from parsley.bitstring import BitString
-from parsley.fields import ASCII, Enum, Numeric, Floating, Bitfield, Switch, Field
+from parsley.fields import ASCII, Enum, Numeric, Bitfield, Field
 import parsley.message_types as mt
 
 
-# ── SID-level field definitions (formerly in message_definitions.py) ────────
-
 TIMESTAMP_2 = Numeric('time', 16, scale=1/1000, unit='s')
-
-MESSAGE_PRIO = Enum('msg_prio', 2, mt.msg_prio)
-MESSAGE_TYPE = Enum('msg_type', 7, mt.msg_type)
-BOARD_TYPE_ID = Enum('board_type_id', 6, mt.board_type_id)
-BOARD_INST_ID = Enum('board_inst_id', 6, mt.board_inst_id)
-MESSAGE_METADATA = Numeric('msg_metadata', 8)
-MESSAGE_SID = Enum(
-    'msg_sid',
-    MESSAGE_PRIO.length + MESSAGE_TYPE.length + BOARD_TYPE_ID.length
-    + BOARD_INST_ID.length + MESSAGE_METADATA.length,
-    {},
-)
-
-_SID_HEADER = [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA]
 
 
 # ── Base class ──────────────────────────────────────────────────────────────
 
-class ParsleyDataPayload:
+
+class Payload:
     """Base class for all typed CAN message payloads.
 
     Subclasses must define a ``FIELDS`` class variable listing the payload
@@ -40,9 +25,11 @@ class ParsleyDataPayload:
 
     FIELDS: ClassVar[list[Field]] = []
 
+    time: float
+
     @classmethod
-    def from_bitstring(cls, bit_str: BitString):
-        kwargs: dict = {}
+    def from_bitstring(cls, bit_str: BitString) -> Self:
+        kwargs: dict[str, str | int | float] = {}
         for field in cls.FIELDS:
             kwargs[field.name] = field.decode(
                 bit_str.pop(field.length, field.variable_length)
@@ -53,29 +40,34 @@ class ParsleyDataPayload:
         return None
 
     def get_time(self) -> float:
-        return self.time  # type: ignore[attr-defined]
+        return self.time
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, str | int | float]:
         return asdict(self)  # type: ignore[call-overload]
+
+    def to_bytes(self) -> bytes:
+        bit_str = BitString()
+        for field in self.FIELDS:
+            bit_str.push(*field.encode(getattr(self, field.name)))
+        return bytes(bit_str.pop(bit_str.length))
 
 
 # ── Payload dataclasses ─────────────────────────────────────────────────────
 
+
 @dataclass(frozen=True)
-class GENERAL_BOARD_STATUS(ParsleyDataPayload):
+class GENERAL_BOARD_STATUS(Payload):
     FIELDS: ClassVar[list[Field]] = [
         TIMESTAMP_2,
-        Bitfield('general_board_status', 32, 'E_NOMINAL', mt.general_board_status_offset),
-        Bitfield('board_error_bitfield', 16, 'E_NOMINAL', mt.board_specific_status_offset),
+        Bitfield('board_error_bitfield', 32, 'E_NOMINAL', mt.board_error_bitfield_offset),
     ]
 
     time: float
-    general_board_status: str
     board_error_bitfield: str
 
 
 @dataclass(frozen=True)
-class RESET_CMD(ParsleyDataPayload):
+class RESET_CMD(Payload):
     FIELDS: ClassVar[list[Field]] = [
         TIMESTAMP_2,
         Enum('board_type_id', 8, mt.board_type_id),
@@ -88,7 +80,7 @@ class RESET_CMD(ParsleyDataPayload):
 
 
 @dataclass(frozen=True)
-class DEBUG_RAW(ParsleyDataPayload):
+class DEBUG_RAW(Payload):
     FIELDS: ClassVar[list[Field]] = [TIMESTAMP_2, ASCII('string', 48)]
 
     time: float
@@ -96,7 +88,7 @@ class DEBUG_RAW(ParsleyDataPayload):
 
 
 @dataclass(frozen=True)
-class CONFIG_SET(ParsleyDataPayload):
+class CONFIG_SET(Payload):
     FIELDS: ClassVar[list[Field]] = [
         TIMESTAMP_2,
         Enum('board_type_id', 8, mt.board_type_id),
@@ -113,7 +105,7 @@ class CONFIG_SET(ParsleyDataPayload):
 
 
 @dataclass(frozen=True)
-class CONFIG_STATUS(ParsleyDataPayload):
+class CONFIG_STATUS(Payload):
     FIELDS: ClassVar[list[Field]] = [
         TIMESTAMP_2,
         Numeric('config_id', 16),
@@ -126,7 +118,7 @@ class CONFIG_STATUS(ParsleyDataPayload):
 
 
 @dataclass(frozen=True)
-class ACTUATOR_CMD(ParsleyDataPayload):
+class ACTUATOR_CMD(Payload):
     FIELDS: ClassVar[list[Field]] = [
         TIMESTAMP_2,
         Enum('cmd_state', 8, mt.actuator_state),
@@ -137,20 +129,20 @@ class ACTUATOR_CMD(ParsleyDataPayload):
 
 
 @dataclass(frozen=True)
-class ACTUATOR_STATUS(ParsleyDataPayload):
+class ACTUATOR_STATUS(Payload):
     FIELDS: ClassVar[list[Field]] = [
         TIMESTAMP_2,
+        Enum('cmd_state', 8, mt.actuator_state),
         Enum('curr_state', 8, mt.actuator_state),
-        Enum('cmd_state', 8, mt.actuator_state),
     ]
 
     time: float
-    curr_state: str
     cmd_state: str
+    curr_state: str
 
 
 @dataclass(frozen=True)
-class ALT_ARM_CMD(ParsleyDataPayload):
+class ALT_ARM_CMD(Payload):
     FIELDS: ClassVar[list[Field]] = [
         TIMESTAMP_2,
         Enum('alt_arm_state', 8, mt.alt_arm_state),
@@ -161,7 +153,7 @@ class ALT_ARM_CMD(ParsleyDataPayload):
 
 
 @dataclass(frozen=True)
-class ALT_ARM_STATUS(ParsleyDataPayload):
+class ALT_ARM_STATUS(Payload):
     FIELDS: ClassVar[list[Field]] = [
         TIMESTAMP_2,
         Enum('alt_arm_state', 8, mt.alt_arm_state),
@@ -176,7 +168,7 @@ class ALT_ARM_STATUS(ParsleyDataPayload):
 
 
 @dataclass(frozen=True)
-class SENSOR_ANALOG16(ParsleyDataPayload):
+class SENSOR_ANALOG16(Payload):
     FIELDS: ClassVar[list[Field]] = [TIMESTAMP_2, Numeric('value', 16)]
 
     time: float
@@ -184,7 +176,7 @@ class SENSOR_ANALOG16(ParsleyDataPayload):
 
 
 @dataclass(frozen=True)
-class SENSOR_ANALOG32(ParsleyDataPayload):
+class SENSOR_ANALOG32(Payload):
     FIELDS: ClassVar[list[Field]] = [TIMESTAMP_2, Numeric('value', 32)]
 
     time: float
@@ -192,7 +184,20 @@ class SENSOR_ANALOG32(ParsleyDataPayload):
 
 
 @dataclass(frozen=True)
-class SENSOR_DEM_ANALOG16(ParsleyDataPayload):
+class SENSOR_2D_ANALOG24(Payload):
+    FIELDS: ClassVar[list[Field]] = [
+        TIMESTAMP_2,
+        Numeric('value_x', 24),
+        Numeric('value_y', 24),
+    ]
+
+    time: float
+    value_x: int
+    value_y: int
+
+
+@dataclass(frozen=True)
+class SENSOR_3D_ANALOG16(Payload):
     FIELDS: ClassVar[list[Field]] = [
         TIMESTAMP_2,
         Numeric('value_x', 16),
@@ -207,7 +212,7 @@ class SENSOR_DEM_ANALOG16(ParsleyDataPayload):
 
 
 @dataclass(frozen=True)
-class GPS_TIMESTAMP(ParsleyDataPayload):
+class GPS_TIMESTAMP(Payload):
     FIELDS: ClassVar[list[Field]] = [
         TIMESTAMP_2,
         Numeric('hrs', 8),
@@ -224,7 +229,7 @@ class GPS_TIMESTAMP(ParsleyDataPayload):
 
 
 @dataclass(frozen=True)
-class GPS_LATITUDE(ParsleyDataPayload):
+class GPS_LATITUDE(Payload):
     FIELDS: ClassVar[list[Field]] = [
         TIMESTAMP_2,
         Numeric('degs', 8),
@@ -241,7 +246,7 @@ class GPS_LATITUDE(ParsleyDataPayload):
 
 
 @dataclass(frozen=True)
-class GPS_LONGITUDE(ParsleyDataPayload):
+class GPS_LONGITUDE(Payload):
     FIELDS: ClassVar[list[Field]] = [
         TIMESTAMP_2,
         Numeric('degs', 8),
@@ -258,22 +263,20 @@ class GPS_LONGITUDE(ParsleyDataPayload):
 
 
 @dataclass(frozen=True)
-class GPS_ALTITUDE(ParsleyDataPayload):
+class GPS_ALTITUDE(Payload):
     FIELDS: ClassVar[list[Field]] = [
         TIMESTAMP_2,
-        Numeric('altitude', 16),
+        Numeric('altitude', 32),
         Numeric('daltitude', 8),
-        ASCII('unit', 8),
     ]
 
     time: float
     altitude: int
     daltitude: int
-    unit: str
 
 
 @dataclass(frozen=True)
-class GPS_INFO(ParsleyDataPayload):
+class GPS_INFO(Payload):
     FIELDS: ClassVar[list[Field]] = [
         TIMESTAMP_2,
         Numeric('num_sats', 8),
@@ -286,7 +289,7 @@ class GPS_INFO(ParsleyDataPayload):
 
 
 @dataclass(frozen=True)
-class STREAM_STATUS(ParsleyDataPayload):
+class STREAM_STATUS(Payload):
     FIELDS: ClassVar[list[Field]] = [
         TIMESTAMP_2,
         Numeric('total_size', 24),
@@ -299,7 +302,7 @@ class STREAM_STATUS(ParsleyDataPayload):
 
 
 @dataclass(frozen=True)
-class STREAM_DATA(ParsleyDataPayload):
+class STREAM_DATA(Payload):
     FIELDS: ClassVar[list[Field]] = [TIMESTAMP_2, ASCII('data', 48)]
 
     time: float
@@ -307,15 +310,16 @@ class STREAM_DATA(ParsleyDataPayload):
 
 
 @dataclass(frozen=True)
-class STREAM_RETRY(ParsleyDataPayload):
+class STREAM_RETRY(Payload):
     FIELDS: ClassVar[list[Field]] = [TIMESTAMP_2]
 
     time: float
 
 
-# ── MESSAGES dict & CAN_MESSAGE Switch ──────────────────────────────────────
+# ── Payload map & factory ──────────────────────────────────────────────────
 
-_PAYLOAD_MAP: dict[str, type[ParsleyDataPayload]] = {
+
+_PAYLOAD_MAP: dict[str, type[Payload] | None] = {
     'GENERAL_BOARD_STATUS': GENERAL_BOARD_STATUS,
     'RESET_CMD': RESET_CMD,
     'DEBUG_RAW': DEBUG_RAW,
@@ -327,7 +331,8 @@ _PAYLOAD_MAP: dict[str, type[ParsleyDataPayload]] = {
     'ALT_ARM_STATUS': ALT_ARM_STATUS,
     'SENSOR_ANALOG16': SENSOR_ANALOG16,
     'SENSOR_ANALOG32': SENSOR_ANALOG32,
-    'SENSOR_DEM_ANALOG16': SENSOR_DEM_ANALOG16,
+    'SENSOR_2D_ANALOG24': SENSOR_2D_ANALOG24,
+    'SENSOR_3D_ANALOG16': SENSOR_3D_ANALOG16,
     'GPS_TIMESTAMP': GPS_TIMESTAMP,
     'GPS_LATITUDE': GPS_LATITUDE,
     'GPS_LONGITUDE': GPS_LONGITUDE,
@@ -336,27 +341,17 @@ _PAYLOAD_MAP: dict[str, type[ParsleyDataPayload]] = {
     'STREAM_STATUS': STREAM_STATUS,
     'STREAM_DATA': STREAM_DATA,
     'STREAM_RETRY': STREAM_RETRY,
+    'LEDS_ON': None,
+    'LEDS_OFF': None,
 }
 
-MESSAGES: dict[str, list[Field]] = {
-    name: _SID_HEADER + cls.FIELDS
-    for name, cls in _PAYLOAD_MAP.items()
-}
-# LED messages have no payload
-MESSAGES['LEDS_ON'] = list(_SID_HEADER)
-MESSAGES['LEDS_OFF'] = list(_SID_HEADER)
 
-CAN_MESSAGE = Switch('msg_type', MESSAGE_TYPE.length, mt.msg_type, MESSAGES)
+def get_payload_type(msg_type: str) -> type[Payload] | None:
+    """Return the payload class for a message type, or None for empty payloads.
 
-
-# ── Factory function ────────────────────────────────────────────────────────
-
-def parse_payload(msg_type: str, bit_str: BitString) -> ParsleyDataPayload | None:
-    """Parse a message payload bitstring into a typed dataclass.
-
-    Returns ``None`` for message types with no payload (e.g. LEDS_ON/OFF).
+    Raises ``ValueError`` for unknown message types.
     """
-    payload_cls = _PAYLOAD_MAP.get(msg_type)
-    if payload_cls is None:
-        return None
-    return payload_cls.from_bitstring(bit_str)
+    try:
+        return _PAYLOAD_MAP[msg_type]
+    except KeyError:
+        raise ValueError(f"Unknown message type: {msg_type}")
