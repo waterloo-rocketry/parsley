@@ -224,7 +224,6 @@ class TestSwitch:
         switch = Switch("status", 8, enum, {"a": [], "b": []})
         assert set(switch.get_keys()) == {"a", "b"}
 
-
 class TestBitfieldLogs:
     @pytest.fixture(autouse=True)
     def bitfield(self):
@@ -232,7 +231,7 @@ class TestBitfieldLogs:
             name="general_board_status",
             length=16,
             default="E_NOMINAL",
-            map_name_offset=mt.general_board_status_offset,
+            map_name_offset=mt.board_error_bitfield_offset,
         )
 
     @pytest.mark.parametrize(
@@ -252,6 +251,9 @@ class TestBitfieldLogs:
             (b"\x04\x00", "E_IO_ERROR"),
             (b"\x08\x00", "E_FS_ERROR"),
             (b"\x10\x00", "E_WATCHDOG_TIMEOUT"),
+            (b"\x20\x00", "E_12V_EFUSE_FAULT"),
+            (b"\x40\x00", "E_5V_EFUSE_FAULT"),
+            (b"\x80\x00", "E_PT_OUT_OF_RANGE"),
         ],
     )
     def test_decode_various_logs(self, bitfield, bytes, expected):

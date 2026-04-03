@@ -39,12 +39,24 @@ def test_parsley_object_getitem():
     assert obj['data'] == {}
 
 
-def test_parsley_object_invalid_prio_raises():
+def test_parsley_object_unknown_prio_accepted():
+    obj = ParsleyObject(
+        board_type_id='ANY',
+        board_inst_id='GROUND',
+        msg_prio='0x03',
+        msg_type='RESET_CMD',
+        msg_metadata=0,
+        data={}
+    )
+    assert obj['msg_prio'] == '0x03'
+
+
+def test_parsley_object_empty_prio_raises():
     with pytest.raises(ValidationError):
         ParsleyObject(
             board_type_id='ANY',
             board_inst_id='GROUND',
-            msg_prio='BAD_PRIO',
+            msg_prio='',
             msg_type='RESET_CMD',
             msg_metadata=0,
             data={}
