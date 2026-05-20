@@ -355,21 +355,64 @@ class TestParseToObject:
         assert bit_len == 70
         
     def test_format_line(self):
+        # Structural check: substring `'X' in line` would still pass even if
+        # format_line silently dropped a column (that's the exact pattern that
+        # hid the original msg_metadata drop). Split the formatted line back
+        # into its header list + body dict and compare positionally, so any
+        # drop/reorder/extra-field surfaces immediately.
         parsed_data = {
             'msg_prio': 'HIGH',
             'msg_type': 'GENERAL_BOARD_STATUS',
             'board_type_id': 'RLCS_RELAY',
             'board_inst_id': 'ROCKET',
+            'msg_metadata': 0,
             'data': {
                 'time': 1.234,
                 'board_error_bitfield': 'E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'
             }
         }
         line = _ParsleyParseInternal.format_line(parsed_data)
-        # MSG_PRIO_LEN=7 (HIGHEST), MSG_TYPE_LEN=20 (GENERAL_BOARD_STATUS),
-        # BOARD_TYPE_ID_LEN=10 (RLCS_RELAY), BOARD_INST_ID_LEN=15 (RA_STRATOLOGGER)
-        expected_line = '[ HIGH    GENERAL_BOARD_STATUS   RLCS_RELAY ROCKET          ] time: 1.234 board_error_bitfield: E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'
-        assert line == expected_line
+        header, body = utilities.split_format_line(line)
+        assert header == ['HIGH', 'GENERAL_BOARD_STATUS', 'RLCS_RELAY', 'ROCKET', '0']
+        assert body == {'time': '1.234', 'board_error_bitfield': 'E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'}
+
+    def test_format_line_includes_sensor_metadata(self):
+        # SENSOR_ANALOG16 uses Enum(analog_sensor_id) at index 3, so the parser
+        # produces 'SENSOR_PT_CHANNEL_1' as a string for msg_metadata.
+        parsed_data = {
+            'msg_prio': 'LOW',
+            'msg_type': 'SENSOR_ANALOG16',
+            'board_type_id': 'LOGGER',
+            'board_inst_id': 'ROCKET',
+            'msg_metadata': 'SENSOR_PT_CHANNEL_1',
+            'data': {'time': 22.473, 'value': 13923},
+        }
+        line = _ParsleyParseInternal.format_line(parsed_data)
+        assert 'SENSOR_PT_CHANNEL_1' in line
+
+    def test_format_line_includes_actuator_metadata(self):
+        parsed_data = {
+            'msg_prio': 'MEDIUM',
+            'msg_type': 'ACTUATOR_CMD',
+            'board_type_id': 'INJECTOR',
+            'board_inst_id': 'ROCKET',
+            'msg_metadata': next(iter(mt.actuator_id)),
+            'data': {'time': 1.0, 'cmd_state': next(iter(mt.actuator_state))},
+        }
+        line = _ParsleyParseInternal.format_line(parsed_data)
+        assert next(iter(mt.actuator_id)) in line
+
+    def test_format_line_includes_altimeter_metadata(self):
+        parsed_data = {
+            'msg_prio': 'MEDIUM',
+            'msg_type': 'ALT_ARM_CMD',
+            'board_type_id': 'PAYLOAD',
+            'board_inst_id': 'ROCKET',
+            'msg_metadata': next(iter(mt.altimeter_id)),
+            'data': {'time': 1.0, 'alt_arm_state': next(iter(mt.alt_arm_state))},
+        }
+        line = _ParsleyParseInternal.format_line(parsed_data)
+        assert next(iter(mt.altimeter_id)) in line
         
     def test_encode_data(self):
         parsed_data = {
@@ -415,6 +458,71 @@ class TestParseToObject:
 
         assert res['msg_metadata'] == 'ACTUATOR_FUEL_INJECTOR_VALVE'
         assert res['msg_type'] == 'ACTUATOR_CMD'
+
+    def test_encode_round_trips_parser_output(self):
+        # The shape the parser actually produces (nested 'data' dict) must be
+        # accepted by encode_data. Pre-2026.3 only the flat hand-built shape
+        # worked, so a parse→encode round-trip silently failed.
+        msg_sid = utilities.create_msg_sid_from_strings(
+            'MEDIUM', 'ALT_ARM_STATUS', '0', 'ALTIMETER', 'ROCKET'
+        )
+        bit_str = BitString()
+        bit_str.push(*TIMESTAMP_2.encode(0.0))  # exact-encoding timestamp value
+        bit_str.push(*Enum('alt_arm_state', 8, mt.alt_arm_state).encode('ALT_ARM_STATE_ARMED'))
+        bit_str.push(*Numeric('drogue_v', 16).encode(4095))
+        bit_str.push(*Numeric('main_v', 16).encode(2048))
+        msg_data = bit_str.pop(bit_str.length)
+
+        parsed = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
+        assert isinstance(parsed, ParsleyObject)
+        dumped = parsed.model_dump()
+
+        # Round-trip the parser's own output shape — this is what omnibus
+        # consumers receive over CAN/Parsley.
+        re_sid, re_data = _ParsleyParseInternal.encode_data(dumped)
+        assert int.from_bytes(re_sid.to_bytes(4, 'big'), 'big') == int.from_bytes(msg_sid, 'big')
+        assert bytes(re_data) == bytes(msg_data)
+
+    def test_encode_corrupt_metadata_falls_back_to_numeric(self):
+        # The parser falls back to a raw int byte when an Enum-typed metadata
+        # decode fails. encode_data must accept that same int so a corrupt
+        # frame can be forwarded without first sanitizing it.
+        bit_sid = BitString()
+        bit_sid.push(*MESSAGE_PRIO.encode('HIGH'))
+        bit_sid.push(*MESSAGE_TYPE.encode('ACTUATOR_CMD'))
+        bit_sid.push(*BOARD_TYPE_ID.encode('INJECTOR'))
+        bit_sid.push(*BOARD_INST_ID.encode('ROCKET'))
+        bit_sid.push(*MESSAGE_METADATA.encode(0xFF))  # not a valid actuator_id
+        msg_sid = bit_sid.pop(MESSAGE_SID.length)
+
+        bit_data = BitString()
+        bit_data.push(*TIMESTAMP_2.encode(0.0))  # Numeric.encode has float-precision issues at non-zero scaled values
+        bit_data.push(*Enum('cmd_state', 8, mt.actuator_state).encode('ACT_STATE_ON'))
+        msg_data = bit_data.pop(bit_data.length)
+
+        parsed = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
+        assert isinstance(parsed, ParsleyObject)
+        assert parsed.msg_metadata == 0xFF  # fell back to int
+
+        # Round-trip the int-valued metadata
+        re_sid, re_data = _ParsleyParseInternal.encode_data(parsed.model_dump())
+        assert bytes(re_data) == bytes(msg_data)
+
+    def test_parsley_error_carries_msg_prio(self):
+        # ParsleyError must include msg_prio so consumers branching on error
+        # can still observe priority. Trigger an error by giving a bad SID
+        # that decodes msg_prio successfully but fails on msg_type.
+        bit_sid = BitString()
+        bit_sid.push(*MESSAGE_PRIO.encode('LOW'))
+        bit_sid.push(b'\x7F', MESSAGE_TYPE.length)  # 0x7F is not a known msg_type
+        bit_sid.push(*BOARD_TYPE_ID.encode('GPS'))
+        bit_sid.push(*BOARD_INST_ID.encode('ROCKET'))
+        bit_sid.push(*MESSAGE_METADATA.encode(0))
+        msg_sid = bit_sid.pop(MESSAGE_SID.length)
+
+        result = _ParsleyParseInternal.parse_to_object(msg_sid, b'')
+        assert isinstance(result, ParsleyError)
+        assert result.msg_prio == 'LOW'
 
     def test_parse_usb_debug(self):
         line = "$1234ABCD:12,34,56,78\r\n\0"
