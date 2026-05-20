@@ -1,12 +1,12 @@
 '''
 Contains the new static class implementation of Parsley.py
 '''
-from typing import Any
+from typing import Any, Generator
 from parsley.parsley_message import ParsleyObject, ParsleyError
 from parsley.bitstring import BitString
 from parsley.message_definitions import CAN_MESSAGE, MESSAGE_PRIO, MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA, MESSAGE_SID
 import parsley.parse_utils as pu
-from parsley.fields import Field, Switch, Bitfield
+from parsley.fields import Field, Switch, Bitfield, Enum
 from abc import ABC, abstractmethod
 import struct
 import crc8
@@ -17,6 +17,16 @@ MSG_PRIO_LEN = max([len(msg_prio) for msg_prio in mt.msg_prio])
 MSG_TYPE_LEN = max([len(msg_type) for msg_type in mt.msg_type])
 BOARD_TYPE_ID_LEN = max([len(board_type_id) for board_type_id in mt.board_type_id])
 BOARD_INST_ID_LEN = max([len(board_inst_id) for board_inst_id in mt.board_inst_id])
+# Widest name across every per-msg-type metadata Enum. The parser already resolves
+# the 8-bit metadata to a name string when CAN_MESSAGE has an Enum at index 3
+# (e.g. SENSOR_ANALOG16 -> 'SENSOR_5V_VOLT'), otherwise it stays a numeric int.
+MSG_METADATA_LEN = max(
+    (len(name)
+     for fields in CAN_MESSAGE.map_key_enum.values()
+     if isinstance(fields[3], Enum)
+     for name in fields[3].map_key_val),
+    default=0,
+)
 
 class _ParsleyParseInternal:
     def __init__(self):
@@ -28,8 +38,13 @@ class _ParsleyParseInternal:
         msg_type = parsed_data['msg_type']
         board_type_id = parsed_data['board_type_id']
         board_inst_id = parsed_data['board_inst_id']
+        msg_metadata = parsed_data.get('msg_metadata', '')
         data = parsed_data['data']
-        res = f'[ {msg_prio:<{MSG_PRIO_LEN}} {msg_type:<{MSG_TYPE_LEN}} {board_type_id:<{BOARD_TYPE_ID_LEN}} {board_inst_id:<{BOARD_INST_ID_LEN}} ]'
+        res = (
+            f'[ {msg_prio:<{MSG_PRIO_LEN}} {msg_type:<{MSG_TYPE_LEN}}'
+            f' {board_type_id:<{BOARD_TYPE_ID_LEN}} {board_inst_id:<{BOARD_INST_ID_LEN}}'
+            f' {str(msg_metadata):<{MSG_METADATA_LEN}} ]'
+        )
         for k, v in data.items():
             formatted_value = f"{v:.3f}" if isinstance(v, float) else v
             res += f' {k}: {formatted_value}'
@@ -55,12 +70,32 @@ class _ParsleyParseInternal:
         bit_str.push(*MESSAGE_TYPE.encode(msg_type))
         bit_str.push(*BOARD_TYPE_ID.encode(board_type_id))
         bit_str.push(*BOARD_INST_ID.encode(board_inst_id))
-        bit_str.push(*CAN_MESSAGE.get_fields(msg_type)[3].encode(msg_metadata))
+        # The parser falls back to a raw int when an Enum-typed metadata byte
+        # doesn't match any known key (parse_msg_metadata). Mirror that on the
+        # encode side: if the field is an Enum but we have an int, push the
+        # raw byte through MESSAGE_METADATA so a corrupt-but-known msg_type can
+        # still be re-emitted unchanged.
+        metadata_field = CAN_MESSAGE.get_fields(msg_type)[3]
+        if isinstance(metadata_field, Enum) and isinstance(msg_metadata, int):
+            bit_str.push(*MESSAGE_METADATA.encode(msg_metadata))
+        else:
+            bit_str.push(*metadata_field.encode(msg_metadata))
         msg_sid = int.from_bytes(bit_str.pop(bit_str.length), byteorder='big')
 
-        # skip the first field (board_id) since thats parsed separately
+        # Accept both the flat shape (legacy hand-built dicts) and the nested
+        # `{'data': {...}}` shape that the parser actually produces. Looking up
+        # payload fields at the top level lets callers like FakeSerialCommunicator
+        # / commander.py keep working; the `data` fallback lets `parse → encode`
+        # round-trip a ParsleyObject.model_dump().
+        payload = parsed_data.get('data') if isinstance(parsed_data.get('data'), dict) else None
         for field in CAN_MESSAGE.get_fields(msg_type)[4:]:
-            bit_str.push(*field.encode(parsed_data[field.name]))
+            if field.name in parsed_data:
+                value = parsed_data[field.name]
+            elif payload is not None and field.name in payload:
+                value = payload[field.name]
+            else:
+                raise KeyError(field.name)
+            bit_str.push(*field.encode(value))
         msg_data = [byte for byte in bit_str.pop(bit_str.length)]
         return msg_sid, msg_data
 
@@ -159,6 +194,7 @@ class _ParsleyParseInternal:
         except (ValueError, IndexError, KeyError) as error:
             # convert the 6-bit msg_type into its canlib 12-bit form and include an error object
             return ParsleyError(
+                msg_prio=msg_prio,
                 board_type_id=board_type_id,
                 board_inst_id=board_inst_id,
                 msg_type=pu.hexify(encoded_msg_type, is_msg_type=True),
@@ -244,7 +280,7 @@ class LoggerParser(ParsleyParser):
     HEADER_LEN = struct.calcsize(HEADER_FMT) # == 9
     PARSE_LOGGER_PAGE_SIZE = 4096
 
-    def parse(self, buf: bytes, page_number: int) -> ParsleyObject | ParsleyError:
+    def parse(self, buf: bytes, page_number: int) -> Generator[ParsleyObject | ParsleyError, None, None]:
         # Strip the buffer to 4096 bytes, as required by the logger.
         if len(buf) != self.PARSE_LOGGER_PAGE_SIZE:
             raise ValueError('Logger message must be exactly 4096 bytes')

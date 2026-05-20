@@ -5,6 +5,7 @@ from parsley.parsley_message import ParsleyObject, ParsleyError
 
 def test_parsley_error_getitem():
     err = ParsleyError(
+        msg_prio='HIGH',
         board_type_id='ANY',
         board_inst_id='GROUND',
         msg_type='RESET_CMD',
@@ -13,6 +14,7 @@ def test_parsley_error_getitem():
         error='something went wrong'
     )
 
+    assert err['msg_prio'] == 'HIGH'
     assert err['board_type_id'] == 'ANY'
     assert err['board_inst_id'] == 'GROUND'
     assert err['msg_type'] == 'RESET_CMD'
@@ -39,16 +41,72 @@ def test_parsley_object_getitem():
     assert obj['data'] == {}
 
 
-def test_parsley_object_unknown_prio_accepted():
+def test_parsley_object_unknown_prio_raises():
+    # The parser will never emit a msg_prio outside mt.msg_prio (the 2-bit
+    # MESSAGE_PRIO enum is fully populated), so accepting one is a sign of
+    # caller-side breakage (e.g. forgetting to decode and passing the raw
+    # hex string '0x03'). Strict validation surfaces these bugs early.
+    with pytest.raises(ValidationError):
+        ParsleyObject(
+            board_type_id='ANY',
+            board_inst_id='GROUND',
+            msg_prio='0x03',
+            msg_type='RESET_CMD',
+            msg_metadata=0,
+            data={}
+        )
+
+
+def test_parsley_object_metadata_string_must_match_msg_type_enum():
+    # SENSOR_ANALOG16 uses analog_sensor_id; a name from actuator_id is invalid.
+    with pytest.raises(ValidationError):
+        ParsleyObject(
+            board_type_id='LOGGER',
+            board_inst_id='ROCKET',
+            msg_prio='LOW',
+            msg_type='SENSOR_ANALOG16',
+            msg_metadata='ACTUATOR_OX_INJECTOR_VALVE',  # wrong enum for this msg_type
+            data={'time': 0.0, 'value': 0},
+        )
+
+
+def test_parsley_object_metadata_string_rejected_for_numeric_msg_type():
+    # RESET_CMD has a generic Numeric metadata byte (no enum). A string is invalid.
+    with pytest.raises(ValidationError):
+        ParsleyObject(
+            board_type_id='ANY',
+            board_inst_id='GROUND',
+            msg_prio='HIGH',
+            msg_type='RESET_CMD',
+            msg_metadata='SENSOR_PT_CHANNEL_1',
+            data={}
+        )
+
+
+def test_parsley_object_metadata_int_always_allowed_in_range():
+    # The parser falls back to a raw int byte for corrupt-but-known frames.
+    # Validation must NOT reject that, or the corruption-fallback path breaks.
     obj = ParsleyObject(
-        board_type_id='ANY',
-        board_inst_id='GROUND',
-        msg_prio='0x03',
-        msg_type='RESET_CMD',
-        msg_metadata=0,
-        data={}
+        board_type_id='LOGGER',
+        board_inst_id='ROCKET',
+        msg_prio='LOW',
+        msg_type='SENSOR_ANALOG16',
+        msg_metadata=250,  # not a real analog_sensor_id, but int fallback is OK
+        data={'time': 0.0, 'value': 0},
     )
-    assert obj['msg_prio'] == '0x03'
+    assert obj['msg_metadata'] == 250
+
+
+def test_parsley_object_metadata_string_matching_enum_accepted():
+    obj = ParsleyObject(
+        board_type_id='LOGGER',
+        board_inst_id='ROCKET',
+        msg_prio='LOW',
+        msg_type='SENSOR_ANALOG16',
+        msg_metadata='SENSOR_PT_CHANNEL_1',
+        data={'time': 0.0, 'value': 0},
+    )
+    assert obj['msg_metadata'] == 'SENSOR_PT_CHANNEL_1'
 
 
 def test_parsley_object_empty_prio_raises():
