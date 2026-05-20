@@ -121,24 +121,37 @@ class TestParsley:
 
         assert res == expected_res
         
+    _EXPECTED_ERROR_KEYS = {
+        'msg_prio', 'board_type_id', 'board_inst_id',
+        'msg_type', 'msg_metadata', 'data'
+    }
+
+    def _assert_error_shape(self, res):
+        assert set(res.keys()) == self._EXPECTED_ERROR_KEYS, (
+            f"error dict shape regressed: missing {self._EXPECTED_ERROR_KEYS - set(res.keys())}, "
+            f"extra {set(res.keys()) - self._EXPECTED_ERROR_KEYS}"
+        )
+        assert set(res['data'].keys()) == {'msg_data', 'error'}
+        assert res['data']['error'].startswith('error:')
+
     def test_parse_bad_msg_type(self):
         msg_sid = b'\x00\x00'
         msg_data = b'\xAB\xCD\xEF\x00'
         res = parsley.parse(msg_sid, msg_data)
-        assert 'error' in res['data']
-    
+        self._assert_error_shape(res)
+
     def test_parse_empty(self):
         msg_sid = b''
         msg_data = b''
         res = parsley.parse(msg_sid, msg_data)
-        assert 'error' in res['data'] 
-        
+        self._assert_error_shape(res)
+
     def test_parse_messed_up_SID(self):
         msg_sid = b'\xFF\xFF\xFF\xFF'  # Invalid SID
         msg_data = b'\x00\x00\x00\x00'  # Dummy data
         res = parsley.parse(msg_sid, msg_data)
-        assert 'error' in res['data']
-        
+        self._assert_error_shape(res)
+
     def test_parse_bad_board_type_id(self):
         # manually build message since using BOARD_TYPE_ID from message_definitions will throw an error for b'\x1F' as it is invalid
         bit_msg_sid = BitString()
@@ -150,7 +163,11 @@ class TestParsley:
         msg_sid = bit_msg_sid.pop(MESSAGE_SID.length)
 
         res = parsley.parse(msg_sid, b'')
-        assert '0x' in res['board_type_id']
+        # board_type_id 0x1F isn't in the enum → parser hexifies; assert both
+        # the hex shape AND that no other field got blanked by the fallback.
+        assert res['board_type_id'].startswith('0x')
+        assert res['msg_prio'] == 'LOW'
+        assert res['board_inst_id'] == 'ANY'  # 0x00 decoded fine
 
     def test_parse_bad_msg_data(self):
         msg_sid = utilities.create_msg_sid_from_strings('MEDIUM', 'ALT_ARM_STATUS', '0', 'ALTIMETER', 'ANY')
@@ -159,8 +176,12 @@ class TestParsley:
         msg_data = b'\x00\x00\x01'  # truncated, missing drogue_v and main_v
 
         res = parsley.parse(msg_sid, msg_data)
-        assert 'error' in res['data']
-        
+        self._assert_error_shape(res)
+        # Even on a payload-decode failure, the SID-level fields must survive.
+        assert res['msg_prio'] == 'MEDIUM'
+        assert res['board_type_id'] == 'ALTIMETER'
+        assert res['board_inst_id'] == 'ANY'
+
     def test_bad_board_instance(self):
         # manually build message since BOARD_INST_ID.encode() will throw an error for b'\x1F'
         bit_msg_sid = BitString()
@@ -172,7 +193,9 @@ class TestParsley:
         msg_sid = bit_msg_sid.pop(MESSAGE_SID.length)
 
         res = parsley.parse(msg_sid, b'')
-        assert '0x' in res['board_inst_id']
+        assert res['board_inst_id'].startswith('0x')
+        assert res['msg_prio'] == 'LOW'
+        assert res['board_type_id'] == 'GPS'
         
     def test_parse_bitstring(self):
         bit_str = BitString()
@@ -228,16 +251,28 @@ class TestParsley:
             'msg_type': 'GENERAL_BOARD_STATUS',
             'board_type_id': 'RLCS_RELAY',
             'board_inst_id': 'ROCKET',
+            'msg_metadata': 0,
             'data': {
                 'time': 1.234,
                 'board_error_bitfield': 'E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'
             }
         }
         line = parsley.format_line(parsed_data)
-        # MSG_PRIO_LEN=7 (HIGHEST), MSG_TYPE_LEN=20 (GENERAL_BOARD_STATUS),
-        # BOARD_TYPE_ID_LEN=10 (RLCS_RELAY), BOARD_INST_ID_LEN=15 (RA_STRATOLOGGER)
-        expected_line = '[ HIGH    GENERAL_BOARD_STATUS RLCS_RELAY ROCKET          ] time: 1.234 board_error_bitfield: E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'
-        assert line == expected_line
+        header, body = utilities.split_format_line(line)
+        assert header == ['HIGH', 'GENERAL_BOARD_STATUS', 'RLCS_RELAY', 'ROCKET', '0']
+        assert body == {'time': '1.234', 'board_error_bitfield': 'E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'}
+
+    def test_format_line_includes_sensor_metadata(self):
+        parsed_data = {
+            'msg_prio': 'LOW',
+            'msg_type': 'SENSOR_ANALOG16',
+            'board_type_id': 'LOGGER',
+            'board_inst_id': 'ROCKET',
+            'msg_metadata': 'SENSOR_PT_CHANNEL_1',
+            'data': {'time': 22.473, 'value': 13923},
+        }
+        line = parsley.format_line(parsed_data)
+        assert 'SENSOR_PT_CHANNEL_1' in line
         
     def test_encode_data(self):
         parsed_data = {

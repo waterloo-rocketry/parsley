@@ -30,9 +30,11 @@ def parse(msg_sid: bytes, msg_data: bytes) -> dict:
     
     if isinstance(result, ParsleyError):
         return {
+            'msg_prio': result.msg_prio,
             'board_type_id': result.board_type_id,
             'board_inst_id': result.board_inst_id,
             'msg_type': result.msg_type,
+            'msg_metadata': result.msg_metadata,
             'data': {
                 'msg_data': result.msg_data,
                 'error': result.error

@@ -360,16 +360,53 @@ class TestParseToObject:
             'msg_type': 'GENERAL_BOARD_STATUS',
             'board_type_id': 'RLCS_RELAY',
             'board_inst_id': 'ROCKET',
+            'msg_metadata': 0,
             'data': {
                 'time': 1.234,
                 'board_error_bitfield': 'E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'
             }
         }
         line = _ParsleyParseInternal.format_line(parsed_data)
-        # MSG_PRIO_LEN=7 (HIGHEST), MSG_TYPE_LEN=20 (GENERAL_BOARD_STATUS),
-        # BOARD_TYPE_ID_LEN=10 (RLCS_RELAY), BOARD_INST_ID_LEN=15 (RA_STRATOLOGGER)
-        expected_line = '[ HIGH    GENERAL_BOARD_STATUS RLCS_RELAY ROCKET          ] time: 1.234 board_error_bitfield: E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'
-        assert line == expected_line
+        header, body = utilities.split_format_line(line)
+        assert header == ['HIGH', 'GENERAL_BOARD_STATUS', 'RLCS_RELAY', 'ROCKET', '0']
+        assert body == {'time': '1.234', 'board_error_bitfield': 'E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'}
+
+    def test_format_line_includes_sensor_metadata(self):
+        # SENSOR_ANALOG16 should have'SENSOR_PT_CHANNEL_1' as a string for msg_metadata.
+        parsed_data = {
+            'msg_prio': 'LOW',
+            'msg_type': 'SENSOR_ANALOG16',
+            'board_type_id': 'LOGGER',
+            'board_inst_id': 'ROCKET',
+            'msg_metadata': 'SENSOR_PT_CHANNEL_1',
+            'data': {'time': 22.473, 'value': 13923},
+        }
+        line = _ParsleyParseInternal.format_line(parsed_data)
+        assert 'SENSOR_PT_CHANNEL_1' in line
+
+    def test_format_line_includes_actuator_metadata(self):
+        parsed_data = {
+            'msg_prio': 'MEDIUM',
+            'msg_type': 'ACTUATOR_CMD',
+            'board_type_id': 'INJECTOR',
+            'board_inst_id': 'ROCKET',
+            'msg_metadata': next(iter(mt.actuator_id)),
+            'data': {'time': 1.0, 'cmd_state': next(iter(mt.actuator_state))},
+        }
+        line = _ParsleyParseInternal.format_line(parsed_data)
+        assert next(iter(mt.actuator_id)) in line
+
+    def test_format_line_includes_altimeter_metadata(self):
+        parsed_data = {
+            'msg_prio': 'MEDIUM',
+            'msg_type': 'ALT_ARM_CMD',
+            'board_type_id': 'PAYLOAD',
+            'board_inst_id': 'ROCKET',
+            'msg_metadata': next(iter(mt.altimeter_id)),
+            'data': {'time': 1.0, 'alt_arm_state': next(iter(mt.alt_arm_state))},
+        }
+        line = _ParsleyParseInternal.format_line(parsed_data)
+        assert next(iter(mt.altimeter_id)) in line
         
     def test_encode_data(self):
         parsed_data = {
@@ -415,6 +452,38 @@ class TestParseToObject:
 
         assert res['msg_metadata'] == 'ACTUATOR_FUEL_INJECTOR_VALVE'
         assert res['msg_type'] == 'ACTUATOR_CMD'
+
+    def test_encode_corrupt_metadata_falls_back_to_numeric(self):
+        flat = {
+            'msg_prio': 'HIGH',
+            'msg_type': 'ACTUATOR_CMD',
+            'board_type_id': 'INJECTOR',
+            'board_inst_id': 'ROCKET',
+            'msg_metadata': 0xFF,  # not a valid actuator_id name
+            'time': 0.0,
+            'cmd_state': 'ACT_STATE_ON',
+        }
+        msg_sid, _ = _ParsleyParseInternal.encode_data(flat)
+
+        bit_str_msg_sid = BitString(msg_sid.to_bytes(4, 'big'), MESSAGE_SID.length)
+        bit_str_msg_sid.pop(MESSAGE_PRIO.length)
+        bit_str_msg_sid.pop(MESSAGE_TYPE.length)
+        bit_str_msg_sid.pop(BOARD_TYPE_ID.length)
+        bit_str_msg_sid.pop(BOARD_INST_ID.length)
+        assert MESSAGE_METADATA.decode(bit_str_msg_sid.pop(MESSAGE_METADATA.length)) == 0xFF
+
+    def test_parsley_error_carries_msg_prio(self):
+        bit_sid = BitString()
+        bit_sid.push(*MESSAGE_PRIO.encode('LOW'))
+        bit_sid.push(b'\x7F', MESSAGE_TYPE.length)  # 0x7F is not a known msg_type
+        bit_sid.push(*BOARD_TYPE_ID.encode('GPS'))
+        bit_sid.push(*BOARD_INST_ID.encode('ROCKET'))
+        bit_sid.push(*MESSAGE_METADATA.encode(0))
+        msg_sid = bit_sid.pop(MESSAGE_SID.length)
+
+        result = _ParsleyParseInternal.parse_to_object(msg_sid, b'')
+        assert isinstance(result, ParsleyError)
+        assert result.msg_prio == 'LOW'
 
     def test_parse_usb_debug(self):
         line = "$1234ABCD:12,34,56,78\r\n\0"
