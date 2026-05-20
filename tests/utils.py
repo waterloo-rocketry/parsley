@@ -25,13 +25,7 @@ def create_msg_sid_from_strings(priority_str: str, msg_type_str: str, metadata_s
 
 
 def split_format_line(line: str) -> tuple[list[str], dict[str, str]]:
-    """Parse `format_line` output back into (header_fields, body_dict).
-
-    Structural decomposition for tests: catches dropped/reordered fields
-    without being brittle about column-padding widths. Header is the
-    bracketed `[ prio type btype binst metadata ]` prefix; body is the
-    trailing ` key: value key: value ...` payload.
-    """
+    """Parse format_line output back into (header_fields, body_dict)."""
     bracket, sep, body = line.partition(']')
     assert sep == ']', f"format_line output missing closing bracket: {line!r}"
     header_fields = bracket.lstrip('[ ').split()
