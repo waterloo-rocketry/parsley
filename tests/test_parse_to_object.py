@@ -98,7 +98,7 @@ class TestParseToObject:
         assert res == expected_res
 
     def test_parse_sensor_analog(self):
-        msg_sid = utilities.create_msg_sid_from_strings('MEDIUM', 'SENSOR_ANALOG16', '0', 'PAYLOAD', 'ANY')
+        msg_sid = utilities.create_msg_sid_from_strings('MEDIUM', 'SENSOR_ANALOG16', 'SENSOR_5V_VOLT', 'PAYLOAD', 'ANY')
 
         bit_str = BitString()
         bit_str.push(*TIMESTAMP_2.encode(12.345))
@@ -113,7 +113,7 @@ class TestParseToObject:
             'board_type_id': 'PAYLOAD',
             'board_inst_id': 'ANY',
             'msg_prio': 'MEDIUM',
-            'msg_metadata': 0,
+            'msg_metadata': 'SENSOR_5V_VOLT',
             'data': {
                 'time': utilities.approx(12.345),
                 'value': 3300
@@ -258,8 +258,8 @@ class TestParseToObject:
             'msg_prio': 'MEDIUM',
             'msg_type': 'ALT_ARM_STATUS',
             'board_type_id': 'ALTIMETER',
-            'board_inst_id': 'SIDE_LOOKING',
-            'msg_metadata': 0,
+            'board_inst_id': 'ROCKET',
+            'msg_metadata': 'ALTIMETER_RAVEN',
             'time': 5.678,
             'alt_arm_state': 'ALT_ARM_STATE_ARMED',
             'drogue_v': 4095,
@@ -277,13 +277,12 @@ class TestParseToObject:
         assert msg_data == list(expected_msg_data)
 
     def test_encode_parse_actuator_cmd_metadata(self):
-        actuator_id = mt.actuator_id['ACTUATOR_FUEL_INJECTOR_VALVE']
         parsed_data = {
             'msg_prio': 'HIGH',
             'msg_type': 'ACTUATOR_CMD',
             'board_type_id': 'INJECTOR',
             'board_inst_id': 'ROCKET',
-            'msg_metadata': actuator_id,
+            'msg_metadata': 'ACTUATOR_FUEL_INJECTOR_VALVE',
             'time': 1.0,
             'cmd_state': 'ACT_STATE_ON',
         }
@@ -291,7 +290,7 @@ class TestParseToObject:
         result = _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
         res = self._to_dict(result)
 
-        assert res['msg_metadata'] == actuator_id
+        assert res['msg_metadata'] == 'ACTUATOR_FUEL_INJECTOR_VALVE'
         assert res['msg_type'] == 'ACTUATOR_CMD'
 
     def test_parse_usb_debug(self):

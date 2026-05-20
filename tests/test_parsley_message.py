@@ -39,12 +39,12 @@ def test_parsley_object_getitem():
     assert obj['data'] == {}
 
 
-def test_parsley_object_invalid_prio_raises():
+def test_parsley_object_empty_prio_raises():
     with pytest.raises(ValidationError):
         ParsleyObject(
             board_type_id='ANY',
             board_inst_id='GROUND',
-            msg_prio='BAD_PRIO',
+            msg_prio='',
             msg_type='RESET_CMD',
             msg_metadata=0,
             data={}
@@ -64,6 +64,20 @@ def test_parsley_object_metadata_boundary():
             msg_metadata=256,
             data={}
         )
+
+
+def test_parsley_object_string_metadata_is_valid():
+    obj = ParsleyObject(
+        board_type_id='ANY',
+        board_inst_id='GROUND',
+        msg_prio='0x3',
+        msg_type='ACTUATOR_CMD',
+        msg_metadata='ACTUATOR_FUEL_INJECTOR_VALVE',
+        data={}
+    )
+
+    assert obj.msg_prio == '0x3'
+    assert obj.msg_metadata == 'ACTUATOR_FUEL_INJECTOR_VALVE'
 
 
 def test_parsley_object_invalid_type_raises():

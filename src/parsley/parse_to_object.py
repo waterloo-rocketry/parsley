@@ -11,7 +11,12 @@ import crc8
 from parsley.bitstring import BitString
 from parsley.fields import Enum, Numeric, Field
 from parsley.parsley_message import ParsleyObject, ParsleyError
-from parsley.payloads import ParsleyDataPayload, get_payload_type
+from parsley.payloads import (
+    ParsleyDataPayload,
+    decode_msg_metadata,
+    encode_msg_metadata,
+    get_payload_type,
+)
 import parsley.message_types as mt
 import parsley.parse_utils as pu
 
@@ -91,7 +96,7 @@ class _ParsleyParseInternal:
         bit_str.push(*_MESSAGE_TYPE.encode(msg_type))
         bit_str.push(*_BOARD_TYPE_ID.encode(board_type_id))
         bit_str.push(*_BOARD_INST_ID.encode(board_inst_id))
-        bit_str.push(*_MESSAGE_METADATA.encode(msg_metadata))
+        bit_str.push(*encode_msg_metadata(str(msg_type), msg_metadata))
         msg_sid = int.from_bytes(bit_str.pop(bit_str.length), byteorder='big')
 
         payload_cls = get_payload_type(str(msg_type))
@@ -127,6 +132,13 @@ class _ParsleyParseInternal:
         return _MESSAGE_METADATA.decode(encoded_msg_metadata)
 
     @staticmethod
+    def parse_msg_prio(encoded_msg_prio: bytes) -> str:
+        try:
+            return _MESSAGE_PRIO.decode(encoded_msg_prio)
+        except ValueError:
+            return pu.hexify(encoded_msg_prio)
+
+    @staticmethod
     def parse_to_object(msg_sid: bytes | int, msg_data: bytes | list[int]) -> ParsleyObject | ParsleyError:
         """Extract msg_type and board_id from msg_sid to construct a ParsleyObject.
 
@@ -146,11 +158,12 @@ class _ParsleyParseInternal:
 
         board_type_id = _ParsleyParseInternal.parse_board_type_id(encoded_board_type_id)
         board_inst_id = _ParsleyParseInternal.parse_board_inst_id(encoded_board_inst_id)
-        msg_metadata = _ParsleyParseInternal.parse_msg_metadata(encoded_msg_metadata)
+        msg_metadata: int | str = _ParsleyParseInternal.parse_msg_metadata(encoded_msg_metadata)
 
         try:
-            msg_prio: str = _MESSAGE_PRIO.decode(encoded_msg_prio)
+            msg_prio: str = _ParsleyParseInternal.parse_msg_prio(encoded_msg_prio)
             msg_type: str = _MESSAGE_TYPE.decode(encoded_msg_type)
+            msg_metadata = decode_msg_metadata(msg_type, encoded_msg_metadata)
             payload_cls = get_payload_type(msg_type)
             data: ParsleyDataPayload | None = payload_cls.from_bitstring(BitString(msg_data)) if payload_cls else None
         except (ValueError, IndexError, KeyError) as error:

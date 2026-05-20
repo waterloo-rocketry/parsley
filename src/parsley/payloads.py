@@ -345,6 +345,17 @@ _PAYLOAD_MAP: dict[str, type[ParsleyDataPayload] | None] = {
     'LEDS_OFF': None,
 }
 
+_MSG_METADATA_FIELDS: dict[str, Field] = {
+    'ACTUATOR_CMD': Enum('msg_metadata', 8, mt.actuator_id),
+    'ACTUATOR_STATUS': Enum('msg_metadata', 8, mt.actuator_id),
+    'ALT_ARM_CMD': Enum('msg_metadata', 8, mt.altimeter_id),
+    'ALT_ARM_STATUS': Enum('msg_metadata', 8, mt.altimeter_id),
+    'SENSOR_ANALOG16': Enum('msg_metadata', 8, mt.analog_sensor_id),
+    'SENSOR_ANALOG32': Enum('msg_metadata', 8, mt.analog_sensor_id),
+    'SENSOR_2D_ANALOG24': Enum('msg_metadata', 8, mt.dem_2d_sensor_id),
+    'SENSOR_3D_ANALOG16': Enum('msg_metadata', 8, mt.dem_3d_sensor_id),
+}
+
 
 def get_payload_type(msg_type: str) -> type[ParsleyDataPayload] | None:
     """Return the payload class for a message type, or None for empty payloads.
@@ -355,3 +366,25 @@ def get_payload_type(msg_type: str) -> type[ParsleyDataPayload] | None:
         return _PAYLOAD_MAP[msg_type]
     except KeyError:
         raise ValueError(f"Unknown message type: {msg_type}")
+
+
+def get_msg_metadata_field(msg_type: str) -> Field:
+    get_payload_type(msg_type)
+    return _MSG_METADATA_FIELDS.get(msg_type, Numeric('msg_metadata', 8))
+
+
+def decode_msg_metadata(msg_type: str, encoded_msg_metadata: bytes) -> int | str:
+    metadata_field = get_msg_metadata_field(msg_type)
+    try:
+        return metadata_field.decode(encoded_msg_metadata)
+    except ValueError:
+        return Numeric('msg_metadata', 8).decode(encoded_msg_metadata)
+
+
+def encode_msg_metadata(msg_type: str, msg_metadata: int | str) -> tuple[bytes, int]:
+    metadata_field = get_msg_metadata_field(msg_type)
+    if isinstance(msg_metadata, str) and msg_metadata.isdigit():
+        msg_metadata = int(msg_metadata)
+    if isinstance(msg_metadata, int):
+        return Numeric('msg_metadata', 8).encode(msg_metadata)
+    return metadata_field.encode(msg_metadata)

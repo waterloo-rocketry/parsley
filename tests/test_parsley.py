@@ -96,7 +96,7 @@ class TestParsley:
         assert res == expected_res
 
     def test_parse_sensor_analog(self):
-        msg_sid = utilities.create_msg_sid_from_strings('MEDIUM', 'SENSOR_ANALOG16', '0', 'PAYLOAD', 'ANY')
+        msg_sid = utilities.create_msg_sid_from_strings('MEDIUM', 'SENSOR_ANALOG16', 'SENSOR_5V_VOLT', 'PAYLOAD', 'ANY')
 
         """
         MEDIUM = 0x2, SENSOR_ANALOG16 = 0x00A, PAYLOAD(type) = 0x0A, ANY = 0x00, metadata = 0x00
@@ -121,7 +121,7 @@ class TestParsley:
             'board_type_id': 'PAYLOAD',
             'board_inst_id': 'ANY',
             'msg_prio': 'MEDIUM',
-            'msg_metadata': 0,
+            'msg_metadata': 'SENSOR_5V_VOLT',
             'data': {
                 'time': utilities.approx(12.345),
                 'value': 3300
@@ -242,8 +242,8 @@ class TestParsley:
             'msg_prio': 'MEDIUM',
             'msg_type': 'ALT_ARM_STATUS',
             'board_type_id': 'ALTIMETER',
-            'board_inst_id': 'SIDE_LOOKING',
-            'msg_metadata': 0,
+            'board_inst_id': 'ROCKET',
+            'msg_metadata': 'ALTIMETER_RAVEN',
             'time': 5.678,
             'alt_arm_state': 'ALT_ARM_STATE_ARMED',
             'drogue_v': 4095,

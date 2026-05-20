@@ -10,7 +10,7 @@ BoardTypeID = str
 BoardInstID = str
 MsgPrio = str
 MsgType = str
-MsgMetadata = int
+MsgMetadata = int | str
 
 
 @dataclass
@@ -42,8 +42,8 @@ class ParsleyObject(BaseModel):
     @field_validator("msg_prio")
     @classmethod
     def validate_msg_prio(cls, value: str) -> str:
-        if value not in mt.msg_prio:
-            raise ValueError(f"Invalid msg_prio type '{value}'")
+        if len(value) == 0:
+            raise ValueError('msg_prio must be non-empty')
         return value
 
     @field_validator("msg_type")
@@ -55,9 +55,15 @@ class ParsleyObject(BaseModel):
 
     @field_validator("msg_metadata")
     @classmethod
-    def validate_msg_metadata(cls, value: int) -> int:
-        if not (0 <= value <= 255):
-            raise ValueError(f"msg_metadata '{value}' is out of range (0-255)")
+    def validate_msg_metadata(cls, value: int | str) -> int | str:
+        if isinstance(value, int):
+            if not (0 <= value <= 255):
+                raise ValueError(f"msg_metadata '{value}' is out of range (0-255)")
+        elif isinstance(value, str):
+            if len(value) == 0:
+                raise ValueError('msg_metadata string must be non-empty')
+        else:
+            raise ValueError('msg_metadata must be int or str')
         return value
 
     def __getitem__(self, key: str) -> object:

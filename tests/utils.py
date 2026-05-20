@@ -9,6 +9,7 @@ from parsley.parse_to_object import (
     _MESSAGE_METADATA,
     _MESSAGE_SID,
 )
+from parsley.payloads import encode_msg_metadata
 
 FLOAT_TOLERANCE = 0.01
 
@@ -20,7 +21,8 @@ def create_msg_sid_from_strings(priority_str: str, msg_type_str: str, metadata_s
     (msg_type_bits, _) = _MESSAGE_TYPE.encode(msg_type_str)
     (board_type_bits, _) = _BOARD_TYPE_ID.encode(board_type_str)
     (board_inst_bits, _) = _BOARD_INST_ID.encode(board_inst_str)
-    (metadata_bits, _) = _MESSAGE_METADATA.encode(int(metadata_str) if metadata_str.isdigit() else 0)
+    metadata_value = int(metadata_str) if metadata_str.isdigit() else metadata_str
+    (metadata_bits, _) = encode_msg_metadata(msg_type_str, metadata_value)
 
     bit_msg_sid = BitString(msg_prio_bits, _MESSAGE_PRIO.length)
     bit_msg_sid.push(msg_type_bits, _MESSAGE_TYPE.length)
