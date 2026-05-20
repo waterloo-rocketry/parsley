@@ -121,12 +121,6 @@ class TestParsley:
 
         assert res == expected_res
         
-    # ── Error-path shape invariant ──────────────────────────────────────
-    # All `parsley.parse()` error returns MUST carry the same triage fields
-    # as a success return. Previously these tests only checked
-    # `'error' in res['data']`, which let bug #B2 hide: the error dict was
-    # silently dropping `msg_prio` and `msg_metadata` for the entire
-    # 2026.3 cycle and no test failed. The shape check below catches that.
     _EXPECTED_ERROR_KEYS = {
         'msg_prio', 'board_type_id', 'board_inst_id',
         'msg_type', 'msg_metadata', 'data'
@@ -252,8 +246,6 @@ class TestParsley:
         assert bit_len == 70
         
     def test_format_line(self):
-        # Structural check (see test_parse_to_object.py:test_format_line for
-        # why substring-only assertions are insufficient here).
         parsed_data = {
             'msg_prio': 'HIGH',
             'msg_type': 'GENERAL_BOARD_STATUS',
