@@ -368,7 +368,7 @@ class TestParseToObject:
         line = _ParsleyParseInternal.format_line(parsed_data)
         # MSG_PRIO_LEN=7 (HIGHEST), MSG_TYPE_LEN=20 (GENERAL_BOARD_STATUS),
         # BOARD_TYPE_ID_LEN=10 (RLCS_RELAY), BOARD_INST_ID_LEN=15 (RA_STRATOLOGGER)
-        expected_line = '[ HIGH    GENERAL_BOARD_STATUS RLCS_RELAY ROCKET          ] time: 1.234 board_error_bitfield: E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'
+        expected_line = '[ HIGH    GENERAL_BOARD_STATUS  RLCS_RELAY ROCKET          ] time: 1.234 board_error_bitfield: E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'
         assert line == expected_line
         
     def test_encode_data(self):
