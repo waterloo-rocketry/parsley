@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, Any
 from pydantic import BaseModel, field_validator
 import parsley.message_types as mt
 
@@ -23,6 +23,9 @@ class ParsleyError():
 
     def __getitem__(self, key: str):
         return asdict(self)[key]
+    
+    def to_flat_dict(self) -> dict[str, Any]:
+        return asdict(self)
     
 class ParsleyObject(BaseModel, Generic[T]):
     """
@@ -62,3 +65,12 @@ class ParsleyObject(BaseModel, Generic[T]):
     
     def __getitem__(self, key: str):        
         return self.model_dump()[key]
+    
+    def to_flat_dict(self) -> dict[str, Any]:
+    
+        dumped = self.model_dump()
+        
+        nested_data = dumped.pop("data", {})
+        
+        return {**dumped, **nested_data}
+
