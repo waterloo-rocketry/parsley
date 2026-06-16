@@ -22,3 +22,14 @@ def create_msg_sid_from_strings(priority_str: str, msg_type_str: str, metadata_s
     bit_msg_sid.push(metadata_bits, MESSAGE_METADATA.length)
     msg_sid = bit_msg_sid.pop(MESSAGE_SID.length)
     return msg_sid
+
+
+def split_format_line(line: str) -> tuple[list[str], dict[str, str]]:
+    """Parse format_line output back into (header_fields, body_dict)."""
+    bracket, sep, body = line.partition(']')
+    assert sep == ']', f"format_line output missing closing bracket: {line!r}"
+    header_fields = bracket.lstrip('[ ').split()
+    parts = body.strip().split()
+    assert len(parts) % 2 == 0, f"format_line body has unpaired key/value tokens: {body!r}"
+    body_dict = {parts[i].rstrip(':'): parts[i + 1] for i in range(0, len(parts), 2)}
+    return header_fields, body_dict
