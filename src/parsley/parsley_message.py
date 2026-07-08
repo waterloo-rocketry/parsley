@@ -99,7 +99,6 @@ class ParsleyObject(BaseModel, Generic[T]):
 
     def to_flat_dict(self) -> dict[str, Any]:
         """Flatten data fields into {'BoardType/BoardInstance/MsgType/MsgMetadata/field': value} pairs."""
-        dumped = self.model_dump()
-        nested_data = dumped.pop("data", {}) or {}
-        prefix = _flatten_prefix(dumped["board_type_id"], dumped["board_inst_id"], dumped["msg_type"], dumped["msg_metadata"])
+        nested_data = self.data or {}
+        prefix = _flatten_prefix(self.board_type_id, self.board_inst_id, self.msg_type, self.msg_metadata)
         return {f"{prefix}/{field}": value for field, value in nested_data.items()}
