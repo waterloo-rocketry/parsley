@@ -1,6 +1,5 @@
 from dataclasses import dataclass, asdict
 from typing import Generic, TypeVar
-from pydantic import BaseModel, field_validator, model_validator
 import parsley.message_types as mt
 from parsley.message_definitions import CAN_MESSAGE
 from parsley.fields import Enum as _Enum
@@ -27,7 +26,7 @@ class ParsleyError():
     def __getitem__(self, key: str):
         return asdict(self)[key]
     
-class ParsleyObject(BaseModel, Generic[T]):
+class ParsleyObject(Generic[T]):
     """
     Dataclass to store parsed CAN message data.
     """
@@ -39,7 +38,6 @@ class ParsleyObject(BaseModel, Generic[T]):
     msg_metadata: MsgMetadata
     data: T # ParsleyDataType
 
-    @field_validator("msg_prio")
     def validate_msg_prio(cls, value):
         if value not in mt.msg_prio:
             raise ValueError(
@@ -47,13 +45,11 @@ class ParsleyObject(BaseModel, Generic[T]):
             )
         return value
 
-    @field_validator("msg_type")
     def validate_msg_type(cls, value):
         if value not in mt.msg_type:
             raise ValueError(f"Invalid msg_type type '{value}'")
         return value
 
-    @field_validator("msg_metadata")
     def validate_msg_metadata(cls, value):
         if type(value) is int:
             if not (0 <= value <= 255):
@@ -65,7 +61,6 @@ class ParsleyObject(BaseModel, Generic[T]):
             raise ValueError('msg_metadata must be int or str')
         return value
 
-    @model_validator(mode='after')
     def validate_msg_metadata_against_msg_type(self):
         if isinstance(self.msg_metadata, str):
             metadata_field = CAN_MESSAGE.get_fields(self.msg_type)[3]
