@@ -225,6 +225,9 @@ class LiveTelemetryParser(ParsleyParser):
             raise ValueError('Incorrect frame header')
 
         frame_len = frame[1]
+        # frame_len is untrusted wire data; validate before using it to index
+        if not 7 <= frame_len <= len(frame):
+            raise ValueError('Incorrect frame length')
         msg_sid = int.from_bytes(bytes([frame[2] & 0x1F]) + frame[3:6], byteorder='big')
         msg_data = frame[6:frame_len-1]
         exp_crc = frame[frame_len-1]
