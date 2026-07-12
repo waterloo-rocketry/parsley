@@ -9,27 +9,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install autopep8
-        run: pip install --user autopep8
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+      - name: Sync dependencies
+        run: uv sync --locked
       - name: Run autopep8
-        run: autopep8 -d -r src/parsley/ --exit-code
+        run: uv run --no-sync autopep8 -d -r src/parsley/ --exit-code
 
   run_flake8:
     name: Run flake8
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install flake8
-        run: pip install --user flake8
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+      - name: Sync dependencies
+        run: uv sync --locked
       - name: Run flake8
-        run: flake8
+        run: uv run --no-sync flake8
 
   run_basedpyright:
     name: Run Basedpyright
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install basedpyright
-        run: pip install --user basedpyright
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+      - name: Sync dependencies
+        run: uv sync --locked
       - name: Run basedpyright
-        run: basedpyright src/parsley
+        run: uv run --no-sync basedpyright src/parsley

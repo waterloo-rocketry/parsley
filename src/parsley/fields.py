@@ -226,7 +226,15 @@ class Bitfield(Field):
 
         status = [j for j, bit in self.map_name_offset.items() if bitfield_value & (1 << bit)]
 
-        if not status:
+        # unnamed bits shouldn't be silently dropped or reported as nominal
+        named_mask = 0
+        for bit in self.map_name_offset.values():
+            named_mask |= 1 << bit
+        unknown = bitfield_value & ~named_mask
+        if unknown:
+            status.append(f'UNKNOWN(0x{unknown:X})')
+
+        if bitfield_value == 0:
             status.append(self.default)
 
         return f"{'|'.join(status)}"

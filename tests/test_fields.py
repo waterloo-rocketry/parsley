@@ -301,6 +301,13 @@ class TestBitfieldLogs:
         for value in ("E_NOMINAL", "E_5V_OVER_CURRENT", "E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE"):
             assert bitfield.decode(bitfield.encode(value)[0]) == value
 
+    def test_decode_surfaces_unnamed_bits(self):
+        # production field is 32 bits wide but only ~17 bits are named; an unnamed
+        # bit must never be silently dropped or reported as the nominal default
+        bf = Bitfield("board_error_bitfield", 32, "E_NOMINAL", mt.board_error_bitfield_offset)
+        assert bf.decode((0).to_bytes(4, "big")) == "E_NOMINAL"
+        assert bf.decode((1 << 20).to_bytes(4, "big")) == "UNKNOWN(0x100000)"
+
     def test_encode_unknown_flag_raises(self, bitfield):
         with pytest.raises(ValueError):
             bitfield.encode("E_NOT_A_REAL_FLAG")

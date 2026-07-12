@@ -8,7 +8,7 @@ module-name = "parsley"
 
 [project]
 name = "parsley"
-version = "2026.3"
+version = "2026.5"
 description = "Library to transcode CAN messages and human-readable text"
 readme = "README.md"
 license = "MIT"
@@ -35,6 +35,8 @@ classifiers = [
 
 [dependency-groups]
 dev = [
+    "autopep8",
+    "basedpyright",
     "flake8",
     "pycodestyle",
     "pytest",

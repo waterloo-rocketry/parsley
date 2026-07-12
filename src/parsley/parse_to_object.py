@@ -6,7 +6,7 @@ from parsley.parsley_message import ParsleyObject, ParsleyError
 from parsley.bitstring import BitString
 from parsley.message_definitions import CAN_MESSAGE, MESSAGE_PRIO, MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA, MESSAGE_SID
 import parsley.parse_utils as pu
-from parsley.fields import Field, Switch, Bitfield
+from parsley.fields import Field, Switch, Bitfield, Enum
 from abc import ABC, abstractmethod
 import struct
 import crc8
@@ -17,6 +17,7 @@ MSG_PRIO_LEN = max([len(msg_prio) for msg_prio in mt.msg_prio])
 MSG_TYPE_LEN = max([len(msg_type) for msg_type in mt.msg_type])
 BOARD_TYPE_ID_LEN = max([len(board_type_id) for board_type_id in mt.board_type_id])
 BOARD_INST_ID_LEN = max([len(board_inst_id) for board_inst_id in mt.board_inst_id])
+MSG_METADATA_LEN = max((len(name) for fields in CAN_MESSAGE.map_key_enum.values() if isinstance(fields[3], Enum) for name in fields[3].map_key_val), default=0)
 
 class _ParsleyParseInternal:
     def __init__(self):
@@ -28,8 +29,15 @@ class _ParsleyParseInternal:
         msg_type = parsed_data['msg_type']
         board_type_id = parsed_data['board_type_id']
         board_inst_id = parsed_data['board_inst_id']
+        msg_metadata = parsed_data['msg_metadata']
         data = parsed_data['data']
-        res = f'[ {msg_prio:<{MSG_PRIO_LEN}} {msg_type:<{MSG_TYPE_LEN}} {board_type_id:<{BOARD_TYPE_ID_LEN}} {board_inst_id:<{BOARD_INST_ID_LEN}} ]'
+        
+        res = (
+            f'[ {msg_prio:<{MSG_PRIO_LEN}} {msg_type:<{MSG_TYPE_LEN}}'
+            f' {board_type_id:<{BOARD_TYPE_ID_LEN}} {board_inst_id:<{BOARD_INST_ID_LEN}}'
+            f' {str(msg_metadata):<{MSG_METADATA_LEN}} ]'
+        )
+        
         for k, v in data.items():
             formatted_value = f"{v:.3f}" if isinstance(v, float) else v
             res += f' {k}: {formatted_value}'
@@ -55,7 +63,11 @@ class _ParsleyParseInternal:
         bit_str.push(*MESSAGE_TYPE.encode(msg_type))
         bit_str.push(*BOARD_TYPE_ID.encode(board_type_id))
         bit_str.push(*BOARD_INST_ID.encode(board_inst_id))
-        bit_str.push(*CAN_MESSAGE.get_fields(msg_type)[3].encode(msg_metadata))
+        metadata_field = CAN_MESSAGE.get_fields(msg_type)[3]
+        if isinstance(metadata_field, Enum) and type(msg_metadata) is int:
+            bit_str.push(*MESSAGE_METADATA.encode(msg_metadata))
+        else:
+            bit_str.push(*metadata_field.encode(msg_metadata))
         msg_sid = int.from_bytes(bit_str.pop(bit_str.length), byteorder='big')
 
         # skip the first field (board_id) since thats parsed separately
@@ -159,6 +171,7 @@ class _ParsleyParseInternal:
         except (ValueError, IndexError, KeyError) as error:
             # convert the 6-bit msg_type into its canlib 12-bit form and include an error object
             return ParsleyError(
+                msg_prio=msg_prio,
                 board_type_id=board_type_id,
                 board_inst_id=board_inst_id,
                 msg_type=pu.hexify(encoded_msg_type, is_msg_type=True),
@@ -212,6 +225,9 @@ class LiveTelemetryParser(ParsleyParser):
             raise ValueError('Incorrect frame header')
 
         frame_len = frame[1]
+        # frame_len is untrusted wire data; validate before using it to index
+        if not 7 <= frame_len <= len(frame):
+            raise ValueError('Incorrect frame length')
         msg_sid = int.from_bytes(bytes([frame[2] & 0x1F]) + frame[3:6], byteorder='big')
         msg_data = frame[6:frame_len-1]
         exp_crc = frame[frame_len-1]
