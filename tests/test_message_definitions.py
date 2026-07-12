@@ -27,12 +27,19 @@ class TestCANMessage:
         res = parsley.parse_fields(bit_str2, MESSAGES["GENERAL_BOARD_STATUS"][4:]) # [4:] to skip prio, type, inst
         assert res["board_error_bitfield"] == 'E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE|E_12V_OVER_CURRENT'
 
+    def test_payload_fields_never_shadow_header_fields(self):
+        header_names = {'msg_prio', 'msg_type', 'board_type_id', 'board_inst_id', 'msg_metadata'}
+        for msg_type, fields in MESSAGES.items():
+            for field in fields[4:]:  # [4:] skips the header fields
+                assert field.name not in header_names, \
+                    f"{msg_type} payload field '{field.name}' collides with a header field"
+
     def test_reset_cmd(self, bit_str2):
         bit_str2.push(b"\x08\x00", 16) # 0x08 (ALTIMETER), 0x00 (ANY)
         res = parsley.parse_fields(bit_str2, MESSAGES["RESET_CMD"][4:])
 
-        assert res["board_type_id"] == 'ALTIMETER'
-        assert res["board_inst_id"] == 'ANY'
+        assert res["target_board_type_id"] == 'ALTIMETER'
+        assert res["target_board_inst_id"] == 'ANY'
 
     def test_debug_raw(self, bit_str2):
         bit_str2.push(b"rawmsg", 48)
@@ -45,8 +52,8 @@ class TestCANMessage:
         bit_str2.push(b"\x01\x02\x03\x04\x05\x06", 48)
         res = parsley.parse_fields(bit_str2, MESSAGES["CONFIG_SET"][4:])
 
-        assert res["board_type_id"] == 'INJECTOR'
-        assert res["board_inst_id"] == 'ROCKET'
+        assert res["target_board_type_id"] == 'INJECTOR'
+        assert res["target_board_inst_id"] == 'ROCKET'
         assert res["config_id"] == 0x0304
         assert res["config_value"] == 0x0506
 
