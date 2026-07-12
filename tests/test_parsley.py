@@ -439,7 +439,21 @@ class TestParsley:
         with pytest.raises(ValueError) as e:
             parsley.parse_live_telemetry(frame)
         assert "Incorrect frame length" in str(e.value)
-            
+
+    def test_parse_live_telemetry_frame_len_zero_rejected(self):
+        body = bytearray([0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0xAA, 0xBB, 0xCC])
+        crc = crc8.crc8(bytes(body)).digest()[0]
+        frame = bytes(body) + bytes([crc])
+        with pytest.raises(ValueError) as e:
+            parsley.parse_live_telemetry(frame)
+        assert "Incorrect frame length" in str(e.value)
+
+    def test_parse_live_telemetry_frame_len_too_large_rejected(self):
+        frame = bytes([0x02, 0xFF, 0x12, 0x34, 0x56, 0x78, 0xAA, 0xBB])
+        with pytest.raises(ValueError) as e:
+            parsley.parse_live_telemetry(frame)
+        assert "Incorrect frame length" in str(e.value)
+
     def test_parse_live_telemetry_wrong_header(self):
         frame = b'\x03\x08\x12\x34\x56\x78\xAA\x00'  #header = 0x03 instead of 0x02
         with pytest.raises(ValueError) as e:
