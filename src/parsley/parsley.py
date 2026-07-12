@@ -55,6 +55,7 @@ def parse_live_telemetry(frame: bytes) -> tuple[bytes, bytes] | None:
     if frame[0] != 0x02: raise ValueError("Incorrect frame header")
 
     frame_len = frame[1]
+    if not 7 <= frame_len <= len(frame): raise ValueError("Incorrect frame length")
     msg_sid = int.from_bytes(bytes([frame[2] & 0x1F]) + frame[3:6], byteorder='big')
     msg_data = frame[6:frame_len-1]
     exp_crc = frame[frame_len-1]
