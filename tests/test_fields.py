@@ -238,16 +238,16 @@ class TestBitfieldLogs:
         "bytes,expected",
         [
             (b"\x00\x00", "E_NOMINAL"),
-            (b"\x00\x01", "E_5V_OVER_CURRENT"),
-            (b"\x00\x02", "E_5V_OVER_VOLTAGE"),
-            (b"\x00\x04", "E_5V_UNDER_VOLTAGE"),
-            (b"\x00\x08", "E_12V_OVER_CURRENT"),
-            (b"\x00\x10", "E_12V_OVER_VOLTAGE"),
-            (b"\x00\x20", "E_12V_UNDER_VOLTAGE"),
-            (b"\x00\x40", "E_BATT_OVER_CURRENT"),
-            (b"\x00\x80", "E_BATT_OVER_VOLTAGE"),
-            (b"\x01\x00", "E_BATT_UNDER_VOLTAGE"),
-            (b"\x02\x00", "E_MOTOR_OVER_CURRENT"),
+            (b"\x00\x01", "E_5V_OVER_CURR"),
+            (b"\x00\x02", "E_5V_OVER_VOLT"),
+            (b"\x00\x04", "E_5V_UNDER_VOLT"),
+            (b"\x00\x08", "E_12V_OVER_CURR"),
+            (b"\x00\x10", "E_12V_OVER_VOLT"),
+            (b"\x00\x20", "E_12V_UNDER_VOLT"),
+            (b"\x00\x40", "E_BATT_OVER_CURR"),
+            (b"\x00\x80", "E_BATT_OVER_VOLT"),
+            (b"\x01\x00", "E_BATT_UNDER_VOLT"),
+            (b"\x02\x00", "E_MOTOR_OVER_CURR"),
             (b"\x04\x00", "E_IO_ERROR"),
             (b"\x08\x00", "E_FS_ERROR"),
             (b"\x10\x00", "E_WATCHDOG_TIMEOUT"),
@@ -262,8 +262,8 @@ class TestBitfieldLogs:
     @pytest.mark.parametrize(
         "bytes,expected",
         [
-            (b"\x00\x03", "E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE"),
-            (b"\x00\x05", "E_5V_OVER_CURRENT|E_5V_UNDER_VOLTAGE"),
+            (b"\x00\x03", "E_5V_OVER_CURR|E_5V_OVER_VOLT"),
+            (b"\x00\x05", "E_5V_OVER_CURR|E_5V_UNDER_VOLT"),
         ],
     )
     def test_decode_from_bytes(self, bitfield, bytes, expected):
@@ -271,7 +271,7 @@ class TestBitfieldLogs:
 
     def test_decode_from_hex_string(self, bitfield):
         # decode() also accepts a hex string — covers the isinstance(data, str) branch
-        assert bitfield.decode("0001") == "E_5V_OVER_CURRENT"
+        assert bitfield.decode("0001") == "E_5V_OVER_CURR"
         assert bitfield.decode("0000") == "E_NOMINAL"
 
     def test_decode_custom_bitfield(self):
@@ -284,10 +284,10 @@ class TestBitfieldLogs:
         "value,expected_bytes",
         [
             ("E_NOMINAL", b"\x00\x00"),
-            ("E_5V_OVER_CURRENT", b"\x00\x01"),
-            ("E_5V_OVER_VOLTAGE", b"\x00\x02"),
-            ("E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE", b"\x00\x03"),
-            ("E_5V_OVER_CURRENT|E_5V_UNDER_VOLTAGE", b"\x00\x05"),
+            ("E_5V_OVER_CURR", b"\x00\x01"),
+            ("E_5V_OVER_VOLT", b"\x00\x02"),
+            ("E_5V_OVER_CURR|E_5V_OVER_VOLT", b"\x00\x03"),
+            ("E_5V_OVER_CURR|E_5V_UNDER_VOLT", b"\x00\x05"),
             ("E_WATCHDOG_TIMEOUT", b"\x10\x00"),
         ],
     )
@@ -298,7 +298,7 @@ class TestBitfieldLogs:
         assert length == 16
 
     def test_encode_decode_roundtrip(self, bitfield):
-        for value in ("E_NOMINAL", "E_5V_OVER_CURRENT", "E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE"):
+        for value in ("E_NOMINAL", "E_5V_OVER_CURR", "E_5V_OVER_CURR|E_5V_OVER_VOLT"):
             assert bitfield.decode(bitfield.encode(value)[0]) == value
 
     def test_decode_surfaces_unnamed_bits(self):

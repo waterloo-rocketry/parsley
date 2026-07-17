@@ -36,7 +36,7 @@ MESSAGES = {
     'STREAM_STATUS':         [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA, TIMESTAMP_2, Numeric('total_size', 24), Numeric('tx_size', 24)],
     'STREAM_DATA':           [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA, TIMESTAMP_2, ASCII('data', 48)],
     'STREAM_RETRY':          [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA, TIMESTAMP_2],
-    'TELEMETRY_INFO':        [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, Enum('msg_metadata', 8, mt.board_inst_id), TIMESTAMP_2, Numeric('lqi', 8), Numeric('rssi', 8)],
+    'TELEMETRY_INFO':        [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, Enum('msg_metadata', 8, mt.board_inst_id), TIMESTAMP_2, Numeric('lqi', 8), Numeric('rssi', 8, signed=True)],
     'TELEMETRY_STATE_SWITCH':[MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, Enum('msg_metadata', 8, mt.board_inst_id), TIMESTAMP_2],
     'CANARD_FIRMWARE_ERROR': [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA, TIMESTAMP_2, Numeric('error_code', 32), Numeric('severity', 8)],
     'LEDS_ON':               [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA],

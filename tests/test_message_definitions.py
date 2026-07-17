@@ -22,10 +22,10 @@ class TestCANMessage:
 
 
     def test_general_board_status(self, bit_str2):
-        # 0x0000000B -> bits 0,1,3 set -> E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE|E_12V_OVER_CURRENT
+        # 0x0000000B -> bits 0,1,3 set -> E_5V_OVER_CURR|E_5V_OVER_VOLT|E_12V_OVER_CURR
         bit_str2.push(b"\x00\x00\x00\x0B", 32)
         res = parsley.parse_fields(bit_str2, MESSAGES["GENERAL_BOARD_STATUS"][4:]) # [4:] to skip prio, type, inst
-        assert res["board_error_bitfield"] == 'E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE|E_12V_OVER_CURRENT'
+        assert res["board_error_bitfield"] == 'E_5V_OVER_CURR|E_5V_OVER_VOLT|E_12V_OVER_CURR'
 
     def test_payload_fields_never_shadow_header_fields(self):
         header_names = {'msg_prio', 'msg_type', 'board_type_id', 'board_inst_id', 'msg_metadata'}
