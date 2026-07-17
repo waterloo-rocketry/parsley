@@ -32,7 +32,7 @@ class TestParseToObject:
 
         bit_str = BitString()
         bit_str.push(*TIMESTAMP_2.encode(1.234))
-        board_error_value = (1 << mt.board_error_bitfield_offset['E_5V_OVER_VOLTAGE'])
+        board_error_value = (1 << mt.board_error_bitfield_offset['E_5V_OVER_VOLT'])
         board_error_value |= (1 << mt.board_error_bitfield_offset['E_5V_EFUSE_FAULT'])
         bit_str.push(*Numeric('board_error_bitfield', 32).encode(board_error_value))
 
@@ -49,7 +49,7 @@ class TestParseToObject:
             'msg_metadata': 0,
             'data': {
                 'time': utilities.approx(1.234),
-                'board_error_bitfield': 'E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'
+                'board_error_bitfield': 'E_5V_OVER_VOLT|E_5V_EFUSE_FAULT'
             }
         }
 
@@ -363,13 +363,13 @@ class TestParseToObject:
             'msg_metadata': 0,
             'data': {
                 'time': 1.234,
-                'board_error_bitfield': 'E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'
+                'board_error_bitfield': 'E_5V_OVER_VOLT|E_5V_EFUSE_FAULT'
             }
         }
         line = _ParsleyParseInternal.format_line(parsed_data)
         header, body = utilities.split_format_line(line)
         assert header == ['HIGH', 'GENERAL_BOARD_STATUS', 'RLCS_RELAY', 'ROCKET', '0']
-        assert body == {'time': '1.234', 'board_error_bitfield': 'E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'}
+        assert body == {'time': '1.234', 'board_error_bitfield': 'E_5V_OVER_VOLT|E_5V_EFUSE_FAULT'}
 
     def test_format_line_includes_sensor_metadata(self):
         # SENSOR_ANALOG16 should have'SENSOR_PT_CHANNEL_1' as a string for msg_metadata.
