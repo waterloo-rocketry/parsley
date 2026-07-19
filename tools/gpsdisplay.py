@@ -1,6 +1,5 @@
 import sys
 import datetime
-import random
 import socket
 import parsley
 from pyfiglet import Figlet
