@@ -52,6 +52,7 @@ board_type_id = {
     'RLCS_GLS':             0x0B,
     'RLCS_RELAY':           0x0C,
     'DAQ':                  0x0D,
+    'THERMOCOUPLE':         0x0E,
 }
 
 board_inst_id = {
@@ -67,6 +68,10 @@ board_inst_id = {
     'GROUND_4':    0x09,
     'RA_RAVEN':    0x0A,
     'RA_STRATOLOGGER':0x0B,
+    'TCB_1':       0x0C,
+    'TCB_2':       0x0D,
+    'TCB_3':       0x0E,
+    'TCB_4':       0x0F,
 }
 
 actuator_id = {
@@ -189,6 +194,22 @@ analog_sensor_id = {
     'SENSOR_PAYLOAD_SENSOR_CURR_READING':0x3E,
     'SENSOR_ALTITUDE':                 0x3F,
     'SENSOR_PAYLOAD_TEMP':             0x40,
+    'SENSOR_TC_0':                     0x41,
+    'SENSOR_TC_1':                     0x42,
+    'SENSOR_TC_2':                     0x43,
+    'SENSOR_TC_3':                     0x44,
+    'SENSOR_TC_4':                     0x45,
+    'SENSOR_TC_5':                     0x46,
+    'SENSOR_TC_6':                     0x47,
+    'SENSOR_TC_7':                     0x48,
+    'SENSOR_TC_8':                     0x49,
+    'SENSOR_TC_9':                     0x4A,
+    'SENSOR_TC_10':                    0x4B,
+    'SENSOR_TC_11':                    0x4C,
+    'SENSOR_TC_12':                    0x4D,
+    'SENSOR_TC_13':                    0x4E,
+    'SENSOR_TC_14':                    0x4F,
+    'SENSOR_TC_15':                    0x50,
 }
 
 dem_2d_sensor_id = {
