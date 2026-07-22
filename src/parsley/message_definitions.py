@@ -15,7 +15,7 @@ MESSAGE_SID = Enum('msg_sid', MESSAGE_PRIO.length + MESSAGE_TYPE.length + BOARD_
 # we parse BOARD_ID seperately from the CAN message (since we want to continue parsing even if BOARD_ID throws)
 # but BOARD_ID is still here so that Omnibus has all the fields it needs when creating messages to send
 MESSAGES = {
-    'GENERAL_BOARD_STATUS':  [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA, TIMESTAMP_2, Bitfield('board_error_bitfield', 32, "E_NOMINAL", mt.board_error_bitfield_offset)],
+    'GENERAL_BOARD_STATUS':  [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA, TIMESTAMP_2, Bitfield('board_error_bitfield', 32, 'E_NOMINAL', mt.board_error_bitfield_offset)],
     'RESET_CMD':             [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA, TIMESTAMP_2, Enum('target_board_type_id', 8, mt.board_type_id), Enum('target_board_inst_id', 8, mt.board_inst_id)],
     'DEBUG_RAW':             [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA, TIMESTAMP_2, ASCII('string', 48)],
     'CONFIG_SET':            [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA, TIMESTAMP_2, Enum('target_board_type_id', 8, mt.board_type_id), Enum('target_board_inst_id', 8, mt.board_inst_id), Numeric('config_id', 16), Numeric('config_value', 16)],
@@ -38,7 +38,7 @@ MESSAGES = {
     'STREAM_RETRY':          [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA, TIMESTAMP_2],
     'TELEMETRY_INFO':        [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, Enum('msg_metadata', 8, mt.board_inst_id), TIMESTAMP_2, Numeric('lqi', 8), Numeric('rssi', 8, signed=True)],
     'TELEMETRY_STATE_SWITCH':[MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, Enum('msg_metadata', 8, mt.board_inst_id), TIMESTAMP_2],
-    'CANARD_FIRMWARE_ERROR': [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA, TIMESTAMP_2, Numeric('error_code', 32), Numeric('severity', 8)],
+    'CANARD_FIRMWARE_ERROR': [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, Enum('module_id', 8, mt.canards_module_id), TIMESTAMP_2, Bitfield('error_bitfield', 32, 'E_NOMINAL', mt.canards_module_error_bitfield_offset), Enum('severity', 8, mt.canards_health_severity)],
     'LEDS_ON':               [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA],
     'LEDS_OFF':              [MESSAGE_PRIO, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA]
 }
