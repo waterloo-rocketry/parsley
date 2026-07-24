@@ -127,7 +127,7 @@ class Numeric(Field):
         if not isinstance(value, Number):
             raise ValueError(f'Value "{value}" is not a valid number')
 
-        value = int(value // self.scale)
+        value = int(round(value / self.scale))
         hex_value = hex(value)
         if not self.signed:
             if value >= 1 << self.length:

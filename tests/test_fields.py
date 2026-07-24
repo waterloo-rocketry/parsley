@@ -71,6 +71,12 @@ class TestEnum:
         converted_data = num.decode(data)
         assert 54.321 == approx(converted_data)
 
+    def test_numeric_scale_round_trips_exactly(self):
+        # encode must round, not floor: an inexact scale (1/1000) otherwise loses 1ms
+        num = Numeric("time", 16, scale=1 / 1000)
+        for raw in (1, 11, 1000, 1500, 65535):
+            assert int.from_bytes(num.encode(num.decode(raw.to_bytes(2, "big")))[0], "big") == raw
+
     def test_enum_decode_encode(self):
         map = {"a": 1, "b": 10, "c": 100}
         enum = Enum("enum", 8, map)
@@ -180,6 +186,27 @@ class TestNumeric:
         num.encode(-5)
         with pytest.raises(ValueError):
             num.encode(5)
+
+    def test_numeric_encode_rounding_works_for_negative_numbers(self):
+        # the round() fix must work the same for negative values, not just positive ones
+        num = Numeric("num", 8, signed=True)
+        for v in (-128, -4, -1, 0, 127):
+            assert num.decode(num.encode(v)[0]) == v
+        scaled = Numeric("t", 16, scale=1 / 1000, signed=True)
+        for raw in (-32768, -1, 1, 32767):
+            assert int.from_bytes(scaled.encode(scaled.decode(raw.to_bytes(2, "big", signed=True)))[0], "big", signed=True) == raw
+
+    def test_numeric_encode_raises_on_real_overflow_not_just_rounding(self):
+        # rounding up can push a value past the field's max; that must still raise
+        unum = Numeric("num", 8)          # unsigned 0..255
+        unum.encode(255.4)                # rounds down to 255, still fits: no error
+        with pytest.raises(ValueError):
+            unum.encode(255.6)            # rounds up to 256: real overflow, must raise
+        snum = Numeric("num", 8, signed=True)  # -128..127
+        with pytest.raises(ValueError):
+            snum.encode(127.6)            # rounds up to 128: real overflow, must raise
+        with pytest.raises(ValueError):
+            snum.encode(-128.6)           # rounds down to -129: real overflow, must raise
 
 
 class TestFloating:
