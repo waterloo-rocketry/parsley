@@ -29,7 +29,7 @@ class TestParsley:
 
         bit_str = BitString()
         bit_str.push(*TIMESTAMP_2.encode(1.234))
-        board_error_value = (1 << mt.board_error_bitfield_offset['E_5V_OVER_VOLTAGE'])
+        board_error_value = (1 << mt.board_error_bitfield_offset['E_5V_OVER_VOLT'])
         board_error_value |= (1 << mt.board_error_bitfield_offset['E_5V_EFUSE_FAULT'])
         bit_str.push(*Numeric('board_error_bitfield', 32).encode(board_error_value))
 
@@ -45,7 +45,7 @@ class TestParsley:
             'msg_metadata': 0,
             'data': {
                 'time': utilities.approx(1.234),
-                'board_error_bitfield': 'E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'
+                'board_error_bitfield': 'E_5V_OVER_VOLT|E_5V_EFUSE_FAULT'
             }
         }
 
@@ -254,13 +254,13 @@ class TestParsley:
             'msg_metadata': 0,
             'data': {
                 'time': 1.234,
-                'board_error_bitfield': 'E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'
+                'board_error_bitfield': 'E_5V_OVER_VOLT|E_5V_EFUSE_FAULT'
             }
         }
         line = parsley.format_line(parsed_data)
         header, body = utilities.split_format_line(line)
         assert header == ['HIGH', 'GENERAL_BOARD_STATUS', 'RLCS_RELAY', 'ROCKET', '0']
-        assert body == {'time': '1.234', 'board_error_bitfield': 'E_5V_OVER_VOLTAGE|E_5V_EFUSE_FAULT'}
+        assert body == {'time': '1.234', 'board_error_bitfield': 'E_5V_OVER_VOLT|E_5V_EFUSE_FAULT'}
 
     def test_format_line_includes_sensor_metadata(self):
         parsed_data = {
@@ -439,7 +439,21 @@ class TestParsley:
         with pytest.raises(ValueError) as e:
             parsley.parse_live_telemetry(frame)
         assert "Incorrect frame length" in str(e.value)
-            
+
+    def test_parse_live_telemetry_frame_len_zero_rejected(self):
+        body = bytearray([0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0xAA, 0xBB, 0xCC])
+        crc = crc8.crc8(bytes(body)).digest()[0]
+        frame = bytes(body) + bytes([crc])
+        with pytest.raises(ValueError) as e:
+            parsley.parse_live_telemetry(frame)
+        assert "Incorrect frame length" in str(e.value)
+
+    def test_parse_live_telemetry_frame_len_too_large_rejected(self):
+        frame = bytes([0x02, 0xFF, 0x12, 0x34, 0x56, 0x78, 0xAA, 0xBB])
+        with pytest.raises(ValueError) as e:
+            parsley.parse_live_telemetry(frame)
+        assert "Incorrect frame length" in str(e.value)
+
     def test_parse_live_telemetry_wrong_header(self):
         frame = b'\x03\x08\x12\x34\x56\x78\xAA\x00'  #header = 0x03 instead of 0x02
         with pytest.raises(ValueError) as e:
