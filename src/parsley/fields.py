@@ -69,7 +69,7 @@ class Enum(Field):
     dictionary: {'GENERAL_CMD': 0x060, 'RESET_CMD': 0x160}
     b'\x01\x60' <=> 'RESET_CMD'
     """
-    def __init__(self, name: str, length: int, map_key_val: dict):
+    def __init__(self, name: str, length: int, map_key_val: dict[Any, Any]):
         super().__init__(name, length)
 
         self.map_key_val = map_key_val
@@ -186,7 +186,7 @@ class Switch(Enum):
     binary data <=> string (message type) and then
     string -> list of Fields (the specific fields that are defined in the message type)
     """
-    def __init__(self, name: str, length: int, map_key_val: dict, map_key_enum: dict):
+    def __init__(self, name: str, length: int, map_key_val: dict[Any, Any], map_key_enum: dict[Any, Any]):
         super().__init__(name, length, map_key_val)
         self.map_key_enum = map_key_enum
 
@@ -205,7 +205,7 @@ class Bitfield(Field):
     dictionary: {'E_NOMINAL': 0, 'E_5V_OVER_CURRENT': 1, 'E_5V_OVER_VOLTAGE': 2}
     b'\x01\x60' <=> 'E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE'
     """
-    def __init__(self, name: str, length: int, default: str="DEFAULT_STRING", map_name_offset: Optional[dict]=None, unit=""):
+    def __init__(self, name: str, length: int, default: str="DEFAULT_STRING", map_name_offset: Optional[dict[Any, Any]]=None, unit=""):
         super().__init__(name, length, unit)
         self.default = default
         self.map_name_offset = map_name_offset

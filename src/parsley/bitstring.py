@@ -36,14 +36,14 @@ class BitString:
         will append only 110000
         """
         self.length += field_length
-        value = int.from_bytes(value, byteorder='big') # convert to int to do bitwise maniuplations
-        value = value & ((1 << field_length) - 1) # extract the field_length least significant bits
-        self.data = (self.data << field_length) | value # and then append value to the back of data
+        val_int = int.from_bytes(value, byteorder='big') # convert to int to do bitwise maniuplations
+        val_int = val_int & ((1 << field_length) - 1) # extract the field_length least significant bits
+        self.data = (self.data << field_length) | val_int # and then append value to the back of data
 
     def push_front(self, value: bytes, field_length: int):
         """
         Prepends the next field_length least significant bits of data from value (to the front).
         """
-        value = int.from_bytes(value, byteorder='big')
-        self.data = (value << self.length) | self.data # prepend value to the front of data
+        val_int = int.from_bytes(value, byteorder='big')
+        self.data = (val_int << self.length) | self.data # prepend value to the front of data
         self.length += field_length
