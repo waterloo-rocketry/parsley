@@ -1,15 +1,16 @@
 '''
 Contains the new static class implementation of Parsley.py
 '''
-from typing import Any, Iterator
+from collections.abc import Iterator
+from typing import Any
 from parsley.parsley_message import ParsleyObject, ParsleyError
 from parsley.bitstring import BitString
 from parsley.message_definitions import CAN_MESSAGE, MESSAGE_PRIO, MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA, MESSAGE_SID
 import parsley.parse_utils as pu
-from parsley.fields import Field, Switch, Bitfield, Enum
+from parsley.fields import Field, Switch, Enum
 from abc import ABC, abstractmethod
 import struct
-import crc8
+import crc8  # pyright: ignore[reportMissingTypeStubs]
 import parsley.message_types as mt
 
 #Used for formatting lines
@@ -44,7 +45,7 @@ class _ParsleyParseInternal:
         return res
 
     @staticmethod
-    def calculate_msg_bit_len(can_message):
+    def calculate_msg_bit_len(can_message: list[Field]) -> int:
         bit_len = 0
         for field in can_message:
             bit_len += field.length
@@ -133,7 +134,7 @@ class _ParsleyParseInternal:
             return metadata_field.decode(encoded_msg_metadata)
         except ValueError:
             decoded = MESSAGE_METADATA.decode(encoded_msg_metadata)
-            return int(decoded) if isinstance(decoded, (int, float)) else decoded # if value error based on message type just decode as number
+            return int(decoded) # if value error based on message type just decode as number
 
     @staticmethod
     def parse_to_object(msg_sid: bytes, msg_data: bytes) -> ParsleyObject[Any] | ParsleyError:
@@ -195,7 +196,7 @@ class ParsleyParser(ABC):
     """ Abstract base for different input-format parsers """
 
     @abstractmethod
-    def parse(self, *args, **kwargs):
+    def parse(self, *args: Any, **kwargs: Any) -> Any:
         raise NotImplementedError("This class is an abstract class")
 
 class USBDebugParser(ParsleyParser):

@@ -1,13 +1,12 @@
-import crc8
-from typing import Any, Iterator
+import crc8  # pyright: ignore[reportMissingTypeStubs]
+from collections.abc import Iterator
+from typing import Any
 import struct
 from parsley.bitstring import BitString
-from parsley.fields import Field, Switch, Bitfield
-from parsley.message_definitions import CAN_MESSAGE, MESSAGE_METADATA, MESSAGE_PRIO, MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_SID
-import parsley.message_types as mt
-import parsley.parse_utils as pu
+from parsley.fields import Field
+from parsley.message_definitions import MESSAGE_SID
 from deprecated import deprecated
-from parsley.parse_to_object import _ParsleyParseInternal 
+from parsley.parse_to_object import _ParsleyParseInternal  # pyright: ignore[reportPrivateUsage]
 from parsley.parsley_message import ParsleyError
 
 @deprecated(version='2026.2', reason="Deprecated; use a ParsleyParser subclass (USBDebugParser, LiveTelemetryParser, LoggerParser, BitstringParser) from parsley.parse_to_object")
@@ -149,5 +148,5 @@ def format_line(parsed_data: dict[str, Any]) -> str:
 
 # can_message is an array of parsley fields
 @deprecated(version='2026.2', reason="Deprecated; use _ParsleyParseInternal.calculate_msg_bit_len in parsley.parse_to_object")
-def calculate_msg_bit_len(can_message):
+def calculate_msg_bit_len(can_message: list[Field]) -> int:
     return _ParsleyParseInternal.calculate_msg_bit_len(can_message)

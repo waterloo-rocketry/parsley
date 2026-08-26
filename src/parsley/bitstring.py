@@ -4,7 +4,7 @@ class BitString:
     bits from the front. We need to operate at the bit level since some fields are
     non-byte-aligned (eg. DEBUG_MSG's 4-bit DEBUG_LEVEL and DEBUG_MSG's 12-bit LINE_NUM)
     """
-    def __init__(self, data=b'', data_bit_length=0):
+    def __init__(self, data: bytes = b'', data_bit_length: int = 0):
         self.length = data_bit_length or len(data) * 8 # length in bits
         # store the data as an int which is unbounded and lets us do bitwise manipulations
         self.data = int.from_bytes(data, byteorder='big')
