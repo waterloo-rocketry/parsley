@@ -1,5 +1,5 @@
 import crc8
-from typing import Any
+from typing import Any, Iterator
 import struct
 from parsley.bitstring import BitString
 from parsley.fields import Field, Switch, Bitfield
@@ -20,7 +20,7 @@ def parse_fields(bit_str: BitString, fields: list[Field]) -> dict[str, Any]:
     return _ParsleyParseInternal.parse_fields(bit_str, fields)
 
 @deprecated(version='2026.2', reason="Deprecated; use a ParsleyParser subclass (USBDebugParser, LiveTelemetryParser, LoggerParser, BitstringParser) from parsley.parse_to_object")
-def parse(msg_sid: bytes, msg_data: bytes) -> dict:
+def parse(msg_sid: bytes, msg_data: bytes) -> dict[str, Any]:
     """
     Extracts the message_type and board_id from msg_sid to construct a CAN message along with message_data.
     Upon reading poorly formatted data, the error is caught and returned in the dictionary.
@@ -84,7 +84,7 @@ def parse_usb_debug(line: str) -> tuple[bytes, bytes] | None:
     return format_can_message(msg_sid, msg_data)
 
 @deprecated(version='2026.2', reason="Deprecated; use LoggerParser.parse in the new LoggerParser object")
-def parse_logger(buf: bytes, page_number: int) -> tuple[bytes, bytes] | None:
+def parse_logger(buf: bytes, page_number: int) -> Iterator[tuple[bytes, bytes]]:
     """
     Parse one logger record.
 
@@ -139,12 +139,12 @@ def format_can_message(msg_sid: int, msg_data: list[int]) -> tuple[bytes, bytes]
 
 # given a dictionary of CAN message data, return the CAN message bits
 @deprecated(version='2026.2', reason="Deprecated; use _ParsleyParseInternal.encode_data in parsley.parse_to_object")
-def encode_data(parsed_data: dict) -> tuple[int, list[int]]:
+def encode_data(parsed_data: dict[str, Any]) -> tuple[int, list[int]]:
     return _ParsleyParseInternal.encode_data(parsed_data)
 
 # formats a parsed CAN message (dictionary) into a singular line
 @deprecated(version='2026.2', reason="Deprecated; use _ParsleyParseInternal.format_line in parsley.parse_to_object")
-def format_line(parsed_data: dict) -> str:
+def format_line(parsed_data: dict[str, Any]) -> str:
     return _ParsleyParseInternal.format_line(parsed_data)
 
 # can_message is an array of parsley fields

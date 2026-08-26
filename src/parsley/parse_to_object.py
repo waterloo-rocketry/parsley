@@ -1,7 +1,7 @@
 '''
 Contains the new static class implementation of Parsley.py
 '''
-from typing import Any
+from typing import Any, Iterator
 from parsley.parsley_message import ParsleyObject, ParsleyError
 from parsley.bitstring import BitString
 from parsley.message_definitions import CAN_MESSAGE, MESSAGE_PRIO, MESSAGE_TYPE, BOARD_TYPE_ID, BOARD_INST_ID, MESSAGE_METADATA, MESSAGE_SID
@@ -24,7 +24,7 @@ class _ParsleyParseInternal:
         raise NotImplementedError("This class is static only do not instantiate it")
 
     @staticmethod
-    def format_line(parsed_data: dict) -> str:
+    def format_line(parsed_data: dict[Any, Any]) -> str:
         msg_prio = parsed_data['msg_prio']
         msg_type = parsed_data['msg_type']
         board_type_id = parsed_data['board_type_id']
@@ -51,7 +51,7 @@ class _ParsleyParseInternal:
         return bit_len
 
     @staticmethod
-    def encode_data(parsed_data: dict) -> tuple[int, list[int]]:
+    def encode_data(parsed_data: dict[str, Any]) -> tuple[int, list[int]]:
         msg_prio = parsed_data['msg_prio']
         msg_type = parsed_data['msg_type']
         board_type_id = parsed_data['board_type_id']
@@ -64,10 +64,11 @@ class _ParsleyParseInternal:
         bit_str.push(*BOARD_TYPE_ID.encode(board_type_id))
         bit_str.push(*BOARD_INST_ID.encode(board_inst_id))
         metadata_field = CAN_MESSAGE.get_fields(msg_type)[3]
-        if isinstance(metadata_field, Enum) and type(msg_metadata) is int:
+        if isinstance(metadata_field, Enum) and isinstance(msg_metadata, int):
             bit_str.push(*MESSAGE_METADATA.encode(msg_metadata))
         else:
-            bit_str.push(*metadata_field.encode(msg_metadata))
+            encoded_val, encoded_len = metadata_field.encode(msg_metadata)
+            bit_str.push(encoded_val, encoded_len)
         msg_sid = int.from_bytes(bit_str.pop(bit_str.length), byteorder='big')
 
         # skip the first field (board_id) since thats parsed separately
@@ -131,10 +132,11 @@ class _ParsleyParseInternal:
             metadata_field = CAN_MESSAGE.get_fields(msg_type)[3]
             return metadata_field.decode(encoded_msg_metadata)
         except ValueError:
-            return MESSAGE_METADATA.decode(encoded_msg_metadata) # if value error based on message type just decode as number
+            decoded = MESSAGE_METADATA.decode(encoded_msg_metadata)
+            return int(decoded) if isinstance(decoded, (int, float)) else decoded # if value error based on message type just decode as number
 
     @staticmethod
-    def parse_to_object(msg_sid: bytes, msg_data: bytes) -> ParsleyObject | ParsleyError:
+    def parse_to_object(msg_sid: bytes, msg_data: bytes) -> ParsleyObject[Any] | ParsleyError:
         """
         Extracts the message_type and board_id from msg_sid to construct a Parsley Object along with message_data.
         Upon reading poorly formatted data, the error is caught and returned in a ParsleyError object.
@@ -158,7 +160,7 @@ class _ParsleyParseInternal:
         msg_prio = _ParsleyParseInternal.parse_msg_prio(encoded_msg_prio)
 
         msg_type = None
-        msg_metadata: int | str = MESSAGE_METADATA.decode(encoded_msg_metadata)  # numeric default if msg_type decode fails
+        msg_metadata: Any = MESSAGE_METADATA.decode(encoded_msg_metadata)  # numeric default if msg_type decode fails
         data: dict[str, Any] = {}
 
         try:
@@ -199,7 +201,7 @@ class ParsleyParser(ABC):
 class USBDebugParser(ParsleyParser):
     """ Parse ASCII USB-debug lines """
 
-    def parse(self, line: str) -> ParsleyObject | ParsleyError:
+    def parse(self, line: str) -> ParsleyObject[Any] | ParsleyError:
         line = line.strip(' \0\r\n')
         if len(line) == 0 or line[0] != '$':
             raise ValueError('Incorrect line format')
@@ -213,12 +215,12 @@ class USBDebugParser(ParsleyParser):
             msg_sid_int = int(line, 16)
             msg_data_list = []
 
-        return _ParsleyParseInternal.parse_to_object(msg_sid_int, msg_data_list)
+        return _ParsleyParseInternal.parse_to_object(msg_sid_int.to_bytes((msg_sid_int.bit_length() + 7) // 8 or 1, 'big'), bytes(msg_data_list))
 
 class LiveTelemetryParser(ParsleyParser):
     """ Parse binary live-telemetry """
 
-    def parse(self, frame: bytes) -> ParsleyObject | ParsleyError:
+    def parse(self, frame: bytes) -> ParsleyObject[Any] | ParsleyError:
         if len(frame) < 7:
             raise ValueError('Incorrect frame length')
         if frame[0] != 0x02:
@@ -236,7 +238,7 @@ class LiveTelemetryParser(ParsleyParser):
         if msg_crc != exp_crc:
             raise ValueError(f'Bad checksum, expected {exp_crc:02X} but got {msg_crc:02X}')
 
-        return _ParsleyParseInternal.parse_to_object(msg_sid, list(msg_data))
+        return _ParsleyParseInternal.parse_to_object(msg_sid.to_bytes((msg_sid.bit_length() + 7) // 8 or 1, 'big'), bytes(msg_data))
 
 class LoggerParser(ParsleyParser):
     """ Parses logger pages and yields `ParsleyObject` items """
@@ -260,7 +262,7 @@ class LoggerParser(ParsleyParser):
     HEADER_LEN = struct.calcsize(HEADER_FMT) # == 9
     PARSE_LOGGER_PAGE_SIZE = 4096
 
-    def parse(self, buf: bytes, page_number: int) -> ParsleyObject | ParsleyError:
+    def parse(self, buf: bytes, page_number: int) -> Iterator[ParsleyObject[Any] | ParsleyError]:
         # Strip the buffer to 4096 bytes, as required by the logger.
         if len(buf) != self.PARSE_LOGGER_PAGE_SIZE:
             raise ValueError('Logger message must be exactly 4096 bytes')
@@ -291,7 +293,9 @@ class LoggerParser(ParsleyParser):
 class BitstringParser(ParsleyParser):
     ''' Parse BitString objects '''
 
-    def parse(self, bit_str: BitString) -> ParsleyObject | ParsleyError:
-        msg_sid = int.from_bytes(bit_str.pop(MESSAGE_SID.length), byteorder='big')
-        msg_data = [byte for byte in bit_str.pop(bit_str.length)]
+    def parse(self, bit_str: BitString) -> ParsleyObject[Any] | ParsleyError:
+        msg_sid = bit_str.pop(MESSAGE_SID.length)
+        if isinstance(msg_sid, int):
+            msg_sid = msg_sid.to_bytes((MESSAGE_SID.length + 7) // 8, 'big')
+        msg_data = bytes(bit_str.pop(bit_str.length))
         return _ParsleyParseInternal.parse_to_object(msg_sid, msg_data)
