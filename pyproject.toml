@@ -8,6 +8,8 @@ module-name = "parsley"
 
 [tool.basedpyright]
 failOnWarnings = false
+include = ["src/**"]
+strict = ["src/**"]
 
 [project]
 name = "parsley"
