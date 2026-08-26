@@ -40,7 +40,7 @@ class ParsleyObject(BaseModel, Generic[T]):
     data: T # ParsleyDataType
 
     @field_validator("msg_prio")
-    def validate_msg_prio(cls, value):
+    def validate_msg_prio(cls, value: str) -> str:
         if value not in mt.msg_prio:
             raise ValueError(
                 f"Invalid msg_prio '{value}' (expected one of {list(mt.msg_prio)})"
@@ -48,13 +48,13 @@ class ParsleyObject(BaseModel, Generic[T]):
         return value
 
     @field_validator("msg_type")
-    def validate_msg_type(cls, value):
+    def validate_msg_type(cls, value: str) -> str:
         if value not in mt.msg_type:
             raise ValueError(f"Invalid msg_type type '{value}'")
         return value
 
     @field_validator("msg_metadata")
-    def validate_msg_metadata(cls, value):
+    def validate_msg_metadata(cls, value: int | str) -> int | str:
         if type(value) is int:
             if not (0 <= value <= 255):
                 raise ValueError(f"msg_metadata '{value}' is out of range (0-255)")

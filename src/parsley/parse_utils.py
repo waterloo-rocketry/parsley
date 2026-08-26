@@ -1,4 +1,4 @@
-def hexify(data: bytes, is_msg_type=False):
+def hexify(data: bytes, is_msg_type: bool = False):
     """
     Formats byte strings into its respective hexadecimal strings.
 

@@ -1,7 +1,9 @@
-from typing import Any, Literal, Tuple, Union, Optional
+from __future__ import annotations
+
+from typing import Any, Literal
 import struct
 
-Number = Union[int, float]
+Number = int | float
 
 class Field:
     """
@@ -9,7 +11,7 @@ class Field:
 
     Note: data is assumed to be LSB-aligned to match the implementation of BitString.
     """
-    def __init__(self, name: str, length: int, unit=""):
+    def __init__(self, name: str, length: int, unit: str = ""):
         self.name = name
         self.length = length # length in bits
         self.unit = unit # optional unit description
@@ -22,7 +24,7 @@ class Field:
         """
         raise NotImplementedError
 
-    def encode(self, value: Any) -> Tuple[bytes, int]:
+    def encode(self, value: Any) -> tuple[bytes, int]:
         """
         Converts value to `self.length` bits of data and returns a tuple of (encoded_value, self.length)
         or raises a ValueError with an appropiate message if this is not possible.
@@ -49,7 +51,7 @@ class ASCII(Field):
     def decode(self, data: bytes) -> str:
         return data.replace(b'\x00', b'').decode('ascii') # remove null bytes to return original data
 
-    def encode(self, value: str) -> Tuple[bytes, int]:
+    def encode(self, value: str) -> tuple[bytes, int]:
         if type(value) != str:
             raise ValueError(f'{value} is not a string')
         if not value.isascii():
@@ -95,7 +97,7 @@ class Enum(Field):
 
         return self.map_val_key[value]
 
-    def encode(self, value) -> Tuple[bytes, int]:
+    def encode(self, value: Any) -> tuple[bytes, int]:
         if value not in self.map_key_val:
             raise ValueError(f'Key "{value}" not found in map "{self.name}"')
 
@@ -113,7 +115,7 @@ class Numeric(Field):
     For example:
     b'\xFC' <=> -4 (two's complement)
     """
-    def __init__(self, name: str, length: int, scale: float=1, signed=False, big_endian=True, unit=""):
+    def __init__(self, name: str, length: int, scale: float=1, signed: bool=False, big_endian: bool=True, unit: str=""):
         super().__init__(name, length, unit)
         self.scale = scale
         self.signed = signed
@@ -123,8 +125,8 @@ class Numeric(Field):
         value = int.from_bytes(data, byteorder=self.endian, signed = self.signed)
         return value * self.scale
 
-    def encode(self, value: Number) -> Tuple[bytes, int]:
-        if not isinstance(value, Number):
+    def encode(self, value: Number) -> tuple[bytes, int]:
+        if not isinstance(value, (int, float)): # pyright: ignore[reportUnnecessaryIsInstance]
             raise ValueError(f'Value "{value}" is not a valid number')
 
         value = int(round(value / self.scale))
@@ -155,7 +157,7 @@ class Floating(Field):
     (Note, byte order may be reversed depending on endianess)
 
     """
-    def __init__(self, name: str, big_endian=True, unit=""):
+    def __init__(self, name: str, big_endian: bool=True, unit: str=""):
         super().__init__(name, 32, unit)
         self.endian = 'big' if big_endian else 'little'
 
@@ -165,8 +167,8 @@ class Floating(Field):
         else:
             return struct.unpack('<f', data)[0]
 
-    def encode(self, value: Number) -> Tuple[bytes, int]:
-        if not isinstance(value, Number):
+    def encode(self, value: Number) -> tuple[bytes, int]:
+        if not isinstance(value, (int, float)): # pyright: ignore[reportUnnecessaryIsInstance]
             raise ValueError(f'Value "{value}" is not a valid float')
 
         value = float(value)
@@ -190,7 +192,7 @@ class Switch(Enum):
         super().__init__(name, length, map_key_val)
         self.map_key_enum = map_key_enum
 
-    def get_fields(self, key):
+    def get_fields(self, key: Any) -> Any:
         return self.map_key_enum[key]
 
     def get_keys(self):
@@ -205,7 +207,7 @@ class Bitfield(Field):
     dictionary: {'E_NOMINAL': 0, 'E_5V_OVER_CURRENT': 1, 'E_5V_OVER_VOLTAGE': 2}
     b'\x01\x60' <=> 'E_5V_OVER_CURRENT|E_5V_OVER_VOLTAGE'
     """
-    def __init__(self, name: str, length: int, default: str="DEFAULT_STRING", map_name_offset: Optional[dict[Any, Any]]=None, unit=""):
+    def __init__(self, name: str, length: int, default: str="DEFAULT_STRING", map_name_offset: dict[Any, Any] | None=None, unit: str=""):
         super().__init__(name, length, unit)
         self.default = default
         self.map_name_offset = map_name_offset
@@ -235,7 +237,7 @@ class Bitfield(Field):
 
         return f"{'|'.join(status)}"
 
-    def encode(self, value: Any) -> Tuple[bytes, int]:
+    def encode(self, value: Any) -> tuple[bytes, int]:
         if not isinstance(value, str):
             raise ValueError(f'Value "{value}" is not a valid bitfield string')
 
