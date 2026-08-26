@@ -1,9 +1,11 @@
 from typing import Any, Literal, Tuple, Union, Optional
+from abc import ABC, abstractmethod
 import struct
 
 Number = Union[int, float]
 
-class Field:
+class Field(ABC):
+
     """
     Abstract base class for all fields that can be transcoded.
 
@@ -15,6 +17,7 @@ class Field:
         self.unit = unit # optional unit description
         self.variable_length = False
 
+    @abstractmethod
     def decode(self, data: bytes) -> Any:
         """
         Converts `self.length` bits of `data` to the field's corresponding python value.
@@ -22,6 +25,7 @@ class Field:
         """
         raise NotImplementedError
 
+    @abstractmethod
     def encode(self, value: Any) -> Tuple[bytes, int]:
         """
         Converts value to `self.length` bits of data and returns a tuple of (encoded_value, self.length)
