@@ -138,3 +138,75 @@ def test_parsley_object_invalid_type_raises():
             msg_metadata=0,
             data={}
         )
+
+
+def test_parsley_object_to_flat_dict():
+    obj = ParsleyObject(
+        board_type_id='LOGGER',
+        board_inst_id='ROCKET',
+        msg_prio='LOW',
+        msg_type='SENSOR_ANALOG16',
+        msg_metadata='SENSOR_PT_CHANNEL_1',
+        data={'time': 0.5, 'value': 100},
+    )
+
+    assert obj.to_flat_dict() == {
+        'LOGGER/ROCKET/SENSOR_ANALOG16/SENSOR_PT_CHANNEL_1/time': 0.5,
+        'LOGGER/ROCKET/SENSOR_ANALOG16/SENSOR_PT_CHANNEL_1/value': 100,
+    }
+
+
+def test_parsley_object_to_flat_dict_empty_data():
+    obj = ParsleyObject(
+        board_type_id='ANY',
+        board_inst_id='GROUND',
+        msg_prio='HIGH',
+        msg_type='RESET_CMD',
+        msg_metadata=0,
+        data={}
+    )
+
+    assert obj.to_flat_dict() == {}
+
+
+def test_parsley_object_to_flat_dict_avoids_cross_msg_type_collision():
+    # GPS_TIMESTAMP and GPS_LATITUDE share the same board, same (numeric) metadata,
+    # and both have a 'mins' data field -- msg_type must be in the key or these collide.
+    timestamp = ParsleyObject(
+        board_type_id='GPS',
+        board_inst_id='ROCKET',
+        msg_prio='LOW',
+        msg_type='GPS_TIMESTAMP',
+        msg_metadata=5,
+        data={'hrs': 23, 'mins': 59, 'secs': 44, 'dsecs': 26},
+    )
+    latitude = ParsleyObject(
+        board_type_id='GPS',
+        board_inst_id='ROCKET',
+        msg_prio='LOW',
+        msg_type='GPS_LATITUDE',
+        msg_metadata=5,
+        data={'degs': 43, 'mins': 28, 'dmins': 100, 'direction': 'N'},
+    )
+
+    combined = {**timestamp.to_flat_dict(), **latitude.to_flat_dict()}
+
+    assert combined['GPS/ROCKET/GPS_TIMESTAMP/5/mins'] == 59
+    assert combined['GPS/ROCKET/GPS_LATITUDE/5/mins'] == 28
+
+
+def test_parsley_error_to_flat_dict():
+    err = ParsleyError(
+        msg_prio='HIGH',
+        board_type_id='GPS',
+        board_inst_id='ROCKET',
+        msg_type='GPS_ALTITUDE',
+        msg_metadata=0x42,
+        msg_data='0xFFEEDDCC',
+        error='ChecksumMismatch: GPS packet corrupted'
+    )
+
+    assert err.to_flat_dict() == {
+        'GPS/ROCKET/GPS_ALTITUDE/66/msg_data': '0xFFEEDDCC',
+        'GPS/ROCKET/GPS_ALTITUDE/66/error': 'ChecksumMismatch: GPS packet corrupted',
+    }

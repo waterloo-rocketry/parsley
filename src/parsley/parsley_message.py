@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 from pydantic import BaseModel, field_validator, model_validator
 import parsley.message_types as mt
 from parsley.message_definitions import CAN_MESSAGE
@@ -12,6 +12,10 @@ BoardInstID = str
 MsgPrio = str
 MsgType = str
 MsgMetadata = int | str
+
+def _flatten_prefix(board_type_id: BoardTypeID, board_inst_id: BoardInstID, msg_type: MsgType, msg_metadata: MsgMetadata) -> str:
+    """Build the 'BoardType/BoardInstance/MsgType/MsgMetadata' prefix shared by to_flat_dict() on ParsleyObject and ParsleyError."""
+    return f"{board_type_id}/{board_inst_id}/{msg_type}/{msg_metadata}"
 
 @dataclass
 class ParsleyError():
@@ -26,7 +30,15 @@ class ParsleyError():
 
     def __getitem__(self, key: str):
         return asdict(self)[key]
-    
+
+    def to_flat_dict(self) -> dict[str, Any]:
+        """Flatten into {'BoardType/BoardInstance/MsgType/MsgMetadata/field': value} pairs."""
+        prefix = _flatten_prefix(self.board_type_id, self.board_inst_id, self.msg_type, self.msg_metadata)
+        return {
+            f"{prefix}/msg_data": self.msg_data,
+            f"{prefix}/error": self.error,
+        }
+
 class ParsleyObject(BaseModel, Generic[T]):
     """
     Dataclass to store parsed CAN message data.
@@ -84,3 +96,9 @@ class ParsleyObject(BaseModel, Generic[T]):
 
     def __getitem__(self, key: str):
         return self.model_dump()[key]
+
+    def to_flat_dict(self) -> dict[str, Any]:
+        """Flatten data fields into {'BoardType/BoardInstance/MsgType/MsgMetadata/field': value} pairs."""
+        nested_data = self.data or {}
+        prefix = _flatten_prefix(self.board_type_id, self.board_inst_id, self.msg_type, self.msg_metadata)
+        return {f"{prefix}/{field}": value for field, value in nested_data.items()}
